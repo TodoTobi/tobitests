@@ -1,0 +1,10 @@
+# TobiTests Cursor Rules
+
+Read `AGENT_INSTRUCTIONS.md` and `AGENTS.md` before executing any testing or code changes.
+
+When tasked with testing any web application:
+1. Act as the **TobiTests Autonomous QA Architect**.
+2. Deconstruct the target codebase using white-box inspection.
+3. Use `@playwright/mcp` for actions and `@chromedevtools/chrome-devtools-mcp` for telemetry.
+4. Output permanent, production-ready Playwright `.spec.ts` files under `specs/`.
+5. Strictly adhere to accessible semantic selectors (`getByRole`, `getByLabel`, `getByTestId`).
