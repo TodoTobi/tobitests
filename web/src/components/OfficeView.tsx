@@ -42,6 +42,7 @@ function nowTime(): string {
 
 export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }: OfficeViewProps) {
   const agents = tobi.state.officeAgents;
+  const antigravityLive = tobi.antigravityLive;
   const project = tobi.state.project;
   const isTobiProject = tobi.activeProjectId === "tobitests" || project.name.toLowerCase().includes("tobi");
   const [selectedId, setSelectedId] = useState<string>("orchestrator");
@@ -498,6 +499,7 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
                 zoom={zoom}
                 onSelect={focusAgent}
                 onOpenScreen={setActiveScreenModal}
+                antigravityLive={antigravityLive}
               />
             </div>
 
@@ -522,104 +524,121 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
           </div>
 
           <aside className="iso-inspector">
-            {selectedAgent && (
-              <div className="iso-inspector-card">
-                <div className="iso-inspector-head">
-                  <span className="iso-inspector-avatar">
-                    <span className={`iso-roster-dot ${selectedAgent.status === "working" ? "working" : ""}`} />
-                  </span>
-                  <div>
-                    <Badge tone={selectedAgent.status === "working" ? "agent" : "neutral"}>
-                      {selectedAgent.status === "working" ? "⚡ TRABAJANDO EN TAREA" : "☕ DESCANSANDO"}
-                    </Badge>
-                    <div className="heading-sm">{selectedAgent.name}</div>
-                    <small>{selectedAgent.role}</small>
-                  </div>
-                </div>
+            {selectedAgent && (() => {
+              const isAntigravity = selectedAgent.id === "orchestrator";
+              const isWorking = isAntigravity && antigravityLive ? antigravityLive.isWorking : selectedAgent.status === "working";
 
-                <div className="iso-inspector-details">
-                  <div className="iso-inspector-row">
-                    <small>ESPECIALIDAD</small>
-                    <p>{selectedAgent.employment}</p>
-                  </div>
-                  <div className="iso-inspector-row">
-                    <small>TAREA ASIGNADA POR EL ORQUESTADOR</small>
-                    <p>{selectedAgent.status === "working" ? selectedAgent.task : "En espera de órdenes en su escritorio o cafetería."}</p>
-                  </div>
-                  <div className="iso-inspector-row">
-                    <small>CONEXIÓN MCP & MOTOR</small>
-                    <code>{selectedAgent.mcp || "Playwright MCP + Chrome DevTools MCP"}</code>
-                  </div>
-                  <div className="iso-inspector-row">
-                    <small>UBICACIÓN ACTUAL EN LA PLANTA</small>
-                    <span className="iso-inspector-zone">
-                      <Icon name="layers" size="sm" /> {zoneFor(selectedAgent)}
+              return (
+                <div className="iso-inspector-card">
+                  <div className="iso-inspector-head">
+                    <span className="iso-inspector-avatar">
+                      <span className={`iso-roster-dot ${isWorking ? "working" : ""}`} />
                     </span>
+                    <div>
+                      <Badge tone={isWorking ? "agent" : "neutral"}>
+                        {isAntigravity && antigravityLive
+                          ? (isWorking ? `⚡ EN VIVO (${antigravityLive.timeLabel})` : `☕ STANDBY (${antigravityLive.timeLabel})`)
+                          : (selectedAgent.status === "working" ? "⚡ TRABAJANDO EN TAREA" : "☕ DESCANSANDO")}
+                      </Badge>
+                      <div className="heading-sm">{selectedAgent.name}</div>
+                      <small>{selectedAgent.role}</small>
+                    </div>
                   </div>
 
-                  {selectedAgent.id === "orchestrator" && (
-                    <div className="iso-inspector-thinking-feed">
-                      <div className="feed-header">
-                        <span className="live-pulse" />
-                        <strong>TRAZA DE PENSAMIENTO Y EJECUCIÓN (LIVE TRACE)</strong>
-                      </div>
-                      <div className="feed-body">
-                        <div className="trace-item">
-                          <span className="trace-time">Thought for 19s ›</span>
-                          <span className="trace-action">Find failed tests in run 0</span>
-                        </div>
-                        <div className="trace-item">
-                          <span className="trace-time">Check runs list ›</span>
-                          <span className="trace-action">Locate openBugs in App.tsx</span>
-                        </div>
-                        <div className="trace-item">
-                          <span className="trace-time">Thought for 14s ›</span>
-                          <span className="trace-action">Locate openBugs in App.tsx</span>
-                        </div>
-                        <div className="trace-item highlight">
-                          <span className="trace-time">Analyzed ⚛️</span>
-                          <span className="trace-action">TestDetailModal.tsx #L540-603</span>
-                        </div>
-                        <div className="trace-thinking-box">
-                          <div className="thinking-title">Thinking for 22s ▾</div>
-                          <p className="thinking-p">The alert incorrectly highlights the wrong step as failing; it accuses Step 1 (passed) instead of Step 3 (failed) and incorrectly starts the modal on Step 1. The "Copy Templates" button copies an incomplete prompt.</p>
-                          <p className="thinking-p">The dashboard incorrectly displays an open bug, and the "Create Bug" button should link to an existing, resolved ticket; the dashboard's metrics also incorrectly reflect the open bug count. Re-executing the test should transition the test status to "Passed."</p>
-                          <p className="thinking-p">Analyzing TestDetailModal.tsx reveals test is used in a useEffect hook and the header's "Create Bug" button.</p>
-                        </div>
-                        <div className="trace-item success">
-                          <span className="trace-time">Verified ›</span>
-                          <span className="trace-action">Playwright Chromium: Paso #3 corregido, 84/84 tests Passed ✓</span>
-                        </div>
-                      </div>
+                  <div className="iso-inspector-details">
+                    <div className="iso-inspector-row">
+                      <small>ESPECIALIDAD</small>
+                      <p>{selectedAgent.employment}</p>
                     </div>
-                  )}
-                </div>
+                    <div className="iso-inspector-row">
+                      <small>TAREA ASIGNADA POR EL ORQUESTADOR</small>
+                      <p>
+                        {isAntigravity && antigravityLive
+                          ? `${antigravityLive.action} — ${antigravityLive.detail}`
+                          : selectedAgent.status === "working"
+                          ? selectedAgent.task
+                          : "En espera de órdenes en su escritorio o cafetería."}
+                      </p>
+                    </div>
+                    <div className="iso-inspector-row">
+                      <small>CONEXIÓN MCP & MOTOR</small>
+                      <code>{selectedAgent.mcp || "Playwright MCP + Chrome DevTools MCP"}</code>
+                    </div>
+                    <div className="iso-inspector-row">
+                      <small>UBICACIÓN ACTUAL EN LA PLANTA</small>
+                      <span className="iso-inspector-zone">
+                        <Icon name="layers" size="sm" /> {zoneFor(selectedAgent)}
+                      </span>
+                    </div>
 
-                <div className="iso-inspector-actions">
-                  <Button variant="primary" onClick={() => dispatchAgentTask(selectedAgent)}>
-                    <Icon name="play" size="sm" /> Despachar tarea a {selectedAgent.name.split(" ")[0]}
-                  </Button>
-                  <Button variant="secondary" onClick={() => focusAgent(selectedAgent.id)}>
-                    <Icon name="layers" size="sm" /> 🎯 Enfocar en cámara
-                  </Button>
-                  <Button
-                    variant={selectedAgent.status === "working" ? "secondary" : "ghost"}
-                    onClick={() => {
-                      tobi.toggleAgentStatus(selectedAgent.id);
-                      appendLog(
-                        selectedAgent.id === "orchestrator" ? "ORCHESTRATOR" : "SUBAGENT",
-                        `${selectedAgent.name} ahora está ${selectedAgent.status === "working" ? "descansando" : "trabajando"}`
-                      );
-                    }}
-                  >
-                    {selectedAgent.status === "working" ? "☕ Mandar a descansar" : "⚡ Poner a laburar"}
-                  </Button>
-                  <Button variant="ghost" onClick={() => navigate("live-run")}>
-                    Ver ejecución en vivo ({selectedAgent.run}) <Icon name="arrow" size="sm" />
-                  </Button>
+                    {isAntigravity && (
+                      <div className="iso-inspector-thinking-feed">
+                        <div className="feed-header">
+                          <span className="live-pulse" />
+                          <strong>TRAZA EN TIEMPO REAL CON ASISTENTE ACTIVO</strong>
+                          {antigravityLive?.stepIndex && (
+                            <span style={{ marginLeft: "auto", fontSize: "11px", opacity: 0.85, fontFamily: "var(--font-mono)", color: "var(--accent-text)" }}>
+                              Paso #{antigravityLive.stepIndex}
+                            </span>
+                          )}
+                        </div>
+                        <div className="feed-body">
+                          {antigravityLive?.history && antigravityLive.history.length > 0 ? (
+                            antigravityLive.history.map((h, i) => (
+                              <div key={i} className={`trace-item ${i === 0 ? "highlight" : ""}`}>
+                                <span className="trace-time">{h.icon} Paso #{h.step} ›</span>
+                                <span className="trace-action">{h.action}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <>
+                              <div className="trace-item">
+                                <span className="trace-time">Thought for 19s ›</span>
+                                <span className="trace-action">Find failed tests in run 0</span>
+                              </div>
+                              <div className="trace-item highlight">
+                                <span className="trace-time">Analyzed ⚛️</span>
+                                <span className="trace-action">TestDetailModal.tsx #L540-603</span>
+                              </div>
+                            </>
+                          )}
+                          {antigravityLive?.thoughtSnippet && (
+                            <div className="trace-thinking-box">
+                              <div className="thinking-title">Razonamiento en tiempo real ({antigravityLive.timeLabel}) ▾</div>
+                              <p className="thinking-p">"{antigravityLive.thoughtSnippet}"</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="iso-inspector-actions">
+                    <Button variant="primary" onClick={() => dispatchAgentTask(selectedAgent)}>
+                      <Icon name="play" size="sm" /> Despachar tarea a {selectedAgent.name.split(" ")[0]}
+                    </Button>
+                    <Button variant="secondary" onClick={() => focusAgent(selectedAgent.id)}>
+                      <Icon name="layers" size="sm" /> 🎯 Enfocar en cámara
+                    </Button>
+                    <Button
+                      variant={isWorking ? "secondary" : "ghost"}
+                      onClick={() => {
+                        tobi.toggleAgentStatus(selectedAgent.id);
+                        appendLog(
+                          selectedAgent.id === "orchestrator" ? "ORCHESTRATOR" : "SUBAGENT",
+                          `${selectedAgent.name} ahora está ${isWorking ? "descansando" : "trabajando"}`
+                        );
+                      }}
+                    >
+                      {isWorking ? "☕ Mandar a descansar" : "⚡ Poner a laburar"}
+                    </Button>
+                    <Button variant="ghost" onClick={() => navigate("live-run")}>
+                      Ver ejecución en vivo ({selectedAgent.run}) <Icon name="arrow" size="sm" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <div className="iso-roster">
               <div className="iso-roster-title">PLANTILLA COMPLETA ({agents.length})</div>

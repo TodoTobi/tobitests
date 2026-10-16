@@ -6,14 +6,200 @@ import path from 'node:path'
 
 import siteConfiguration from './.figma/make/site.json'
 
+function getAntigravityLiveStatus() {
+  try {
+    const home = process.env.USERPROFILE || process.env.HOME || 'C:/Users/usuario';
+    const brainDir = path.join(home, '.gemini', 'antigravity', 'brain');
+    if (!fs.existsSync(brainDir)) return null;
+
+    const dirs = fs.readdirSync(brainDir, { withFileTypes: true })
+      .filter((d: any) => d.isDirectory() && !d.name.startsWith('.'))
+      .map((d: any) => {
+        const p = path.join(brainDir, d.name, '.system_generated', 'logs', 'transcript.jsonl');
+        if (fs.existsSync(p)) {
+          return { dir: d.name, path: p, mtime: fs.statSync(p).mtimeMs };
+        }
+        return null;
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => b.mtime - a.mtime);
+
+    if (dirs.length === 0 || !dirs[0]) return null;
+    const activeTranscript = dirs[0].path;
+
+    const stat = fs.statSync(activeTranscript);
+    const bufferSize = Math.min(stat.size, 65536);
+    const fd = fs.openSync(activeTranscript, 'r');
+    const buffer = Buffer.alloc(bufferSize);
+    fs.readSync(fd, buffer, 0, bufferSize, Math.max(0, stat.size - bufferSize));
+    fs.closeSync(fd);
+
+    const rawLines = buffer.toString('utf8').trim().split('\n');
+    const items: any[] = [];
+    for (let i = rawLines.length - 1; i >= 0 && items.length < 25; i--) {
+      try {
+        items.push(JSON.parse(rawLines[i]));
+      } catch (e) {}
+    }
+
+    const latest = items[0];
+    if (!latest) return null;
+
+    const now = Date.now();
+    const latestTime = new Date(latest.created_at || now).getTime();
+    const secondsAgo = Math.max(0, Math.round((now - latestTime) / 1000));
+
+    let action = 'En guardia · Mesa de Comando';
+    let detail = 'Puesto listo para recibir órdenes';
+    let icon = '⚡';
+    let isWorking = true;
+    let timeLabel = `Live · ${secondsAgo}s`;
+
+    const lastUserPrompt = items.find((it: any) => it.type === 'USER_INPUT');
+    const lastToolCall = items.find((it: any) => it.tool_calls && it.tool_calls.length > 0);
+    const lastThought = items.find((it: any) => it.thinking && it.thinking.trim().length > 0);
+
+    if (latest.type === 'USER_INPUT') {
+      action = 'Leyendo solicitud de Tobías...';
+      const cleanMsg = latest.content ? latest.content.replace(/<[^>]+>/g, '').trim() : '';
+      detail = cleanMsg ? `"${cleanMsg.slice(0, 80)}..."` : 'Analizando requerimiento recibido en chat';
+      icon = '📖';
+      isWorking = true;
+      timeLabel = `Leyendo · ${secondsAgo}s`;
+    } else if (latest.type === 'PLANNER_RESPONSE' && latest.tool_calls && latest.tool_calls.length > 0) {
+      const tc = latest.tool_calls[0];
+      const rawAction = tc.args?.toolAction?.replace(/"/g, '') || tc.args?.toolSummary?.replace(/"/g, '') || tc.name;
+      action = rawAction;
+
+      if (tc.name === 'run_command') {
+        icon = '💻';
+        detail = tc.args?.CommandLine?.replace(/"/g, '')?.slice(0, 85) || 'Ejecutando comando en consola';
+      } else if (tc.name === 'view_file') {
+        icon = '🔍';
+        const file = tc.args?.AbsolutePath?.replace(/"/g, '')?.split(/[\\/]/).pop();
+        detail = file ? `Inspeccionando ${file}` : 'Leyendo archivo del proyecto';
+      } else if (tc.name === 'replace_file_content' || tc.name === 'write_to_file') {
+        icon = '✏️';
+        const file = (tc.args?.TargetFile || tc.args?.AbsolutePath)?.replace(/"/g, '')?.split(/[\\/]/).pop();
+        detail = file ? `Escribiendo cambios en ${file}` : 'Modificando código del sistema';
+      } else if (tc.name === 'call_mcp_tool') {
+        icon = '🔌';
+        detail = `MCP ${tc.args?.ServerName} › ${tc.args?.ToolName}`;
+      } else {
+        icon = '🛠️';
+        detail = tc.args?.toolSummary?.replace(/"/g, '') || 'Procesando paso de ingeniería';
+      }
+      isWorking = true;
+      timeLabel = `Ejecutando · ${secondsAgo}s`;
+    } else if (latest.type === 'GENERIC' && latest.source === 'MODEL') {
+      if (lastToolCall && lastToolCall.tool_calls) {
+        const tc = lastToolCall.tool_calls[0];
+        const rawAction = tc.args?.toolAction?.replace(/"/g, '') || tc.name;
+        action = `Procesando: ${rawAction}`;
+        icon = '🧠';
+        detail = 'Evaluando respuesta técnica y preparando siguiente paso';
+      } else {
+        action = 'Razonando arquitectura...';
+        icon = '🧠';
+        detail = 'Evaluando lógica y verificando reglas';
+      }
+      isWorking = true;
+      timeLabel = `Pensando · ${secondsAgo}s`;
+    } else if (latest.type === 'PLANNER_RESPONSE' && !latest.tool_calls) {
+      if (secondsAgo < 30) {
+        action = 'Respuesta entregada a Tobías';
+        detail = 'Esperando revisión y nueva indicación';
+        icon = '💬';
+        isWorking = true;
+        timeLabel = `Reciente · ${secondsAgo}s`;
+      } else {
+        action = 'En guardia · Mesa de Comando';
+        detail = 'Esperando nuevo requerimiento o consulta';
+        icon = '☕';
+        isWorking = false;
+        timeLabel = `Standby · ${Math.round(secondsAgo / 60)}m`;
+      }
+    }
+
+    let thoughtSnippet: string | null = null;
+    if (lastThought && lastThought.thinking) {
+      thoughtSnippet = lastThought.thinking.trim().slice(0, 160).replace(/\n+/g, ' ');
+    }
+
+    return {
+      conversationId: dirs[0].dir,
+      stepIndex: latest.step_index,
+      type: latest.type,
+      source: latest.source,
+      secondsAgo,
+      isWorking,
+      action,
+      detail,
+      icon,
+      timeLabel,
+      thoughtSnippet,
+      history: items.filter((it: any) => it.tool_calls || it.type === 'USER_INPUT').slice(0, 8).map((it: any) => {
+        let title = 'Acción de agente';
+        let actIcon = '🛠️';
+        if (it.type === 'USER_INPUT') {
+          title = 'Mensaje de Tobías';
+          actIcon = '👤';
+        } else if (it.tool_calls && it.tool_calls[0]) {
+          const tc = it.tool_calls[0];
+          title = tc.args?.toolAction?.replace(/"/g, '') || tc.args?.toolSummary?.replace(/"/g, '') || tc.name;
+          actIcon = tc.name === 'run_command' ? '💻' : tc.name === 'view_file' ? '🔍' : (tc.name.includes('write') || tc.name.includes('replace')) ? '✏️' : '🛠️';
+        }
+        return {
+          step: it.step_index,
+          type: it.type,
+          time: it.created_at,
+          action: title,
+          icon: actIcon
+        };
+      })
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
 function tobiTestsBridgePlugin(): Plugin {
   return {
     name: 'tobitests-bridge',
     configureServer(server) {
       const stateFilePath = path.resolve(__dirname, './src/data/tobi-state.json');
+      const publicLivePath = path.resolve(__dirname, './public/data/antigravity-live.json');
       const sseClients = new Set<any>();
 
+      // Periodically sync live Antigravity telemetry to SSE clients and file
+      const liveInterval = setInterval(() => {
+        try {
+          const live = getAntigravityLiveStatus();
+          if (live) {
+            try {
+              fs.writeFileSync(publicLivePath, JSON.stringify(live, null, 2), 'utf8');
+            } catch (e) {}
+
+            sseClients.forEach((client) => {
+              try {
+                client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: live })}\n\n`);
+              } catch (e) {}
+            });
+          }
+        } catch (e) {}
+      }, 1200);
+
+      server.httpServer?.on('close', () => clearInterval(liveInterval));
+
       server.middlewares.use((req, res, next) => {
+        if (req.url === '/api/antigravity/live' && req.method === 'GET') {
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-cache');
+          const live = getAntigravityLiveStatus();
+          res.end(JSON.stringify(live || { error: 'No live telemetry' }));
+          return;
+        }
+
         if (req.url === '/api/stream') {
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -25,6 +211,10 @@ function tobiTestsBridgePlugin(): Plugin {
           try {
             const raw = fs.readFileSync(stateFilePath, 'utf8');
             res.write(`data: ${JSON.stringify({ type: 'INIT', payload: JSON.parse(raw) })}\n\n`);
+            const live = getAntigravityLiveStatus();
+            if (live) {
+              res.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: live })}\n\n`);
+            }
           } catch (e) {}
           return;
         }

@@ -2,6 +2,27 @@ import { useState, useEffect, useCallback } from 'react';
 import tobiData from '../data/tobi-state.json';
 import vetData from '../data/vetconnect-state.json';
 
+export interface AntigravityLive {
+  conversationId: string;
+  stepIndex: number;
+  type: string;
+  source: string;
+  secondsAgo: number;
+  isWorking: boolean;
+  action: string;
+  detail: string;
+  icon: string;
+  timeLabel: string;
+  thoughtSnippet?: string | null;
+  history?: Array<{
+    step: number;
+    type: string;
+    time: string;
+    action: string;
+    icon: string;
+  }>;
+}
+
 export interface OfficeAgent {
   id: string;
   initials: string;
@@ -181,6 +202,7 @@ export function useTobiState() {
     };
   });
   const [connected, setConnected] = useState(false);
+  const [antigravityLive, setAntigravityLive] = useState<AntigravityLive | null>(null);
 
   const switchProject = useCallback((projectId: string) => {
     setActiveProjectId(projectId);
@@ -206,13 +228,38 @@ export function useTobiState() {
     let es: EventSource | null = null;
     let pollInterval: any = null;
 
+    const fetchLiveTelemetry = async () => {
+      try {
+        const res = await fetch('/api/antigravity/live');
+        if (res.ok) {
+          const live = await res.json();
+          if (live && !live.error) {
+            setAntigravityLive(live);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const resFallback = await fetch('/data/antigravity-live.json');
+        if (resFallback.ok) {
+          const live = await resFallback.json();
+          if (live && !live.error) setAntigravityLive(live);
+        }
+      } catch (e) {}
+    };
+
+    fetchLiveTelemetry();
+
     try {
       es = new EventSource('/api/stream');
       es.onopen = () => setConnected(true);
       es.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data?.payload) {
+          if (data?.type === 'ANTIGRAVITY_LIVE' && data.payload) {
+            setAntigravityLive(data.payload);
+          } else if (data?.payload && data?.type !== 'ANTIGRAVITY_LIVE') {
             setState(data.payload);
           }
         } catch (e) {
@@ -231,10 +278,12 @@ export function useTobiState() {
               setConnected(true);
             }
           } catch (err) {}
-        }, 3000);
+          fetchLiveTelemetry();
+        }, 2000);
       };
     } catch (e) {
       console.warn('[TobiTests Bridge] SSE failed, using local data');
+      pollInterval = setInterval(fetchLiveTelemetry, 2000);
     }
 
     return () => {
@@ -432,6 +481,7 @@ Entonces ${bug.entonces}
   return {
     state,
     connected,
+    antigravityLive,
     activeProjectId,
     availableProjects: AVAILABLE_PROJECTS,
     switchProject,

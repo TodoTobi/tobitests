@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { AgentFigure } from "./OfficeCharacters";
-import type { OfficeAgent } from "../hooks/useTobiState";
+import type { OfficeAgent, AntigravityLive } from "../hooks/useTobiState";
 import type { AgentPose } from "./useAgentMotion";
 import {
   COLS,
@@ -91,6 +91,7 @@ interface OfficeSceneProps {
   zoom?: number;
   onSelect: (id: string) => void;
   onOpenScreen: (modal: ScreenModal) => void;
+  antigravityLive?: AntigravityLive | null;
 }
 
 const floor = pts([project(0, 0, 0), project(COLS, 0, 0), project(COLS, ROWS, 0), project(0, ROWS, 0)]);
@@ -260,6 +261,7 @@ export function OfficeScene({
   zoom = 1,
   onSelect,
   onOpenScreen,
+  antigravityLive,
 }: OfficeSceneProps) {
   const [thoughtIdx, setThoughtIdx] = useState(0);
 
@@ -315,20 +317,32 @@ export function OfficeScene({
         const pose = (poses || []).find((p) => p.id === agent.id);
         if (!pose) return null;
         const p = project(pose.x, pose.y, 0);
-        const isWorking = agent.status === "working";
+        const isAntigravity = agent.id === "orchestrator";
+        const antigravityWorking = antigravityLive ? antigravityLive.isWorking : agent.status === "working";
+        const isWorking = isAntigravity ? antigravityWorking : agent.status === "working";
         const bubble = isStandup
           ? STANDUP_POSITIONS[agent.id]?.bubble || agent.bubble
           : isWorking
-          ? agent.bubble
-          : agent.idleBubble || "Descansando";
+          ? (isAntigravity && antigravityLive ? `${antigravityLive.icon} ${antigravityLive.action}` : agent.bubble)
+          : (isAntigravity && antigravityLive ? `${antigravityLive.icon} ${antigravityLive.action}` : agent.idleBubble || "Descansando");
         const walking = pose.action === "walk";
-        const isOrchestratorThinking = agent.id === "orchestrator" && isWorking && !isStandup;
+        const isOrchestratorThinking = isAntigravity && !isStandup && isWorking;
+
+        const thoughtData = (isAntigravity && antigravityLive)
+          ? {
+              time: antigravityLive.timeLabel,
+              icon: antigravityLive.icon,
+              action: antigravityLive.action,
+              detail: antigravityLive.detail,
+              snippet: antigravityLive.thoughtSnippet,
+            }
+          : currentThought;
 
         return (
           <div
             key={agent.id}
-            className={`iso-agent ${walking ? "is-walking" : ""} ${!walking && pose.action === "work" ? "is-working" : ""} ${
-              !walking && pose.action !== "work" ? "is-resting" : ""
+            className={`iso-agent ${walking ? "is-walking" : ""} ${!walking && (isAntigravity ? isWorking : pose.action === "work") ? "is-working" : ""} ${
+              !walking && !(isAntigravity ? isWorking : pose.action === "work") ? "is-resting" : ""
             } ${selectedId === agent.id ? "is-selected" : ""} ${isStandup ? "is-in-standup" : ""}`}
             style={{ left: p.x, top: p.y, zIndex: Math.round((pose.x + pose.y) * 10) + 40 }}
             role="button"
@@ -345,16 +359,21 @@ export function OfficeScene({
               <div className="iso-agent-bubble iso-antigravity-thinking-bubble">
                 <div className="thought-badge-row">
                   <span className="thought-pulse-dot" />
-                  <span className="thought-time">{currentThought.time}</span>
+                  <span className="thought-time">{thoughtData.time}</span>
                   <span className="thought-chevron">›</span>
                   <span className="thought-action">
-                    {currentThought.icon && <span className="thought-icon">{currentThought.icon}</span>}
-                    {currentThought.action}
+                    {thoughtData.icon && <span className="thought-icon">{thoughtData.icon}</span>}
+                    {thoughtData.action}
                   </span>
                 </div>
-                {currentThought.detail && (
+                {thoughtData.detail && (
                   <div className="thought-detail-text">
-                    {currentThought.detail}
+                    {thoughtData.detail}
+                  </div>
+                )}
+                {thoughtData.snippet && (
+                  <div className="thought-detail-text" style={{ fontStyle: "italic", opacity: 0.85, marginTop: "3px", borderTop: "1px dashed rgba(255,255,255,0.15)", paddingTop: "3px" }}>
+                    💭 "{thoughtData.snippet}"
                   </div>
                 )}
               </div>
@@ -364,7 +383,11 @@ export function OfficeScene({
             <span className="iso-agent-shadow" />
             <span className="iso-agent-flip" style={{ transform: pose.dir < 0 ? "scaleX(-1)" : "none" }}>
               <span className="iso-agent-figure">
-                <AgentFigure id={agent.id} status={pose.action === "work" ? "working" : "idle"} size={58} />
+                <AgentFigure
+                  id={agent.id}
+                  status={isAntigravity ? (isWorking ? "working" : "idle") : (pose.action === "work" ? "working" : "idle")}
+                  size={58}
+                />
               </span>
             </span>
             <span className="iso-agent-name">
