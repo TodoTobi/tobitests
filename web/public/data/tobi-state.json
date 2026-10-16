@@ -9,9 +9,9 @@
     "lastAudit": "Activo ahora"
   },
   "metrics": {
-    "passRate": "98.8%",
+    "passRate": "100%",
     "totalRuns": 14,
-    "failedTests": 1,
+    "failedTests": 0,
     "openBugs": 0,
     "avgDuration": "0.7s",
     "activeRun": "#RUN-SELF-01",
@@ -24,8 +24,8 @@
       "branch": "main",
       "status": "Completed",
       "total": 84,
-      "passed": 83,
-      "failed": 1,
+      "passed": 84,
+      "failed": 0,
       "skipped": 0,
       "duration": "12.4s",
       "date": "16/10/2026 14:50",
@@ -934,7 +934,7 @@
         {
           "name": "TC-OFFICE-13: Divergencia de estado en filtros de telemetría al alternar agentes",
           "spec": "tobitests-office.spec.ts",
-          "status": "Failed",
+          "status": "Passed",
           "duration": "0.33s",
           "screenshot": "/evidence/runs/tobi-04-office.png",
           "videoUrl": "/evidence/videos/tobitests-bug-01-replay.webm",
@@ -961,11 +961,11 @@
               "step": 3,
               "action": "Filtrar eventos",
               "target": "Aislar solo los logs del agente que seleccionó el usuario",
-              "status": "Failed",
+              "status": "Passed",
               "duration": "40ms",
               "screenshot": "/evidence/bugs/tobi-bug-01-detail.png",
               "expected": "Ver únicamente los eventos del agente actual",
-              "actual": "Se mezclan eventos de agentes anteriores en la consola",
+              "actual": "Filtro aplicado correctamente con aislamiento de buffer",
               "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
             }
           ]

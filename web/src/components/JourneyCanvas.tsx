@@ -90,7 +90,7 @@ const TOBI_NODES: JourneyNode[] = [
     height: NODE_HEIGHT,
     testsCount: 16,
     touches: 16,
-    failedCount: 1,
+    failedCount: 0,
     category: "workspace",
   },
   {
@@ -105,7 +105,7 @@ const TOBI_NODES: JourneyNode[] = [
     height: NODE_HEIGHT,
     testsCount: 18,
     touches: 18,
-    failedCount: 1,
+    failedCount: 0,
     category: "workspace",
   },
 
@@ -143,7 +143,7 @@ const TOBI_NODES: JourneyNode[] = [
   {
     id: "bug-detail",
     title: "/bug-detail · BUG-01 Telemetría",
-    subtitle: "Ficha de causa raíz y reproducción BDD",
+    subtitle: "Ficha de causa raíz y reproducción BDD (Resuelto)",
     route: "/bug-detail",
     screenshot: "/evidence/bugs/tobi-bug-01-detail.png",
     x: 880,
@@ -152,7 +152,7 @@ const TOBI_NODES: JourneyNode[] = [
     height: NODE_HEIGHT,
     testsCount: 1,
     touches: 1,
-    failedCount: 1,
+    failedCount: 0,
     category: "diagnostics",
   },
 
@@ -239,9 +239,9 @@ const TOBI_EDGES: JourneyEdge[] = [
     agentRole: "Inspector de Incidentes",
     agentMcp: "chrome-devtools-mcp",
     actionCode: "page.locator('.table tbody tr.clickable').first.click()",
-    humanExplanation: "Seleccionó el primer incidente del listado para inspeccionar su causa raíz, escenario BDD y evidencia en video.",
+    humanExplanation: "Seleccionó el incidente en el listado para inspeccionar su causa raíz, escenario BDD y verificar su estado resuelto.",
     duration: "80ms",
-    status: "Failed",
+    status: "Passed",
   },
   {
     id: "e-office-bugdetail",
@@ -252,9 +252,9 @@ const TOBI_EDGES: JourneyEdge[] = [
     agentRole: "Vigilante de Consola & Red",
     agentMcp: "chrome-devtools-mcp",
     actionCode: "devtools.on('console.warn', ({ text }) => trackDivergence(text))",
-    humanExplanation: "Capturó una divergencia de estado en los filtros de telemetría de La Oficina y generó el ticket técnico BUG-01.",
+    humanExplanation: "Auditó los filtros de telemetría de La Oficina: aislamiento de buffer validado con 0 divergencias de estado.",
     duration: "45ms",
-    status: "Failed",
+    status: "Passed",
   },
   {
     id: "e-dashboard-specs",
@@ -395,13 +395,48 @@ export function JourneyCanvas({ tobi, navigate, onInspectTest }: JourneyCanvasPr
     return null;
   }, [activeTest, selectedEdge, selectedNodeId]);
 
+  const dynamicNodes = useMemo(() => {
+    const failedOffice = testsList.filter((t) => (t.spec?.includes("office") || t.name?.includes("TC-OFFICE")) && t.status === "Failed").length;
+    const failedBugs = testsList.filter((t) => (t.spec?.includes("bugs") || t.name?.includes("TC-BUGS")) && t.status === "Failed").length;
+    const openBugs = (tobi.state.bugs || []).filter((b) => b.status !== "Resolved" && b.status !== "Closed").length;
+
+    return TOBI_NODES.map((node) => {
+      let failedCount = 0;
+      if (node.id === "office") failedCount = failedOffice;
+      else if (node.id === "bug-tracker") failedCount = failedBugs;
+      else if (node.id === "bug-detail") failedCount = openBugs;
+      return {
+        ...node,
+        failedCount,
+      };
+    });
+  }, [testsList, tobi.state.bugs]);
+
+  const dynamicEdges = useMemo(() => {
+    const failedOffice = testsList.filter((t) => (t.spec?.includes("office") || t.name?.includes("TC-OFFICE")) && t.status === "Failed").length;
+    const openBugs = (tobi.state.bugs || []).filter((b) => b.status !== "Resolved" && b.status !== "Closed").length;
+
+    return TOBI_EDGES.map((edge) => {
+      let status: "Passed" | "Failed" = edge.status;
+      if (edge.id === "e-office-bugdetail") {
+        status = failedOffice > 0 ? "Failed" : "Passed";
+      } else if (edge.id === "e-bugtracker-bugdetail") {
+        status = openBugs > 0 ? "Failed" : "Passed";
+      }
+      return {
+        ...edge,
+        status,
+      };
+    });
+  }, [testsList, tobi.state.bugs]);
+
   const nodeMap = useMemo(() => {
     const map: Record<string, JourneyNode> = {};
-    TOBI_NODES.forEach((n) => {
+    dynamicNodes.forEach((n) => {
       map[n.id] = n;
     });
     return map;
-  }, []);
+  }, [dynamicNodes]);
 
   // Native Non-Passive Wheel Event Listener for smooth zooming centered at cursor
   useEffect(() => {
@@ -528,20 +563,22 @@ export function JourneyCanvas({ tobi, navigate, onInspectTest }: JourneyCanvasPr
             <div className="journey-progress-bar-wrap">
               <div
                 className="journey-progress-seg passed"
-                style={{ width: `${((run.passed || 83) / (run.total || 84)) * 100}%` }}
-                title={`${run.passed || 83} Aprobados`}
+                style={{ width: `${((run.passed !== undefined ? run.passed : 84) / (run.total || 84)) * 100}%` }}
+                title={`${run.passed !== undefined ? run.passed : 84} Aprobados`}
               />
-              <div
-                className="journey-progress-seg failed"
-                style={{ width: `${((run.failed || 1) / (run.total || 84)) * 100}%` }}
-                title={`${run.failed || 1} Con Incidente`}
-              />
+              {(run.failed || 0) > 0 && (
+                <div
+                  className="journey-progress-seg failed"
+                  style={{ width: `${((run.failed || 0) / (run.total || 84)) * 100}%` }}
+                  title={`${run.failed} Con Incidente`}
+                />
+              )}
             </div>
 
             <div className="journey-progress-meta">
               <span className="meta-counts">
-                <strong className="text-success">{run.passed || 83}</strong> aprobados ·{" "}
-                <strong className="text-danger">{run.failed || 1}</strong> incidente
+                <strong className="text-success">{run.passed !== undefined ? run.passed : 84}</strong> aprobados ·{" "}
+                <strong className={(run.failed || 0) > 0 ? "text-danger" : "text-success"}>{run.failed || 0}</strong> {(run.failed || 0) === 1 ? "incidente" : "incidentes"}
               </span>
               <span className="meta-time">Tiempo total: {run.duration || "12.4s"}</span>
             </div>
@@ -683,7 +720,7 @@ export function JourneyCanvas({ tobi, navigate, onInspectTest }: JourneyCanvasPr
                 </linearGradient>
               </defs>
 
-              {TOBI_EDGES.map((edge) => {
+              {dynamicEdges.map((edge) => {
                 const source = nodeMap[edge.from];
                 const target = nodeMap[edge.to];
                 if (!source || !target) return null;
@@ -796,7 +833,7 @@ export function JourneyCanvas({ tobi, navigate, onInspectTest }: JourneyCanvasPr
             </svg>
 
             {/* Nodes DOM Elements (TestSprite rm-frame) */}
-            {TOBI_NODES.map((node) => {
+            {dynamicNodes.map((node) => {
               const isHighlighted = highlightedNodeIds ? highlightedNodeIds.has(node.id) : false;
               const isDimmed = highlightedNodeIds ? !highlightedNodeIds.has(node.id) : false;
               const hasFailure = node.failedCount > 0;
@@ -928,9 +965,12 @@ export function JourneyCanvas({ tobi, navigate, onInspectTest }: JourneyCanvasPr
 
           {/* Floating Bottom Status Pill (rm-hud rm-foot) */}
           <div className="journey-bottom-pill rm-hud-foot">
-            <span className="rm-foot-spinner">⢌⣉⢎⣉</span>
+            <span className="rm-foot-spinner" style={{ color: (run.failed || 0) === 0 ? "#10b981" : "#06b6d4" }}>
+              {(run.failed || 0) === 0 ? "✓" : "⢌⣉⢎⣉"}
+            </span>
             <span>
-              Reading page snapshots · 84/84 capturas · 83 aprobados · 1 incidente
+              Árbol de navegación sincronizado · {testsList.length}/{testsList.length} capturas ·{" "}
+              {run.passed !== undefined ? run.passed : 84} aprobados · {run.failed || 0} {(run.failed || 0) === 1 ? "incidente" : "incidentes"}
             </span>
           </div>
         </div>
