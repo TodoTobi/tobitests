@@ -7,7 +7,9 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "dev:web": "npm run dev --prefix web",
+    "build:web": "npm run build --prefix web"
   },
   "keywords": [
     "testing",
