@@ -183,53 +183,52 @@ export function OfficeView({
       case "orchestrator":
         // Chief Architect
         if (!isWorking) {
-          return { left: "44%", top: "43%", zone: "Escritorio Central (Descansando)" };
+          return { left: "50%", top: "43%", zone: "Escritorio Central (Descansando)" };
         }
         return workBeat % 2 === 1
-          ? { left: "37%", top: "33%", zone: "Pizarra de Arquitectura (Coordinando)" }
-          : { left: "44%", top: "41%", zone: "Mesa de Comando Central (Orquestando)" };
+          ? { left: "44%", top: "25%", zone: "Pizarra de Arquitectura (Coordinando)" }
+          : { left: "50%", top: "37%", zone: "Mesa de Comando Central (Orquestando)" };
 
       case "explorer":
         // Explorer QA
         if (!isWorking) {
-          // Resting either at desk or in break room
           return workBeat === 3
-            ? { left: "15%", top: "86%", zone: "Cafetería & Lounge (Tomando café ☕)" }
-            : { left: "16%", top: "33%", zone: "Escritorio QA (Descansando)" };
+            ? { left: "14%", top: "90%", zone: "Cafetería & Lounge (Tomando café ☕)" }
+            : { left: "14%", top: "27%", zone: "Escritorio QA (Descansando)" };
         }
         return workBeat % 2 === 1
-          ? { left: "19%", top: "31%", zone: "Terminal Playwright (Probando /login)" }
-          : { left: "28%", top: "38%", zone: "Revisando reporte con Orquestador" };
+          ? { left: "14%", top: "22%", zone: "Terminal Playwright (Probando /login)" }
+          : { left: "32%", top: "36%", zone: "Revisando reporte con Orquestador" };
 
       case "telemetry":
         // Telemetry Auditor
         if (!isWorking) {
           return workBeat === 2
-            ? { left: "21%", top: "86%", zone: "Cafetería & Lounge (Charlando ☕)" }
-            : { left: "76%", top: "33%", zone: "Escritorio Telemetría (Descansando)" };
+            ? { left: "22%", top: "90%", zone: "Cafetería & Lounge (Charlando ☕)" }
+            : { left: "85%", top: "33%", zone: "Escritorio Telemetría (Descansando)" };
         }
         return workBeat % 2 === 1
-          ? { left: "82%", top: "20%", zone: "Rack de Servidores CDP (Inspeccionando red)" }
-          : { left: "74%", top: "31%", zone: "Consola DevTools (Auditando consola)" };
+          ? { left: "85%", top: "18%", zone: "Rack de Servidores CDP (Inspeccionando red)" }
+          : { left: "85%", top: "29%", zone: "Consola DevTools (Auditando consola)" };
 
       case "writer":
         // Spec Writer
         if (!isWorking) {
-          return { left: "75%", top: "67%", zone: "Estudio de Specs (En su escritorio)" };
+          return { left: "85%", top: "87%", zone: "Estudio de Specs (En su escritorio)" };
         }
         return workBeat % 2 === 1
-          ? { left: "55%", top: "52%", zone: "Entregando spec al Orquestador" }
-          : { left: "73%", top: "65%", zone: "Estudio Playwright (Escribiendo .spec.ts)" };
+          ? { left: "62%", top: "50%", zone: "Entregando spec al Orquestador" }
+          : { left: "85%", top: "82%", zone: "Estudio Playwright (Escribiendo .spec.ts)" };
 
       case "security":
       default:
         // RBAC Security Hunter
         if (!isWorking) {
-          return { left: "27%", top: "86%", zone: "Cafetería & Sillón Lounge (Descansando ☕)" };
+          return { left: "22%", top: "90%", zone: "Cafetería & Sillón Lounge (Descansando ☕)" };
         }
         return workBeat % 2 === 1
-          ? { left: "28%", top: "24%", zone: "Pizarra de Seguridad (Verificando roles)" }
-          : { left: "18%", top: "65%", zone: "Estación RBAC (Auditando CLIENT/VET/ADMIN)" };
+          ? { left: "32%", top: "26%", zone: "Pizarra de Seguridad (Verificando roles)" }
+          : { left: "14%", top: "58%", zone: "Estación RBAC (Auditando CLIENT/VET/ADMIN)" };
     }
   };
 
