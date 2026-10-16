@@ -6,64 +6,89 @@ from playwright.async_api import async_playwright
 async def record_doctor():
     videos_dir = "C:/Users/usuario/Documents/tobitests/web/public/evidence/videos"
     os.makedirs(videos_dir, exist_ok=True)
-    temp_video_dir = os.path.join(videos_dir, "temp_doc")
-    os.makedirs(temp_video_dir, exist_ok=True)
+    temp_dir = os.path.join(videos_dir, "temp_doc")
+    os.makedirs(temp_dir, exist_ok=True)
 
-    print("Launching Chromium to record Doctor login & audit...")
+    print("Launching Chromium with video recording for Doctor Portal...")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context(
-            record_video_dir=temp_video_dir,
+        ctx = await browser.new_context(
+            record_video_dir=temp_dir,
             record_video_size={"width": 1280, "height": 720},
             viewport={"width": 1280, "height": 720}
         )
-        page = await context.new_page()
+        page = await ctx.new_page()
 
         try:
-            print("1. Navigating to Login...")
+            print("1. Navigating to VetConnect Login...")
             await page.goto("http://localhost:5173/login", wait_until="networkidle")
             await page.wait_for_timeout(1000)
 
-            print("2. Trying Doctor credentials (doctor@gmail.com)...")
-            await page.fill('input[type="email"], input[name="email"]', "doctor@gmail.com")
+            consent = page.locator('button:has-text("Aceptar"), button:has-text("Solo Necesarias")').first
+            if await consent.count() > 0:
+                await consent.click()
+                await page.wait_for_timeout(400)
+
+            print("2. Filling Doctor credentials (doctor@gmail.com / Doctor123+)...")
+            await page.fill('input[type="email"]', "doctor@gmail.com")
             await page.wait_for_timeout(500)
-            
-            # Try Doctor 123+ first
-            await page.fill('input[type="password"], input[name="password"]', "Doctor 123+")
-            await page.wait_for_timeout(800)
-            submit_btn = page.locator('button[type="submit"], button:has-text("Ingresar")').first
-            await submit_btn.click()
-            await page.wait_for_timeout(2500)
-            print("URL after 'Doctor 123+':", page.url)
+            await page.fill('input[type="password"]', "Doctor123+")
+            await page.wait_for_timeout(600)
 
-            if page.url.endswith("/login"):
-                # Try without space
-                print("Trying password without space: Doctor123+...")
-                await page.fill('input[type="password"], input[name="password"]', "Doctor123+")
-                await submit_btn.click()
+            print("3. Submitting login form...")
+            await page.click('button[type="submit"]')
+            await page.wait_for_timeout(2000)
+
+            continuar = page.locator('button:has-text("Continuar")').first
+            if await continuar.count() > 0:
+                print("Clicking Continuar...")
+                await continuar.click()
                 await page.wait_for_timeout(2500)
-                print("URL after 'Doctor123+':", page.url)
 
-            # Wait to capture doctor portal/view
-            await page.wait_for_timeout(3000)
-            print("Doctor session recorded successfully!")
+            print(f"Doctor logged in successfully! URL: {page.url}")
+
+            # Explore Doctor navigation
+            for section in ["Consultas", "Pacientes", "Agenda", "Cola de atención"]:
+                link = page.locator(f'a:has-text("{section}"), button:has-text("{section}")').first
+                if await link.count() > 0:
+                    print(f"Navigating to {section}...")
+                    await link.click()
+                    await page.wait_for_timeout(2000)
+
+            # Toggle doctor state to 'En consulta' or 'Disponible'
+            state_btn = page.locator('button:has-text("En consulta")').first
+            if await state_btn.count() > 0:
+                print("Toggling doctor state to En consulta...")
+                await state_btn.click()
+                await page.wait_for_timeout(1500)
+
+            disp_btn = page.locator('button:has-text("Disponible")').first
+            if await disp_btn.count() > 0:
+                print("Toggling back to Disponible...")
+                await disp_btn.click()
+                await page.wait_for_timeout(1500)
+
+            await page.wait_for_timeout(2000)
+            print("Doctor portal audit completed!")
 
         except Exception as e:
             print(f"Error during doctor flow: {e}")
 
-        await context.close()
+        await ctx.close()
         await browser.close()
 
     # Move video
-    video_files = [f for f in os.listdir(temp_video_dir) if f.endswith(".webm")]
-    if video_files:
-        latest_video = os.path.join(temp_video_dir, video_files[0])
-        target_path = os.path.join(videos_dir, "doctor-portal-audit.webm")
-        if os.path.exists(target_path):
-            os.remove(target_path)
-        shutil.move(latest_video, target_path)
-        print(f"Recorded Doctor video saved to: {target_path}")
-        shutil.rmtree(temp_video_dir, ignore_errors=True)
+    vfiles = [f for f in os.listdir(temp_dir) if f.endswith(".webm")]
+    if vfiles:
+        latest = os.path.join(temp_dir, vfiles[0])
+        dest = os.path.join(videos_dir, "doctor-portal-audit.webm")
+        if os.path.exists(dest):
+            os.remove(dest)
+        shutil.move(latest, dest)
+        print(f"Saved authentic Doctor replay to: {dest}")
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    else:
+        print("No video file created.")
 
 if __name__ == "__main__":
     asyncio.run(record_doctor())

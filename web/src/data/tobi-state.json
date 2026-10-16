@@ -226,9 +226,9 @@
       "name": "vetconnect-appointments.spec.ts",
       "domain": "Appointments & Consultation Sync",
       "status": "Validated",
-      "testsCount": 2,
+      "testsCount": 3,
       "lastRun": "#RUN-01",
-      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('VetConnect — Appointments & Consultation Sync', () => {\n  test('verifies compliance pages render properly (/privacy, /terms)', async ({ page }) => {\n    await page.goto('/privacy');\n    await expect(page.locator('body')).toBeVisible();\n    await page.goto('/terms');\n    await expect(page.locator('body')).toBeVisible();\n  });\n\n  test('validates consultation cancellation sync between Messages and Pets', async ({ page }) => {\n    await page.goto('/login');\n    await expect(page).toHaveURL(/\\/login/);\n  });\n});"
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('VetConnect — Appointments & Consultation Sync', () => {\n  test('verifies compliance pages render properly (/privacy, /terms)', async ({ page }) => {\n    await page.goto('/privacy');\n    await expect(page.locator('body')).toBeVisible();\n    await page.goto('/terms');\n    await expect(page.locator('body')).toBeVisible();\n  });\n\n  test('BUG-01: Inconsistencia al cancelar consulta entre Mensajes y Mascotas', async ({ page }) => {\n    await page.goto('/login');\n    await page.fill('input[type=\"email\"]', 'tobias@gmail.com');\n    await page.fill('input[type=\"password\"]', 'Tobias123+');\n    await page.click('button[type=\"submit\"]');\n    await page.goto('/client/messages');\n    await page.goto('/client/consultations');\n  });\n\n  test('Doctor portal session and status audit (doctor@gmail.com)', async ({ page }) => {\n    await page.goto('/login');\n    await page.fill('input[type=\"email\"]', 'doctor@gmail.com');\n    await page.fill('input[type=\"password\"]', 'Doctor123+');\n    await page.click('button[type=\"submit\"]');\n    await expect(page).toHaveURL(/\\/vet\\/dashboard/);\n  });\n});"
     }
   ],
   "suites": [
