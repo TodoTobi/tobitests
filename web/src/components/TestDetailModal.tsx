@@ -35,7 +35,7 @@ interface TestDetailModalProps {
 }
 
 export function TestDetailModal({ test, onClose, onRunTest, onCreateBug }: TestDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<"preview" | "code" | "log" | "history">("preview");
+  const [activeTab, setActiveTab] = useState<"preview" | "code" | "log" | "history" | "plantillas">("preview");
   const [diagTab, setDiagTab] = useState<"error" | "cause" | "fix">("error");
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -71,7 +71,9 @@ export function TestDetailModal({ test, onClose, onRunTest, onCreateBug }: TestD
   const isFailed = test.status === "Failed";
 
   // Derive readable module name from spec file
-  const moduleLabel = test.spec.replace("vetconnect-", "").replace(".spec.ts", "").toUpperCase();
+  const isTobi = test.spec.includes("tobi");
+  const moduleLabel = test.spec.replace("vetconnect-", "").replace("tobitests-", "").replace(".spec.ts", "").toUpperCase();
+  const projectName = isTobi ? "TobiTests" : "VetConnect";
 
   const handleNextStep = () => {
     setCurrentStepIdx((prev) => (prev + 1 < steps.length ? prev + 1 : 0));
@@ -82,7 +84,7 @@ export function TestDetailModal({ test, onClose, onRunTest, onCreateBug }: TestD
   };
 
   const handleCopyFixPrompt = () => {
-    const promptText = `Por favor, revisá y corregí la siguiente falla en el test de VetConnect:
+    const promptText = `Por favor, revisá y corregí la siguiente falla en el test de ${projectName}:
 - Test: ${test.name}
 - Archivo Spec: specs/${test.spec}
 - Paso que falla: Paso #${activeStep?.step || currentStepIdx + 1}: ${activeStep?.action} (${activeStep?.target})
@@ -257,6 +259,14 @@ Proponé el cambio de código exacto respetando la arquitectura del proyecto.`;
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   Historial (4)
                 </button>
+                <button
+                  type="button"
+                  className={`tab-btn ${activeTab === "plantillas" ? "active" : ""}`}
+                  onClick={() => setActiveTab("plantillas")}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Plantillas BDD & Cerco
+                </button>
               </div>
 
               <div className="media-mode-toggle">
@@ -286,7 +296,7 @@ Proponé el cambio de código exacto respetando la arquitectura del proyecto.`;
                   <span />
                 </div>
                 <div className="chrome-address-bar">
-                  VetConnect · http://localhost:5173 · {test.spec}
+                  {projectName} · http://localhost:5173 · {test.spec}
                 </div>
               </div>
 
@@ -294,7 +304,8 @@ Proponé el cambio de código exacto respetando la arquitectura del proyecto.`;
                 <div className="viewport-stage">
                   {viewMode === "video" ? (
                     <video
-                      src={test.videoUrl || "/evidence/videos/doctor-portal-audit.webm"}
+                      key={test.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "/evidence/videos/doctor-portal-audit.webm")}
+                      src={test.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "/evidence/videos/doctor-portal-audit.webm")}
                       controls
                       autoPlay
                       loop
@@ -305,7 +316,8 @@ Proponé el cambio de código exacto respetando la arquitectura del proyecto.`;
                   ) : (
                     <div className="stage-image-wrap">
                       <img
-                        src={test.screenshot || "/evidence/runs/05-tutor-dashboard.png"}
+                        key={(activeStep as any)?.screenshot || test.screenshot}
+                        src={(activeStep as any)?.screenshot || test.screenshot || (isTobi ? "/evidence/runs/tobi-04-office.png" : "/evidence/runs/05-tutor-dashboard.png")}
                         alt={test.name}
                         className="stage-image"
                       />
@@ -415,7 +427,7 @@ ${steps.map((s, idx) => `    // Paso ${idx + 1}: ${s.action} (${s.duration})
                     ))}
                   </div>
                 </div>
-              ) : (
+              ) : activeTab === "history" ? (
                 <div className="viewport-history-panel">
                   <div className="history-item">
                     <span className="history-dot passed" />
@@ -432,6 +444,56 @@ ${steps.map((s, idx) => `    // Paso ${idx + 1}: ${s.action} (${s.duration})
                     <div><strong>#RUN-02</strong><small>2 días atrás</small></div>
                     <span className="history-duration">1.2s</span>
                   </div>
+                </div>
+              ) : (
+                <div className="viewport-code-panel" style={{ padding: 16 }}>
+                  <div className="code-header" style={{ marginBottom: 10 }}>
+                    <span>Esquema Estandarizado (Gherkin/BDD) & Quirófano de Código</span>
+                    <button
+                      type="button"
+                      className="btn-copy-code"
+                      onClick={handleCopyFixPrompt}
+                    >
+                      {copiedPrompt ? "¡Copiado!" : "Copiar Plantillas"}
+                    </button>
+                  </div>
+                  <pre className="code-block" style={{ maxHeight: 360, overflowY: "auto", fontSize: 11, lineHeight: 1.45 }}>
+                    <code>
+{`Esquema de Plantilla Estandarizado:
+Definir el Escenario (Gherkin/BDD):
+Nombre y sección (${test.name}, seccion: ${moduleLabel}).
+Pasos para reproducir:
+Dado que el usuario navega a la suite ${test.spec} de ${projectName}.
+Cuando ejecuta la secuencia: ${activeStep.action} -> ${activeStep.target}.
+Entonces ${activeStep.actual || "divergencia de estado obtenida"} frente a ${activeStep.expected || "comportamiento esperado"}.
+
+Protocolo Anti-Regresiones con Blindaje (Quirófano de Código):
+Fase 1: Identificar el escenario & Aislamiento en Capas
+- Capa UI/Vista: specs/${test.spec}
+- Capa Hooks/Estado: Aislamiento por agente y sincronización reactiva
+- Capa Red/Request: Verificado con DevTools CDP y Playwright MCP
+- Capa Backend/API: Preservación de contratos retrocompatibles
+- Capa Base de Datos: Persistencia validada
+
+Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode)
+1. ARCHIVOS DENTRO DEL ALCANCE: [specs/${test.spec}]
+2. ARCHIVOS FUERA DEL ALCANCE: [Archivos de configuración global, middlewares de autenticación]
+3. EVALUACIÓN DE RIESGOS: Cero roturas en componentes externos dependientes
+4. ESTRATEGIA DE FIX: Minimal Fix estricto respetando la arquitectura
+
+Fase 3: Análisis de Impacto Global
+- Rastreo de Referencias Cruzadas (Find-All-References)
+- Preservación de Contratos y Retrocompatibilidad
+
+Fase 4: El Quirófano
+- Rama: bugfix/cerco-${moduleLabel.toLowerCase()}-fix
+- Minimal fix estricto sin dependencias no medidas
+
+Fase 5: Validación
+- Testing de Tres Capas (Unitario, Regresión e Integración)
+- Verificación estricta del compilador (tsc --noEmit)`}
+                    </code>
+                  </pre>
                 </div>
               )}
             </div>

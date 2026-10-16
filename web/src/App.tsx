@@ -1,6 +1,7 @@
 import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { useTobiState, type BugItem } from "./hooks/useTobiState";
 import { OfficeView } from "./components/OfficeView";
+import { JourneyCanvas } from "./components/JourneyCanvas";
 import { TestDetailModal, type TestCaseItem } from "./components/TestDetailModal";
 
 type Tobi = ReturnType<typeof useTobiState>;
@@ -113,7 +114,11 @@ function SearchField({ placeholder = "Buscar", value, onChange }: { placeholder?
     <label className="search-field">
       <Icon name="search" size="sm" />
       <input placeholder={placeholder} aria-label={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
-      {value && <button type="button" className="button button-icon button-sm" style={{ width: 22, minHeight: 22 }} aria-label="Limpiar búsqueda" onClick={() => onChange("")}><Icon name="x" size="sm" /></button>}
+      {value ? (
+        <button type="button" className="button button-icon button-sm" style={{ width: 22, minHeight: 22 }} aria-label="Limpiar búsqueda" onClick={() => onChange("")}><Icon name="x" size="sm" /></button>
+      ) : (
+        <kbd className="kbd" style={{ fontSize: 10, padding: "2px 5px", pointerEvents: "none" }}>⌘K</kbd>
+      )}
     </label>
   );
 }
@@ -164,34 +169,25 @@ function Severity({ value }: { value: string }) {
    Navigation
    ========================================================================== */
 export type AppView =
-  | "landing" | "dashboard" | "test-runs" | "run-detail" | "live-run" | "bug-tracker" | "bug-detail"
+  | "landing" | "dashboard" | "journey" | "test-runs" | "run-detail" | "live-run" | "bug-tracker" | "bug-detail"
   | "diagnostic" | "office" | "specs" | "suites" | "integrations" | "settings";
 
 type NavItem = { label: string; view: AppView; icon: IconName };
 const navGroups: { title: string; items: NavItem[] }[] = [
   {
-    title: "Pruebas", items: [
+    title: "Operaciones", items: [
       { label: "Dashboard", view: "dashboard", icon: "dashboard" },
+      { label: "Mapa de Flujos", view: "journey", icon: "activity" },
       { label: "Test Runs", view: "test-runs", icon: "play" },
-      { label: "Live Run", view: "live-run", icon: "activity" },
-    ]
-  },
-  {
-    title: "Hallazgos", items: [
-      { label: "Bug Tracker", view: "bug-tracker", icon: "bug" },
-      { label: "Diagnostic Studio", view: "diagnostic", icon: "pulse" },
-    ]
-  },
-  {
-    title: "Código", items: [
-      { label: "Test Specs", view: "specs", icon: "file" },
+      { label: "Live Run", view: "live-run", icon: "pulse" },
       { label: "Suites", view: "suites", icon: "layers" },
     ]
   },
   {
-    title: "Equipo", items: [
+    title: "Calidad y Agentes", items: [
+      { label: "Bug Tracker", view: "bug-tracker", icon: "bug" },
       { label: "La Oficina", view: "office", icon: "spark" },
-      { label: "Integraciones", view: "integrations", icon: "code" },
+      { label: "Test Specs", view: "specs", icon: "file" },
     ]
   },
 ];
@@ -200,19 +196,39 @@ const settingsItem: NavItem = { label: "Settings", view: "settings", icon: "sett
 export function resolveActiveNavLabel(view: AppView): string {
   switch (view) {
     case "dashboard": return "Dashboard";
+    case "journey": return "Mapa de Flujos";
     case "test-runs":
     case "run-detail": return "Test Runs";
     case "live-run": return "Live Run";
     case "bug-tracker":
-    case "bug-detail": return "Bug Tracker";
-    case "diagnostic": return "Diagnostic Studio";
+    case "bug-detail":
+    case "diagnostic": return "Bug Tracker";
     case "office": return "La Oficina";
     case "specs": return "Test Specs";
     case "suites": return "Suites";
-    case "integrations": return "Integraciones";
+    case "integrations":
     case "settings": return "Settings";
     default: return "Dashboard";
   }
+}
+
+function SideStatusCard({ tobi }: { tobi: Tobi }) {
+  const { runs, project } = tobi.state as any;
+  const latest = Array.isArray(runs) ? runs[0] : undefined;
+  if (!latest) return null;
+  const total = Math.max(1, (latest.passed || 0) + (latest.failed || 0));
+  return (
+    <div className="side-card" aria-label="Estado del sistema">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        <small><span className="connection-dot" />{project.environment}</small>
+        <span className="mono t-muted" style={{ fontSize: 11 }}>{latest.id}</span>
+      </div>
+      <div className="side-bar" role="img" aria-label={`${latest.passed} ok, ${latest.failed} falló`}>
+        <i className="ok" style={{ width: `${((latest.passed || 0) / total) * 100}%` }} />
+        {(latest.failed || 0) > 0 && <i className="bad" style={{ width: `${((latest.failed || 0) / total) * 100}%` }} />}
+      </div>
+    </div>
+  );
 }
 
 function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi }: {
@@ -247,7 +263,45 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi }: {
         </button>
         {projectsOpen && !compact && (
           <div className="project-popover">
-            <dl>
+            <div style={{ padding: "6px 8px 8px", borderBottom: "1px solid var(--border)", marginBottom: 6 }}>
+              <span className="mono t-muted" style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>Cambiar de Proyecto</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
+              {tobi.availableProjects.map((proj) => {
+                const isSelected = tobi.activeProjectId === proj.id;
+                return (
+                  <button
+                    key={proj.id}
+                    type="button"
+                    className={`button ${isSelected ? "button-primary" : "button-ghost"}`}
+                    style={{
+                      justifyContent: "flex-start",
+                      textAlign: "left",
+                      padding: "8px 10px",
+                      borderRadius: "var(--radius-md)",
+                      width: "100%",
+                      fontSize: 13
+                    }}
+                    onClick={() => {
+                      tobi.switchProject(proj.id);
+                      setProjectsOpen(false);
+                    }}
+                  >
+                    <span className="project-avatar" style={{ width: 22, height: 22, fontSize: 11, marginRight: 8 }}>
+                      {proj.name.charAt(0)}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {proj.name}
+                      </div>
+                      <small className="t-muted" style={{ fontSize: 10 }}>{proj.environment}</small>
+                    </div>
+                    {isSelected && <Icon name="check" size="sm" />}
+                  </button>
+                );
+              })}
+            </div>
+            <dl style={{ margin: 0, paddingTop: 6, borderTop: "1px solid var(--border)" }}>
               <dt>Rama</dt><dd><code>{project.branch}</code></dd>
               <dt>Entorno</dt><dd>{project.environment}</dd>
               <dt>Último run</dt><dd>{metrics.activeRun}</dd>
@@ -264,6 +318,7 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi }: {
           </div>
         ))}
       </nav>
+      <SideStatusCard tobi={tobi} />
       <div className="sidebar-foot">
         {item(settingsItem)}
         {!compact && <button type="button" className="nav-item" onClick={onHome}><Icon name="arrow" /><span>Volver a la portada</span></button>}
@@ -274,10 +329,69 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi }: {
 
 function AppHeader({ title, onMenu, onNotifications, onLive, tobi }: { title: string; onMenu: () => void; onNotifications: () => void; onLive: () => void; tobi: Tobi }) {
   const { project, liveRun } = tobi.state;
+  const [headerProjOpen, setHeaderProjOpen] = useState(false);
+
   return (
     <header className="app-header">
       <Button variant="icon" className="app-mobile-menu" label="Abrir navegación" onClick={onMenu}><Icon name="menu" /></Button>
-      <nav className="breadcrumbs" aria-label="Ubicación"><span>{project.name}</span><Icon name="chevron" size="sm" /><strong>{title}</strong></nav>
+      <nav className="breadcrumbs" aria-label="Ubicación" style={{ position: "relative" }}>
+        <button
+          type="button"
+          onClick={() => setHeaderProjOpen(!headerProjOpen)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            background: "transparent",
+            border: "none",
+            color: "var(--fg)",
+            cursor: "pointer",
+            padding: "2px 6px",
+            borderRadius: "var(--radius-sm)",
+            font: "inherit"
+          }}
+          title="Cambiar proyecto"
+        >
+          <span>{project.name}</span>
+          <Icon name="chevron" size="sm" />
+        </button>
+        {headerProjOpen && (
+          <div
+            className="project-popover"
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              zIndex: 100,
+              minWidth: 240,
+              marginTop: 4,
+              boxShadow: "var(--shadow-md)"
+            }}
+          >
+            <div style={{ padding: "4px 6px 6px", borderBottom: "1px solid var(--border)", marginBottom: 4 }}>
+              <span className="mono t-muted" style={{ fontSize: 10, textTransform: "uppercase" }}>Seleccionar Proyecto</span>
+            </div>
+            {tobi.availableProjects.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={`button ${tobi.activeProjectId === p.id ? "button-primary" : "button-ghost"}`}
+                style={{ width: "100%", justifyContent: "flex-start", padding: "6px 8px", fontSize: 12, marginBottom: 4 }}
+                onClick={() => {
+                  tobi.switchProject(p.id);
+                  setHeaderProjOpen(false);
+                }}
+              >
+                <span className="project-avatar" style={{ width: 18, height: 18, fontSize: 10, marginRight: 6 }}>{p.name.charAt(0)}</span>
+                <span style={{ flex: 1, textAlign: "left" }}>{p.name}</span>
+                {tobi.activeProjectId === p.id && <Icon name="check" size="sm" />}
+              </button>
+            ))}
+          </div>
+        )}
+        <Icon name="chevron" size="sm" />
+        <strong>{title}</strong>
+      </nav>
       <div className="app-header-actions">
         <span className="env-chip"><span className="connection-dot" />{project.environment} · {project.branch}</span>
         <Button variant="secondary" className="run-chip" onClick={onLive}>
@@ -324,7 +438,7 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
   const working = officeAgents.filter((a) => a.status === "working").length;
 
   return <>
-    <PageHeading title="Dashboard" subtitle={`${project.name} · último análisis ${project.lastAudit.toLowerCase()}`}>
+    <PageHeading title="Dashboard" subtitle={`${project.name} · Rama ${project.branch}`}>
       <Button variant="secondary" onClick={() => navigate("office")}><Icon name="spark" size="sm" />La Oficina ({working} activos)</Button>
       <Button onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ver ejecución en vivo</Button>
     </PageHeading>
@@ -421,7 +535,7 @@ function LogList({ logs, compact = false }: { logs: Tobi["state"]["liveRun"]["te
 function TestRunsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: Tobi }) {
   const { runs, project } = tobi.state;
   return <>
-    <PageHeading title="Test Runs" subtitle={`Historial de ejecuciones en ${project.name}`}>
+    <PageHeading title="Test Runs" subtitle={`${runs.length} ejecuciones registradas en ${project.name}`}>
       <Button variant="secondary" onClick={() => navigate("specs")}><Icon name="file" size="sm" />Ver specs</Button>
       <Button onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ejecución activa</Button>
     </PageHeading>
@@ -670,14 +784,24 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
         </div>
         <div className="media" style={{ borderBottom: 0 }}>
           {mode === "screenshot" ? <>
-            <img src={step?.screenshot || "/evidence/runs/02-login-inspection.png"} alt={step?.description || "Ejecución en vivo"} />
+            <img src={step?.screenshot || "/evidence/runs/tobi-01-landing.png"} alt={step?.description || "Ejecución en vivo"} />
             <div className="hud">
               <div><Badge tone="agent"><Icon name="spark" size="sm" />{step?.agent || "Explorer QA"}</Badge></div>
               <strong>Paso {step?.index} · {step?.action}</strong>
               <code>{step?.target}</code>
               <small>{step?.description}</small>
             </div>
-          </> : <video src="/evidence/videos/bug-01-cancellation-replay.webm" controls autoPlay loop muted playsInline />}
+          </> : (
+            <video
+              key={tobi.activeProjectId}
+              src={tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : "/evidence/videos/bug-01-cancellation-replay.webm"}
+              controls
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          )}
         </div>
       </section>
 
@@ -715,7 +839,7 @@ function BugTrackerPage({ navigate, tobi, onSelectBug }: { navigate: (v: AppView
   const open = (id: string) => { onSelectBug(id); navigate("bug-detail"); };
 
   return <>
-    <PageHeading title="Bug Tracker" subtitle="Cada bug sigue el formato Dado que / Cuando / Entonces.">
+    <PageHeading title="Bug Tracker" subtitle={`${list.length} incidentes documentados`}>
       <Button variant="secondary" onClick={() => setReportOpen(true)}><Icon name="eye" size="sm" />Vista previa</Button>
       <Button onClick={() => tobi.downloadMasterBugReport()}><Icon name="download" size="sm" />Descargar reporte (.md)</Button>
     </PageHeading>
@@ -764,18 +888,27 @@ function BugTrackerPage({ navigate, tobi, onSelectBug }: { navigate: (v: AppView
 }
 
 function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppView) => void; tobi: Tobi; selectedBugId?: string }) {
-  const [evidence, setEvidence] = useState<"capture" | "console" | "spec">("capture");
-  const [account, setAccount] = useState<"tutor" | "doctor">("tutor");
+  const [evidence, setEvidence] = useState<"capture" | "console" | "diag" | "spec" | "plantillas">("capture");
+  const [mode, setMode] = useState<"video" | "snapshot">("video");
   const [copied, setCopied] = useState(false);
   const bug = tobi.state.bugs.find((b) => b.id === selectedBugId) || tobi.state.bugs[0];
-  const video = account === "tutor" ? bug.videoUrl || "/evidence/videos/bug-01-cancellation-replay.webm" : bug.doctorVideoUrl || "/evidence/videos/doctor-portal-audit.webm";
+  const diag = diagOf(bug);
+  const isTobi = tobi.activeProjectId === "tobitests" || tobi.state.project.name.toLowerCase().includes("tobi");
+  const video = bug.videoUrl || (isTobi ? "/evidence/videos/tobitests-bug-01-replay.webm" : "/evidence/videos/bug-01-cancellation-replay.webm");
 
   const copy = () => { tobi.copyBddToClipboard(bug); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  const blocks: { title: string; tone: string; text: string }[] = [
+    { title: "Qué se observó", tone: "success", text: diag.observedFact || bug.entonces },
+    { title: "Causa probable", tone: "agent", text: diag.whiteBoxHypothesis || (isTobi ? "El feed no resetea su búfer al alternar el agente seleccionado." : "Divergencia entre estado local y caché del cliente.") },
+    { title: "Verificación", tone: "info", text: diag.reproductionSpec ? `Cubierto por ${diag.reproductionSpec}.` : "Sin spec asociado." },
+    { title: "Solución recomendada", tone: "warning", text: diag.recommendedFix || "Sincronizar mutaciones en un store global o invalidar query." },
+  ];
 
   return <>
     <div className="detail-back"><Button variant="ghost" onClick={() => navigate("bug-tracker")}><Icon name="chevron" size="sm" />Bug Tracker</Button></div>
     <PageHeading title={`${bug.id} · ${bug.title}`} subtitle={`${bug.section} · ${tobi.state.project.name}`}>
-      <Button variant="secondary" onClick={copy}><Icon name={copied ? "check" : "copy"} size="sm" />{copied ? "Copiado" : "Copiar BDD"}</Button>
+      <Button variant="secondary" onClick={copy}><Icon name={copied ? "check" : "copy"} size="sm" />{copied ? "Copiado" : "Copiar Plantillas BDD & Quirófano"}</Button>
       <Button onClick={() => tobi.downloadMasterBugReport()}><Icon name="download" size="sm" />Exportar reporte</Button>
     </PageHeading>
 
@@ -792,16 +925,22 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
         <section className="panel">
           <div className="media-bar">
             <Icon name="video" size="sm" />
-            <strong className="heading-sm">Reproducción</strong>
-            <span className="url-pill" style={{ marginLeft: 8 }}>{account === "tutor" ? "tobias@gmail.com" : "doctor@gmail.com"}</span>
-            <Tabs value={account} onChange={setAccount} items={[{ id: "tutor", label: "Tutor" }, { id: "doctor", label: "Doctor" }]} />
+            <strong className="heading-sm">Reproducción del Incidente</strong>
+            <span className="url-pill" style={{ marginLeft: 8 }}>{tobi.state.project.url} · {bug.section}</span>
+            <Tabs value={mode} onChange={setMode} items={[{ id: "video", label: "Video Replay" }, { id: "snapshot", label: "Captura de Pantalla" }]} />
           </div>
-          <div className="media" style={{ borderBottom: 0 }}><video key={video} src={video} controls autoPlay loop muted playsInline /></div>
+          <div className="media" style={{ borderBottom: 0 }}>
+            {mode === "video" ? (
+              <video key={video} src={video} controls autoPlay loop muted playsInline />
+            ) : (
+              <img src={bug.screenshot || (isTobi ? "/evidence/bugs/tobi-bug-01-detail.png" : "/evidence/bugs/bug-01-divergence-evidence.png")} alt={`Evidencia de ${bug.id}`} />
+            )}
+          </div>
         </section>
 
         <section className="panel bdd">
           <div className="bdd-title">
-            <span className="label">Escenario</span>
+            <span className="label">Escenario para Reproducir</span>
             <h2 className="heading-md">{bug.title}</h2>
             <p>{bug.id} · sección {bug.section}</p>
           </div>
@@ -809,104 +948,104 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
           <div className="bdd-step"><span className="gherkin cuando">Cuando</span><p>{bug.cuando}</p></div>
           <div className="bdd-step"><span className="gherkin entonces">Entonces</span><p>{bug.entonces}</p></div>
         </section>
+
+        <section className="panel analysis">
+          <div className="panel-head">
+            <h2 className="heading-sm">Diagnóstico y Causa Raíz</h2>
+            <Badge tone="agent">Análisis Técnico</Badge>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, padding: "16px 20px" }}>
+            {blocks.map((b) => (
+              <div key={b.title}>
+                <div className="analysis-title"><span className={`dot ${b.tone}`} /><h3 className="heading-sm">{b.title}</h3></div>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--fg)", lineHeight: 1.5 }}>{b.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
       <aside className="panel">
         <div className="tabs-line" role="tablist">
-          {([["capture", "Captura"], ["console", "Consola"], ["spec", "Spec"]] as const).map(([id, label]) => (
+          {([["capture", "Captura"], ["console", "Consola"], ["diag", "Solución"], ["spec", "Spec"], ["plantillas", "Plantillas BDD"]] as const).map(([id, label]) => (
             <button key={id} type="button" role="tab" aria-selected={evidence === id} className={evidence === id ? "active" : ""} onClick={() => setEvidence(id)}>{label}</button>
           ))}
         </div>
         {evidence === "capture" && (
-          <div className="media"><img src={bug.screenshot || "/evidence/bugs/bug-01-divergence-evidence.png"} alt={`Evidencia de ${bug.id}`} /></div>
+          <div className="media"><img src={bug.screenshot || (isTobi ? "/evidence/bugs/tobi-bug-01-detail.png" : "/evidence/bugs/bug-01-divergence-evidence.png")} alt={`Evidencia de ${bug.id}`} /></div>
         )}
         {evidence === "console" && (
-          <pre className="pre">{`[Playwright] click "Cancelar" en /client/messages\n[DevTools] Bandeja de mensajes actualizada\n[Playwright] navegar a Mascotas → Tus consultas\n[Assertion] Esperado "Cancelado", obtenido "En consulta"`}</pre>
+          <pre className="pre">{isTobi
+            ? `[Playwright] Entrar a La Oficina en http://localhost:5173\n[DevTools CDP] Escuchando bus de eventos en WebSocket 9222\n[Explorer QA] Click agente pausado\n[Telemetry] Divergencia: eventos previos no limpiados en consola`
+            : `[Playwright] click "Cancelar" en /client/messages\n[DevTools] Bandeja de mensajes actualizada\n[Playwright] navegar a Mascotas → Tus consultas\n[Assertion] Esperado "Cancelado", obtenido "En consulta"`}</pre>
         )}
-        {evidence === "spec" && <pre className="pre">{tobi.state.specs[1]?.code || "// Sin spec asociado"}</pre>}
+        {evidence === "diag" && (
+          <div style={{ padding: 16 }}>
+            {blocks.map((b) => (
+              <div key={b.title} style={{ marginBottom: 14 }}>
+                <strong style={{ fontSize: 13, display: "block", marginBottom: 3 }}>{b.title}</strong>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>{b.text}</p>
+              </div>
+            ))}
+            {diag.affectedFile && (
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+                <small className="t-muted">Archivo afectado:</small>
+                <div style={{ marginTop: 2 }}><code className="mono">{diag.affectedFile}</code></div>
+              </div>
+            )}
+          </div>
+        )}
+        {evidence === "spec" && <pre className="pre">{tobi.state.specs[1]?.code || tobi.state.specs[0]?.code || "// Sin spec asociado"}</pre>}
+        {evidence === "plantillas" && (
+          <div style={{ padding: 14, fontSize: 11, lineHeight: 1.45 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <strong>📋 BDD & Quirófano de Código</strong>
+              <Button small variant="secondary" onClick={copy}>
+                <Icon name={copied ? "check" : "copy"} size="sm" />
+                {copied ? "¡Copiado!" : "Copiar"}
+              </Button>
+            </div>
+            <pre className="pre" style={{ maxHeight: 360, overflowY: "auto", fontSize: 11, lineHeight: 1.4 }}>
+              {`Esquema de Plantilla Estandarizado:
+Definir el Escenario (Gherkin/BDD):
+Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
+Pasos para reproducir:
+Dado que ${bug.dadoQue}
+Cuando ${bug.cuando}
+Entonces ${bug.entonces}
+
+Protocolo Anti-Regresiones con Blindaje:
+Fase 1: Identificar el escenario & Aislamiento en Capas
+- Capa UI/Vista: ${diag.affectedFile || "web/src/components/OfficeView.tsx"}
+- Capa Hooks/Estado: Búfer reactivo aislado por agentId
+- Capa Red/Request: Verificado con DevTools CDP y Playwright
+- Capa Backend/API: Contratos preservados retrocompatibles
+- Capa Base de Datos: Sincronizado en tobi-state.json
+
+Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode)
+1. ARCHIVOS DENTRO DEL ALCANCE: [${diag.affectedFile || "web/src/components/OfficeView.tsx"}, tobi-state.json]
+2. ARCHIVOS FUERA DEL ALCANCE: [useAgentMotion.ts, OfficeScene.tsx, JourneyCanvas.tsx]
+3. EVALUACIÓN DE RIESGOS: Cero roturas en componentes externos
+4. ESTRATEGIA DE FIX: ${diag.recommendedFix || "Minimal Fix estricto"}
+
+Fase 3: Análisis de Impacto Global
+- Rastreo de Referencias Cruzadas (Find-All-References)
+- Preservación estricta de contratos
+
+Fase 4: El Quirófano
+- Rama: bugfix/cerco-${bug.id.toLowerCase()}
+- Minimal fix verificado
+
+Fase 5: Validación
+- Testing de Tres Capas (Unitario, Regresión e Integración)
+- Verificación estricta de tipos (tsc --noEmit)`}
+            </pre>
+          </div>
+        )}
         <div className="inspector-actions">
           <Button variant="secondary" small onClick={() => navigate("specs")}><Icon name="code" size="sm" />Abrir spec</Button>
-          <Button variant="secondary" small onClick={() => navigate("diagnostic")}><Icon name="pulse" size="sm" />Diagnóstico</Button>
+          <Button small onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ver Live Run</Button>
         </div>
-      </aside>
-    </div>
-  </>;
-}
-
-/* ==========================================================================
-   Diagnostic studio
-   ========================================================================== */
-function DiagnosticPage({ navigate, tobi, selectedBugId, onSelectBug }: { navigate: (v: AppView) => void; tobi: Tobi; selectedBugId?: string; onSelectBug: (id: string) => void }) {
-  const bugs = tobi.state.bugs;
-  const bug = bugs.find((b) => b.id === selectedBugId) || bugs[0];
-  const [mode, setMode] = useState<"video" | "snapshot">("video");
-  const diag = diagOf(bug);
-  const { liveRun, project } = tobi.state;
-
-  const blocks: { title: string; tone: string; text: string }[] = [
-    { title: "Qué se observó", tone: "success", text: diag.observedFact || bug.entonces },
-    { title: "Causa probable", tone: "agent", text: diag.whiteBoxHypothesis || "Sin hipótesis registrada." },
-    { title: "Verificación", tone: "info", text: diag.reproductionSpec ? `Cubierto por ${diag.reproductionSpec}.` : "Sin spec asociado." },
-    { title: "Cómo arreglarlo", tone: "warning", text: diag.recommendedFix || "Sin recomendación registrada." },
-  ];
-
-  return <>
-    <PageHeading title="Diagnostic Studio" subtitle={`${project.name} · ${bugs.length} hallazgos`}>
-      <Button variant="secondary" onClick={() => navigate("bug-detail")}>Ver plantilla BDD</Button>
-      <Button onClick={() => navigate("specs")}><Icon name="code" size="sm" />Abrir spec</Button>
-    </PageHeading>
-
-    <div className="diag-layout">
-      <section className="panel" aria-label="Hallazgos">
-        <div className="panel-head"><h2 className="heading-sm">Hallazgos</h2><Badge tone="neutral">{bugs.length}</Badge></div>
-        {bugs.map((b) => (
-          <button type="button" key={b.id} className={`bug-pick ${b.id === bug.id ? "active" : ""}`} onClick={() => { onSelectBug(b.id); setMode("video"); }}>
-            <span style={{ display: "flex", gap: 8, alignItems: "center" }}><Badge tone={severityTone(b.severity)}>{b.severity}</Badge><small>{b.id}</small></span>
-            <strong>{b.title}</strong>
-            <small>{b.section}</small>
-          </button>
-        ))}
-      </section>
-
-      <div className="stack">
-        <section className="panel">
-          <div className="inspector-title">
-            <div className="inspector-meta"><Severity value={bug.severity} /><span>{bug.section}</span><span className="mono">{diag.affectedFile}</span></div>
-            <h3>{bug.title}</h3>
-          </div>
-          <div className="media-bar">
-            <div className="browser-dots"><span /><span /><span /></div>
-            <span className="url-pill">{project.url} · {bug.section}</span>
-            <Tabs value={mode} onChange={setMode} items={[{ id: "video", label: "Replay" }, { id: "snapshot", label: "Captura" }]} />
-          </div>
-          <div className="media" style={{ borderBottom: 0 }}>
-            {mode === "video"
-              ? <video key={bug.videoUrl} src={bug.videoUrl || "/evidence/videos/bug-01-cancellation-replay.webm"} controls autoPlay loop muted playsInline />
-              : <img src={bug.screenshot || "/evidence/bugs/bug-01-divergence-evidence.png"} alt={`Captura de ${bug.id}`} />}
-          </div>
-        </section>
-
-        <section className="panel analysis">
-          {blocks.map((b) => (
-            <div key={b.title}>
-              <div className="analysis-title"><span className={`dot ${b.tone}`} /><h3 className="heading-sm">{b.title}</h3></div>
-              <p>{b.text}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="panel">
-          <div className="panel-head"><h2 className="heading-sm">Eventos del run {liveRun.id}</h2><Badge tone="agent">DevTools</Badge></div>
-          <LogList logs={liveRun.telemetryLogs} />
-        </section>
-      </div>
-
-      <aside className="panel ctx-panel">
-        <div className="panel-head"><h2 className="heading-sm">Contexto</h2></div>
-        <div className="ctx-block"><small>Detectado por</small><div className="row-item" style={{ padding: 0, border: 0 }}><span className="agent-initials working">{bug.agent.slice(0, 2).toUpperCase()}</span><span className="row-main"><strong>{bug.agent}</strong><span>{bug.runId}</span></span></div></div>
-        <div className="ctx-block"><small>Archivos</small>{[diag.affectedFile, diag.reproductionSpec].filter(Boolean).map((f) => <code key={f}>{f}</code>)}</div>
-        <div className="ctx-block"><small>Herramientas MCP</small><code>@playwright/mcp</code><code>@chromedevtools/chrome-devtools-mcp</code></div>
-        <div className="ctx-block"><small>Cuentas de prueba</small><code>tobias@gmail.com</code><code>doctor@gmail.com</code></div>
       </aside>
     </div>
   </>;
@@ -925,7 +1064,7 @@ function SpecsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: T
   const copy = () => { if (!spec) return; navigator.clipboard?.writeText(spec.code); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   return <>
-    <PageHeading title="Test Specs" subtitle="Archivos Playwright generados por el Spec Writer.">
+    <PageHeading title="Test Specs" subtitle={`${specs.length} archivos Playwright generados`}>
       <Button variant="secondary" onClick={copy}><Icon name={copied ? "check" : "copy"} size="sm" />{copied ? "Copiado" : "Copiar código"}</Button>
       <Button onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ejecutar</Button>
     </PageHeading>
@@ -981,7 +1120,7 @@ function SuitesPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppView) 
   const tests = (tobi.state.runs[0]?.tests as unknown as TestItem[]).filter((t) => t.spec === current?.specFile);
 
   return <>
-    <PageHeading title="Suites" subtitle="Grupos de tests por área funcional.">
+    <PageHeading title="Suites" subtitle={`${suites.length} suites automatizadas`}>
       <Button onClick={() => navigate("specs")}><Icon name="file" size="sm" />Ver specs</Button>
     </PageHeading>
     <div className="suite-layout">
@@ -1073,8 +1212,13 @@ function IntegrationsPage({ tobi }: { tobi: Tobi }) {
 
 function SettingsPage({ tobi }: { tobi: Tobi }) {
   const { project, officeAgents } = tobi.state;
+  const items = [
+    { icon: "play" as IconName, tone: "", name: "@playwright/mcp", role: "Ejecución de pruebas", text: "Navega la app usando el árbol de accesibilidad y escribe los specs.", badge: "Motor de acción" },
+    { icon: "pulse" as IconName, tone: "agent", name: "@chromedevtools/chrome-devtools-mcp", role: "Telemetría y DevTools", text: "Lee consola, red y rendimiento mientras corren las pruebas.", badge: "Motor de diagnóstico" },
+    { icon: "code" as IconName, tone: "success", name: `Repositorio ${project.name}`, role: "Código fuente", text: project.repoPath || project.url, badge: `Rama ${project.branch}` },
+  ];
   return <>
-    <PageHeading title="Settings" subtitle={`Configuración del workspace de ${project.name}.`} />
+    <PageHeading title="Settings" subtitle={`Configuración y herramientas de ${project.name}`} />
     <section className="panel">
       <div className="panel-head"><h2 className="heading-sm">Proyecto</h2><Badge tone="success"><span className="connection-dot" />Vinculado</Badge></div>
       <div className="defs">
@@ -1084,8 +1228,23 @@ function SettingsPage({ tobi }: { tobi: Tobi }) {
         <div><small>Repositorio</small><code>{project.repoPath}</code></div>
       </div>
     </section>
+
     <section className="panel">
-      <div className="panel-head"><h2 className="heading-sm">Agentes</h2><span className="t-muted">{officeAgents.length} configurados</span></div>
+      <div className="panel-head"><h2 className="heading-sm">Herramientas MCP e Integraciones</h2><Badge tone="success"><span className="connection-dot" />Conectado</Badge></div>
+      {items.map((it) => (
+        <div className="integration" key={it.name}>
+          <span className={`integration-icon ${it.tone}`}><Icon name={it.icon} /></span>
+          <div>
+            <h3>{it.name}</h3>
+            <p><strong>{it.role}:</strong> {it.text}</p>
+          </div>
+          <Badge tone="info">{it.badge}</Badge>
+        </div>
+      ))}
+    </section>
+
+    <section className="panel">
+      <div className="panel-head"><h2 className="heading-sm">Agentes de prueba</h2><span className="t-muted">{officeAgents.length} configurados</span></div>
       <div className="row-list">
         {officeAgents.map((a) => (
           <div className="row-item" key={a.id}>
@@ -1142,19 +1301,19 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
 
   const go = (v: AppView) => { navigate(v); setMobileNav(false); };
   const labels: Record<AppView, string> = {
-    landing: "Portada", dashboard: "Dashboard", "test-runs": "Test Runs", "run-detail": `Run ${tobi.state.runs[0]?.id ?? ""}`,
+    landing: "Portada", dashboard: "Dashboard", journey: "Mapa de Flujos E2E", "test-runs": "Test Runs", "run-detail": `Run ${tobi.state.runs[0]?.id ?? ""}`,
     "live-run": "Live Run", "bug-tracker": "Bug Tracker", "bug-detail": activeBugId, diagnostic: "Diagnostic Studio",
     office: "La Oficina", specs: "Test Specs", suites: "Suites", integrations: "Integraciones", settings: "Settings",
   };
 
   const content =
     view === "dashboard" ? <DashboardPage navigate={go} tobi={tobi} /> :
-      view === "test-runs" ? <TestRunsPage navigate={go} tobi={tobi} /> :
-        view === "run-detail" ? <RunDetailPage navigate={go} tobi={tobi} onInspectTest={setInspectedTest} /> :
-          view === "live-run" ? <LiveRunPage tobi={tobi} /> :
-            view === "bug-tracker" ? <BugTrackerPage navigate={go} tobi={tobi} onSelectBug={setActiveBugId} /> :
-              view === "bug-detail" ? <BugDetailPage navigate={go} tobi={tobi} selectedBugId={activeBugId} /> :
-                view === "diagnostic" ? <DiagnosticPage navigate={go} tobi={tobi} selectedBugId={activeBugId} onSelectBug={setActiveBugId} /> :
+      view === "journey" ? <JourneyCanvas tobi={tobi} navigate={go} onInspectTest={setInspectedTest} /> :
+        view === "test-runs" ? <TestRunsPage navigate={go} tobi={tobi} /> :
+          view === "run-detail" ? <RunDetailPage navigate={go} tobi={tobi} onInspectTest={setInspectedTest} /> :
+            view === "live-run" ? <LiveRunPage tobi={tobi} /> :
+              view === "bug-tracker" ? <BugTrackerPage navigate={go} tobi={tobi} onSelectBug={setActiveBugId} /> :
+                view === "bug-detail" || view === "diagnostic" ? <BugDetailPage navigate={go} tobi={tobi} selectedBugId={activeBugId} /> :
                   view === "office" ? <OfficePage navigate={go} tobi={tobi} /> :
                     view === "specs" ? <SpecsPage navigate={go} tobi={tobi} /> :
                       view === "suites" ? <SuitesPage navigate={go} tobi={tobi} onInspectTest={setInspectedTest} /> :
@@ -1213,8 +1372,7 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
             <Button variant="ghost" onClick={openOffice}>La Oficina</Button>
           </nav>
           <div className="site-actions">
-            <Button variant="ghost" onClick={openOffice}>Ver La Oficina</Button>
-            <Button onClick={openDashboard}>Entrar<Icon name="arrow" size="sm" /></Button>
+            <Button onClick={openDashboard}>Entrar al workspace<Icon name="arrow" size="sm" /></Button>
           </div>
           <Button variant="icon" className="mobile-menu" label="Menú" onClick={() => setMenu(!menu)}><Icon name={menu ? "x" : "menu"} /></Button>
         </div>
@@ -1225,7 +1383,7 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
         <div className="hero-copy">
           <Badge tone="info"><Icon name="spark" size="sm" />Testing con agentes de IA</Badge>
           <h1 className="heading-xl">Prueba tu web con agentes que la usan de verdad</h1>
-          <p>TobiTests explora {project.name}, encuentra los fallos, los explica con evidencia y deja los tests escritos.</p>
+          <p>Exploración automatizada de flujos, detección de fallos con DevTools y generación de tests deterministas en Playwright.</p>
           <div className="hero-actions">
             <Button onClick={openDashboard}>Entrar al workspace<Icon name="arrow" size="sm" /></Button>
             <Button variant="secondary" onClick={openOffice}><Icon name="spark" size="sm" />Conocer La Oficina</Button>
@@ -1235,11 +1393,11 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
         <div className="product-frame" aria-label="Vista previa del producto">
           <div className="media-bar">
             <div className="browser-dots"><span /><span /><span /></div>
-            <span className="url-pill">{project.url}/login</span>
+            <span className="url-pill">{project.url}</span>
             <Badge tone="success"><span className="connection-dot" />En vivo</Badge>
           </div>
           <div className="product-body">
-            <div className="media"><img src="/evidence/runs/01-landing-audit.png" alt={`Auditoría de ${project.name}`} /></div>
+            <div className="media"><img src={liveRun.steps[0]?.screenshot || "/evidence/runs/tobi-01-landing.png"} alt={`Auditoría de ${project.name}`} /></div>
             <div>
               <div className="panel-head"><h2 className="heading-sm">{liveRun.suite}</h2><code>{liveRun.elapsedTime}</code></div>
               <div className="row-list">
@@ -1282,7 +1440,7 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
           </div>
           <div className="panel">
             <div className="panel-head"><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Badge tone="danger">{bug.severity}</Badge><strong>{bug.id}</strong></div><span className="t-muted">{bug.section}</span></div>
-            <div className="media" style={{ borderBottom: 0 }}><img src="/evidence/bugs/bug-01-divergence-evidence.png" alt={`Evidencia de ${bug.id}`} /></div>
+            <div className="media" style={{ borderBottom: 0 }}><img src={bug.screenshot || "/evidence/bugs/tobi-bug-01-detail.png"} alt={`Evidencia de ${bug.id}`} /></div>
           </div>
         </section>
       )}
