@@ -1368,11 +1368,15 @@ function OfficePage({ navigate, tobi }: { navigate: (view: AppView) => void; tob
 
           {/* Workstation 1: Explorer QA (Top-Left) */}
           <div className={`workstation-pod pod-explorer ${agents.find(a => a.id === "explorer")?.status === "working" ? "active" : "idle"}`}>
-            <div className="pod-plate"><span>PUESTO 01</span><strong>EXPLORER QA DESK</strong></div>
-            <div className="desk-furniture">
-              <div className="dual-monitors">
-                <div className="mini-screen"><span className="screen-line" /><span className="screen-line short" /></div>
-                <div className="mini-screen"><span className="screen-line" /></div>
+            <div className="pod-plate"><span>PUESTO 01 · @playwright/mcp</span><strong>EXPLORER QA DESK</strong></div>
+            <div className="desk-furniture-real">
+              <div className="pod-monitor-frame">
+                <img src="/evidence/runs/02-login-inspection.png" alt="Explorer Screen" className="pod-screen-img" />
+                <div className="pod-screen-glare" />
+                <span className="pod-screen-badge">VIEWPORT: 1280x800</span>
+              </div>
+              <div className="pod-subterminal">
+                <code>page.goto('/login') · locator.fill()</code>
               </div>
               <div className="desk-chair" />
             </div>
@@ -1380,11 +1384,15 @@ function OfficePage({ navigate, tobi }: { navigate: (view: AppView) => void; tob
 
           {/* Workstation 2: Telemetry Auditor (Top-Right) */}
           <div className={`workstation-pod pod-telemetry ${agents.find(a => a.id === "telemetry")?.status === "working" ? "active" : "idle"}`}>
-            <div className="pod-plate"><span>PUESTO 02</span><strong>TELEMETRY AUDITOR LAB</strong></div>
-            <div className="desk-furniture">
-              <div className="dual-monitors">
-                <div className="mini-screen alert"><span className="screen-line" /><span className="screen-line short" /></div>
-                <div className="mini-screen"><span className="screen-line" /></div>
+            <div className="pod-plate"><span>PUESTO 02 · CDP & NETWORK</span><strong>TELEMETRY AUDITOR LAB</strong></div>
+            <div className="desk-furniture-real">
+              <div className="pod-monitor-frame alert-glow">
+                <img src="/evidence/bugs/bug-01-divergence-evidence.png" alt="Telemetry Screen" className="pod-screen-img" />
+                <div className="pod-screen-glare" />
+                <span className="pod-screen-badge alert">CDP TRACE · BUG-01</span>
+              </div>
+              <div className="pod-subterminal">
+                <code>HTTP 200 · Console: State desync found</code>
               </div>
               <div className="desk-chair" />
             </div>
@@ -1392,12 +1400,23 @@ function OfficePage({ navigate, tobi }: { navigate: (view: AppView) => void; tob
 
           {/* Central Command Desk: Antigravity Orchestrator */}
           <div className={`workstation-pod pod-central ${agents.find(a => a.id === "orchestrator")?.status === "working" ? "active" : "idle"}`}>
-            <div className="pod-plate central"><span>COMANDO CENTRAL</span><strong>ANTIGRAVITY ORCHESTRATOR (CEREBRO)</strong></div>
-            <div className="desk-furniture central-table">
-              <div className="triple-monitors">
-                <div className="mini-screen"><small>REPO</small><span className="screen-line" /></div>
-                <div className="mini-screen main"><small>ORCHESTRATOR</small><span className="screen-line" /><span className="screen-line short" /></div>
-                <div className="mini-screen"><small>MCP BUS</small><span className="screen-line" /></div>
+            <div className="pod-plate central"><span>COMANDO CENTRAL · CEREBRO GEMINI 3.8</span><strong>ANTIGRAVITY CHIEF ARCHITECT</strong></div>
+            <div className="desk-furniture-real central-furniture">
+              <div className="pod-monitor-triple">
+                <div className="pod-monitor-frame side">
+                  <img src="/evidence/runs/01-landing-audit.png" alt="Landing" className="pod-screen-img" />
+                  <span className="pod-screen-badge">REPO AUDIT</span>
+                </div>
+                <div className="pod-monitor-frame main">
+                  <img src="/evidence/runs/03-rbac-guard-redirect.png" alt="Guard Check" className="pod-screen-img" />
+                  <span className="pod-screen-badge orchestrator">ORCHESTRATING 4 SUBAGENTS</span>
+                </div>
+                <div className="pod-monitor-frame side">
+                  <div className="pod-code-terminal">
+                    <code>{`// White-Box\nroutes: 7\nspecs: 2\nmcp: dual-bus`}</code>
+                  </div>
+                  <span className="pod-screen-badge">SPECS BUS</span>
+                </div>
               </div>
               <div className="desk-chair executive" />
             </div>
@@ -1405,11 +1424,16 @@ function OfficePage({ navigate, tobi }: { navigate: (view: AppView) => void; tob
 
           {/* Workstation 3: RBAC & Edge Hunter + Coffee Lounge (Bottom-Left) */}
           <div className={`workstation-pod pod-security ${agents.find(a => a.id === "security")?.status === "working" ? "active" : "idle"}`}>
-            <div className="pod-plate"><span>PUESTO 03 + CAFETERÍA</span><strong>RBAC SECURITY & LOUNGE ☕</strong></div>
-            <div className="desk-furniture">
-              <div className="dual-monitors">
-                <div className="mini-screen"><span className="screen-line" /></div>
-                <div className="coffee-station" title="Máquina de Café">☕</div>
+            <div className="pod-plate"><span>PUESTO 03 · SEGURIDAD & LOUNGE</span><strong>RBAC SECURITY & LOUNGE ☕</strong></div>
+            <div className="desk-furniture-real">
+              <div className="pod-monitor-frame">
+                <img src="/evidence/runs/03-rbac-guard-redirect.png" alt="RBAC Screen" className="pod-screen-img" />
+                <div className="pod-screen-glare" />
+                <span className="pod-screen-badge">ROLES: CLIENT/VET/ADMIN</span>
+              </div>
+              <div className="pod-lounge-tray">
+                <span className="coffee-mug" title="Cafetería del equipo">☕</span>
+                <small>Área de descanso</small>
               </div>
               <div className="desk-chair" />
             </div>
@@ -1417,11 +1441,14 @@ function OfficePage({ navigate, tobi }: { navigate: (view: AppView) => void; tob
 
           {/* Workstation 4: Spec Writer (Bottom-Right) */}
           <div className={`workstation-pod pod-writer ${agents.find(a => a.id === "writer")?.status === "working" ? "active" : "idle"}`}>
-            <div className="pod-plate"><span>PUESTO 04</span><strong>SPEC WRITER STUDIO (.SPEC.TS)</strong></div>
-            <div className="desk-furniture">
-              <div className="dual-monitors">
-                <div className="mini-screen code"><span className="screen-line" /><span className="screen-line short" /></div>
-                <div className="mini-screen code"><span className="screen-line" /></div>
+            <div className="pod-plate"><span>PUESTO 04 · PLAYWRIGHT RUNNER</span><strong>SPEC WRITER STUDIO (.SPEC.TS)</strong></div>
+            <div className="desk-furniture-real">
+              <div className="pod-code-screen">
+                <div className="code-screen-header"><span /><span /><span /><small>vetconnect-auth.spec.ts</small></div>
+                <code>{`test('redirects unauthenticated', async () => {\n  await page.goto('/client/dashboard');\n  await expect(page).toHaveURL(/\\/login/);\n});`}</code>
+              </div>
+              <div className="pod-subterminal">
+                <code>specs/vetconnect-auth.spec.ts: 4 tests</code>
               </div>
               <div className="desk-chair" />
             </div>
@@ -1448,15 +1475,17 @@ function OfficePage({ navigate, tobi }: { navigate: (view: AppView) => void; tob
                 </div>
 
                 {/* Character Avatar Sprite */}
-                <div className="worker-sprite">
+                <div className={`worker-sprite ${agent.id} ${isWorking ? "typing" : "sitting"}`}>
                   <div className="worker-head">
                     <span className="worker-hair" />
                     <span className="worker-eyes"><i /><i /></span>
+                    <span className="worker-glasses" />
                   </div>
                   <div className="worker-body">
                     <span className="worker-arm left" />
                     <span className="worker-badge">{agent.initials}</span>
                     <span className="worker-arm right" />
+                    <span className="worker-tool-chip">{agent.id === "telemetry" ? "CDP" : agent.id === "orchestrator" ? "AI" : "E2E"}</span>
                   </div>
                   <div className="worker-legs">
                     <i /><i />
@@ -1507,6 +1536,19 @@ function OfficePage({ navigate, tobi }: { navigate: (view: AppView) => void; tob
                 <div>
                   <small>HERRAMIENTAS MCP VINCULADAS</small>
                   <code>{selectedAgent.mcp || "Playwright MCP + Chrome DevTools MCP"}</code>
+                </div>
+                <div>
+                  <small>REGISTRO DE ACCIONES RECIENTES</small>
+                  <div className="agent-recent-trace">
+                    {selectedAgent.status === "working" ? (
+                      <>
+                        <div className="trace-row"><span className="trace-time">21:38:03</span><p>Interacción activa sobre <code>http://localhost:5173</code></p></div>
+                        <div className="trace-row"><span className="trace-time">21:38:05</span><p>Inspección de árbol de accesibilidad y selectores completada</p></div>
+                      </>
+                    ) : (
+                      <div className="trace-row"><span className="trace-time">Puesto</span><p>En espera en su estación · Listo para recibir tareas del Orquestador</p></div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <small>UBICACIÓN EN LA OFICINA</small>

@@ -1667,3 +1667,247 @@ code { font-family: "JetBrains Mono", monospace; }
   font-weight: 700;
   color: var(--text);
 }
+
+
+/* Workstation Real Monitor & Hardware Terminal Styles */
+.desk-furniture-real {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+}
+
+.pod-monitor-frame {
+  position: relative;
+  width: 100%;
+  height: 94px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 3px solid #1a2c3a;
+  background: #091218;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.pod-monitor-frame.alert-glow {
+  border-color: #c0392b;
+  box-shadow: 0 0 12px rgba(231, 76, 60, 0.4);
+}
+
+.pod-screen-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  opacity: 0.92;
+  filter: contrast(1.05) brightness(0.98);
+}
+
+.pod-screen-glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.pod-screen-badge {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(15, 28, 36, 0.88);
+  color: #7cc4f2;
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pod-screen-badge.alert {
+  background: rgba(192, 57, 43, 0.88);
+  color: #ffffff;
+}
+
+.pod-screen-badge.orchestrator {
+  background: rgba(103, 80, 229, 0.9);
+  color: #ffffff;
+}
+
+.pod-subterminal {
+  width: 100%;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #0f1c24;
+  border: 1px solid #203646;
+  text-align: center;
+  overflow: hidden;
+}
+
+.pod-subterminal code {
+  color: #8fd3ff;
+  font-size: 6.5px;
+  white-space: nowrap;
+}
+
+/* Central Command Desk Triple Screens */
+.central-furniture {
+  width: 100%;
+}
+
+.pod-monitor-triple {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: 6px;
+  width: 100%;
+}
+
+.pod-monitor-frame.side {
+  height: 85px;
+}
+
+.pod-monitor-frame.main {
+  height: 98px;
+  border-color: #6750e5;
+  box-shadow: 0 0 16px rgba(103, 80, 229, 0.35);
+}
+
+.pod-code-terminal {
+  padding: 6px;
+  height: 100%;
+  background: #0c161d;
+  color: #2ecc71;
+  font: 500 6.5px "JetBrains Mono";
+  display: flex;
+  align-items: center;
+}
+
+.pod-code-terminal code {
+  white-space: pre;
+  color: #55efc4;
+}
+
+.pod-code-screen {
+  width: 100%;
+  height: 94px;
+  border-radius: 8px;
+  border: 3px solid #1a2c3a;
+  background: #0b151c;
+  overflow: hidden;
+  padding: 6px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.code-screen-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #1f3444;
+  padding-bottom: 3px;
+}
+
+.code-screen-header span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #7f8c8d;
+}
+
+.code-screen-header small {
+  color: #7cc4f2;
+  font-size: 6px;
+  margin-left: 4px;
+}
+
+.pod-code-screen code {
+  font-size: 6px;
+  color: #a8e6cf;
+  white-space: pre-wrap;
+  line-height: 1.35;
+  display: block;
+}
+
+.pod-lounge-tray {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #fdf5e6;
+  border: 1px solid #ebd7b2;
+}
+
+.coffee-mug {
+  font-size: 14px;
+}
+
+.pod-lounge-tray small {
+  font-size: 7px;
+  color: #795548;
+  font-weight: 600;
+}
+
+/* Character sprite upgrades */
+.worker-glasses {
+  position: absolute;
+  top: 9px;
+  left: 3px;
+  right: 3px;
+  height: 5px;
+  border: 1.5px solid #2c3e50;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.worker-tool-chip {
+  position: absolute;
+  right: -4px;
+  bottom: -3px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: #172b3a;
+  color: #ffffff;
+  font-size: 5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  border: 1px solid white;
+}
+
+.agent-recent-trace {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.trace-row {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  padding: 4px 6px;
+  border-radius: 5px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+}
+
+.trace-time {
+  font: 700 6.5px "JetBrains Mono";
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.trace-row p {
+  margin: 0;
+  font-size: 7px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.trace-row code {
+  font-size: 6.5px;
+  color: var(--agent);
+}
