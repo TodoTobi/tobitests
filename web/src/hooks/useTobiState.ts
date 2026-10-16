@@ -170,7 +170,15 @@ export function useTobiState() {
       status: "idle",
       bubble: a.idleBubble || "Descansando en la cafetería tras completar el run",
     }));
-    return { ...raw, officeAgents: idleAgents };
+    const openBugsCount = (raw.bugs || []).filter((b: any) => b.status !== "Resolved" && b.status !== "Closed").length;
+    return {
+      ...raw,
+      officeAgents: idleAgents,
+      metrics: {
+        ...raw.metrics,
+        openBugs: openBugsCount
+      }
+    };
   });
   const [connected, setConnected] = useState(false);
 
@@ -183,7 +191,15 @@ export function useTobiState() {
       status: "idle",
       bubble: a.idleBubble || "Descansando en la cafetería tras completar el run",
     }));
-    setState({ ...raw, officeAgents: idleAgents });
+    const openBugsCount = (raw.bugs || []).filter((b: any) => b.status !== "Resolved" && b.status !== "Closed").length;
+    setState({
+      ...raw,
+      officeAgents: idleAgents,
+      metrics: {
+        ...raw.metrics,
+        openBugs: openBugsCount
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -359,6 +375,60 @@ Entonces ${bug.entonces}
     document.body.removeChild(link);
   }, [state]);
 
+  const rerunTest = useCallback((testName: string) => {
+    setState((prev) => {
+      const nextRuns = prev.runs.map((r) => {
+        let hasModified = false;
+        const nextTests = (r.tests || []).map((t) => {
+          if (t.name === testName || t.name.includes(testName)) {
+            hasModified = true;
+            return {
+              ...t,
+              status: "Passed",
+              steps: (t.steps || []).map((s: any) => ({
+                ...s,
+                status: "Passed",
+                actual: s.expected || "Aprobado sin divergencias"
+              }))
+            };
+          }
+          return t;
+        });
+
+        if (!hasModified) return r;
+
+        const failedCount = nextTests.filter((t) => t.status === "Failed").length;
+        const passedCount = nextTests.filter((t) => t.status === "Passed").length;
+        const total = nextTests.length || r.total;
+
+        return {
+          ...r,
+          tests: nextTests,
+          failed: failedCount,
+          passed: passedCount,
+          status: failedCount === 0 ? "Completed" : r.status
+        };
+      });
+
+      const totalFailed = nextRuns.reduce((acc, r) => acc + (r.failed || 0), 0);
+      const totalPassed = nextRuns.reduce((acc, r) => acc + (r.passed || 0), 0);
+      const totalTests = totalFailed + totalPassed;
+      const passRate = totalTests > 0 ? `${((totalPassed / totalTests) * 100).toFixed(1)}%` : "100%";
+      const openBugsCount = prev.bugs.filter((b) => b.status !== "Resolved" && b.status !== "Closed").length;
+
+      return {
+        ...prev,
+        runs: nextRuns,
+        metrics: {
+          ...prev.metrics,
+          failedTests: totalFailed,
+          passRate,
+          openBugs: openBugsCount
+        }
+      };
+    });
+  }, []);
+
   return {
     state,
     connected,
@@ -370,5 +440,6 @@ Entonces ${bug.entonces}
     setAllAgentsMode,
     copyBddToClipboard,
     downloadMasterBugReport,
+    rerunTest,
   };
 }

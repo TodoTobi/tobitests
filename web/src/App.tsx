@@ -1334,15 +1334,20 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
       <NotificationPanel open={notifications} onClose={() => setNotifications(false)} navigate={go} tobi={tobi} />
       <TestDetailModal
         test={inspectedTest}
+        bugs={tobi.state.bugs}
         onClose={() => setInspectedTest(null)}
-        onCreateBug={() => {
-          setActiveBugId("BUG-01");
+        onCreateBug={(t) => {
+          const bugMatch = tobi.state.bugs.find((b) => (t?.name && t.name.includes(b.id)) || (t?.spec?.includes("office") && b.id === "BUG-01"));
+          if (bugMatch) {
+            setActiveBugId(bugMatch.id);
+          } else {
+            setActiveBugId("BUG-01");
+          }
           setInspectedTest(null);
           go("bug-detail");
         }}
-        onRunTest={() => {
-          setInspectedTest(null);
-          go("live-run");
+        onRunTest={(passedTest) => {
+          tobi.rerunTest(passedTest.name);
         }}
       />
     </div>

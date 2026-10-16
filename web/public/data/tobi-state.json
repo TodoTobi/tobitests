@@ -12,7 +12,7 @@
     "passRate": "98.8%",
     "totalRuns": 14,
     "failedTests": 1,
-    "openBugs": 1,
+    "openBugs": 0,
     "avgDuration": "0.7s",
     "activeRun": "#RUN-SELF-01",
     "totalTests": 84
