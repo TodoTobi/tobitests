@@ -207,7 +207,7 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
         <SectionTitle eyebrow="ARQUITECTURA MULTI-AGENTE" title="Un motor conectado directamente a tu repositorio local." description="Sin datos simulados ni cajas negras: lectura directa de código, inspección de navegador y pruebas ejecutables." />
         <div className="capability-list">
           {capabilities.map((item) => (
-            <div className="capability-row" key={item.title} onClick={openDashboard}>
+            <div className="capability-row" key={item.title} role="button" tabIndex={0} onClick={openDashboard} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDashboard(); } }}>
               <span className="cap-index">{item.index}</span>
               <span className="cap-icon"><Icon name={item.icon} /></span>
               <div className="cap-copy"><div className="heading-sm">{item.title}</div><p>{item.text}</p></div>
@@ -680,8 +680,28 @@ function TestRunsPage({ navigate, tobi }: { navigate: (view: AppView) => void; t
 function RunDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState> }) {
   const run = tobi.state.runs[0];
   const [filter, setFilter] = useState<"all" | "failed" | "passed">("all");
-  const filteredTests = run.tests.filter((t) =>
-    filter === "all" ? true : filter === "failed" ? t.status === "Failed" : t.status === "Passed"
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suiteFilter, setSuiteFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+
+  const filteredTests = run.tests.filter((t) => {
+    if (filter === "failed" && t.status !== "Failed") return false;
+    if (filter === "passed" && t.status !== "Passed") return false;
+    if (suiteFilter !== "all" && t.spec !== suiteFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return t.name.toLowerCase().includes(q) || t.spec.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredTests.length / pageSize) || 1;
+  const currentPage = Math.min(page, totalPages);
+  const paginatedTests = filteredTests.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const [selectedTest, setSelectedTest] = useState<typeof run.tests[0] | null>(
+    run.tests.find((t) => t.status === "Failed") || run.tests[0]
   );
 
   return <>
@@ -696,7 +716,7 @@ function RunDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
         <div>
           <StatusBadge status={run.status} />
           <div className="heading-md">{run.passed} aprobadas · {run.failed} con hallazgo confirmado</div>
-          <p>Auditoría White-Box sobre rutas públicas, guardas RBAC y sincronización de estado en {tobi.state.project.name}.</p>
+          <p>Auditoría Multi-Agente End-to-End con Playwright sobre rutas públicas, guardas RBAC, portal médico y tutor en {tobi.state.project.name}.</p>
         </div>
       </div>
       <div className="summary-facts">
@@ -713,47 +733,139 @@ function RunDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
     <div className="detail-layout">
       <section className="panel test-results">
         <div className="panel-head">
-          <div><div className="heading-sm">Pruebas ejecutadas</div><p>{run.tests.length} casos en Playwright</p></div>
+          <div><div className="heading-sm">Pruebas ejecutadas ({filteredTests.length})</div><p>{run.tests.length} casos totales en 6 suites Playwright</p></div>
           <div className="segmented">
-            <Button variant="ghost" className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>Todas ({run.total})</Button>
-            <Button variant="ghost" className={filter === "failed" ? "active" : ""} onClick={() => setFilter("failed")}>Fallidas ({run.failed})</Button>
-            <Button variant="ghost" className={filter === "passed" ? "active" : ""} onClick={() => setFilter("passed")}>Aprobadas ({run.passed})</Button>
+            <Button variant="ghost" className={filter === "all" ? "active" : ""} onClick={() => { setFilter("all"); setPage(1); }}>Todas ({run.total})</Button>
+            <Button variant="ghost" className={filter === "failed" ? "active" : ""} onClick={() => { setFilter("failed"); setPage(1); }}>Fallidas ({run.failed})</Button>
+            <Button variant="ghost" className={filter === "passed" ? "active" : ""} onClick={() => { setFilter("passed"); setPage(1); }}>Aprobadas ({run.passed})</Button>
           </div>
         </div>
-        {filteredTests.map((t) => (
-          <div className={`test-result ${t.status === "Failed" ? "selected" : ""}`} key={t.name}>
-            <span className={t.status === "Passed" ? "test-state passed" : "test-state failed"}>
-              <Icon name={t.status === "Passed" ? "check" : "x"} size="sm" />
-            </span>
-            <div><strong>{t.name}</strong><small>{t.spec} · Chromium</small></div>
-            <code>{t.duration}</code>
-            <StatusBadge status={t.status} />
-            <Icon name="chevron" size="sm" />
+        <div className="test-filter-bar">
+          <div className="test-search-box">
+            <Icon name="search" size="sm" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre de prueba o archivo spec..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+            />
+            {searchQuery && (
+              <button style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--placeholder)" }} onClick={() => setSearchQuery("")}>
+                <Icon name="x" size="sm" />
+              </button>
+            )}
           </div>
-        ))}
+          <select
+            className="test-suite-select"
+            value={suiteFilter}
+            onChange={(e) => { setSuiteFilter(e.target.value); setPage(1); }}
+          >
+            <option value="all">Todas las suites (6)</option>
+            <option value="vetconnect-auth.spec.ts">Suite 1: Auth & Identidad</option>
+            <option value="vetconnect-rbac.spec.ts">Suite 2: RBAC & Seguridad</option>
+            <option value="vetconnect-tutor-pets.spec.ts">Suite 3: Tutor & Mascotas</option>
+            <option value="vetconnect-doctor-clinic.spec.ts">Suite 4: Médico & Clínica</option>
+            <option value="vetconnect-appointments.spec.ts">Suite 5: Consultas & Mensajes</option>
+            <option value="vetconnect-compliance-a11y.spec.ts">Suite 6: GDPR & A11y</option>
+          </select>
+        </div>
+        <div className="test-list-body">
+          {paginatedTests.map((t) => (
+            <div
+              className={`test-result ${selectedTest?.name === t.name ? "selected" : ""}`}
+              key={t.name}
+              onClick={() => setSelectedTest(t)}
+            >
+              <span className={t.status === "Passed" ? "test-state passed" : "test-state failed"}>
+                <Icon name={t.status === "Passed" ? "check" : "x"} size="sm" />
+              </span>
+              <div>
+                <strong>{t.name}</strong>
+                <small>{t.spec} · Chromium Headless</small>
+              </div>
+              <code>{t.duration}</code>
+              <StatusBadge status={t.status} />
+              <Icon name="chevron" size="sm" />
+            </div>
+          ))}
+          {paginatedTests.length === 0 && (
+            <div style={{ padding: "30px", textAlign: "center", color: "var(--placeholder)" }}>
+              No se encontraron pruebas con los filtros seleccionados.
+            </div>
+          )}
+        </div>
+        <div className="test-pagination">
+          <span>Mostrando {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, filteredTests.length)} de {filteredTests.length} pruebas</span>
+          <div className="pagination-controls">
+            <Button
+              variant="secondary"
+              disabled={currentPage <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Anterior
+            </Button>
+            <span>Pág {currentPage} / {totalPages}</span>
+            <Button
+              variant="secondary"
+              disabled={currentPage >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
       </section>
       <aside className="panel run-inspector">
-        <div className="panel-head"><div><div className="heading-sm">Inspección del Fallo</div><p>Detectado por Telemetry Auditor</p></div></div>
-        <div className="error-callout">
-          <Badge tone="danger">STATE DESYNC DETECTED</Badge>
-          <code>Mensajes (Cancelado) !== Mascotas ("En consulta")</code>
-          <p>Al cancelar la consulta en Mensajes, la vista de Mascotas no invalida ni sincroniza el estado.</p>
-        </div>
-        <div className="inspector-shot real-screenshot-container">
-          <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url}/client/dashboard · Real Trace</small></div>
-          <div className="real-shot-wrapper">
-            <img src="/evidence/runs/03-rbac-guard-redirect.png" alt="RBAC Inspection" className="real-shot-img" />
-            <div className="shot-dialog-bubble">
-              <strong>Mascotas → Tus consultas</strong>
-              <small>Estado: "En consulta" (Esperado: "Cancelado")</small>
+        <div className="panel-head">
+          <div>
+            <div className="heading-sm">
+              {selectedTest?.status === "Failed" ? "Inspección de Fallo Activo" : "Detalle de Ejecución"}
             </div>
+            <p>{selectedTest ? selectedTest.name : "Seleccione una prueba"}</p>
           </div>
         </div>
-        <div className="evidence-links">
-          <Button variant="secondary" onClick={() => navigate("diagnostic")}><Icon name="pulse" size="sm" /> Diagnostic Studio</Button>
-          <Button variant="secondary" onClick={() => navigate("specs")}><Icon name="code" size="sm" /> Ver Spec</Button>
-        </div>
-        <Button className="full-button" onClick={() => navigate("bug-detail")}>Abrir reporte BDD · BUG-01 <Icon name="arrow" size="sm" /></Button>
+        {selectedTest?.status === "Failed" ? (
+          <>
+            <div className="error-callout">
+              <Badge tone="danger">STATE DESYNC DETECTED · BUG-01</Badge>
+              <code>Mensajes (Cancelado) !== Mascotas ("En consulta")</code>
+              <p>Al cancelar la consulta en Mensajes, la vista de Mascotas no invalida ni sincroniza el estado en cache ni DB.</p>
+            </div>
+            <div className="inspector-shot real-screenshot-container">
+              <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url}/client/dashboard · Real Trace</small></div>
+              <div className="real-shot-wrapper">
+                <img src="/evidence/runs/03-rbac-guard-redirect.png" alt="RBAC Inspection" className="real-shot-img" />
+                <div className="shot-dialog-bubble">
+                  <strong>Mascotas → Tus consultas</strong>
+                  <small>Estado: "En consulta" (Esperado: "Cancelado")</small>
+                </div>
+              </div>
+            </div>
+            <div className="evidence-links">
+              <Button variant="secondary" onClick={() => navigate("diagnostic")}><Icon name="pulse" size="sm" /> Diagnostic Studio</Button>
+              <Button variant="secondary" onClick={() => navigate("specs")}><Icon name="code" size="sm" /> Ver Spec</Button>
+            </div>
+            <Button className="full-button" onClick={() => navigate("bug-detail")}>Abrir reporte BDD · BUG-01 <Icon name="arrow" size="sm" /></Button>
+          </>
+        ) : (
+          <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Badge tone="success">PASSED</Badge>
+              <small style={{ color: "var(--placeholder)" }}>Duración: {selectedTest?.duration}</small>
+            </div>
+            <div style={{ background: "var(--surface-secondary)", padding: "12px", borderRadius: "6px", fontSize: "13px" }}>
+              <div style={{ fontWeight: 600, marginBottom: "4px" }}>Spec File:</div>
+              <code>{selectedTest?.spec}</code>
+            </div>
+            <div style={{ fontSize: "13px", lineHeight: "1.5" }}>
+              Esta aserción se ejecutó de forma automatizada en el pipeline Playwright contra <code>{tobi.state.project.url}</code> con credenciales autenticadas y verificación DOM completa.
+            </div>
+            <div className="evidence-links" style={{ padding: 0 }}>
+              <Button variant="secondary" onClick={() => navigate("specs")}><Icon name="code" size="sm" /> Inspeccionar Spec</Button>
+              <Button variant="secondary" onClick={() => navigate("live-run")}><Icon name="play" size="sm" /> Ver Live Run</Button>
+            </div>
+          </div>
+        )}
       </aside>
     </div>
   </>;
@@ -959,7 +1071,7 @@ function BugTrackerPage({ navigate, tobi }: { navigate: (view: AppView) => void;
           </div>
           <div className="report-preview">
             <div className="preview-head"><span>master-bug-report-vetconnect.md</span><Badge tone="success">Plantilla Oficial</Badge></div>
-            <code>{bugList.map((b) => `Escenario:\nNombre y sección (${b.id}: ${b.title}, seccion: ${b.section}).\nPasos para reproducir:\nDado que ${b.dadoQue}\nCuando ${b.cuando}\nEntonces ${b.entonces}`).join("\n\n---\n\n")}</code>
+            <code>{bugList.map((b) => `Escenario:\nNombre y sección (${b.id}: ${b.title}, sección: ${b.section}).\nPasos para reproducir:\nDado que ${b.dadoQue}\nCuando ${b.cuando}\nEntonces ${b.entonces}`).join("\n\n---\n\n")}</code>
           </div>
           <div className="modal-actions">
             <Button variant="ghost" onClick={() => setReportOpen(false)}>Cerrar</Button>
@@ -1086,7 +1198,7 @@ function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
             <div className="bdd-line bdd-name-line">
               <span className="bdd-lbl">Nombre y sección:</span>
               <p className="bdd-val">
-                <strong>({bug.id}: {bug.title}, seccion: {bug.section}).</strong>
+                <strong>({bug.id}: {bug.title}, sección: {bug.section}).</strong>
               </p>
             </div>
 
@@ -1663,7 +1775,7 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
 }
 
 export default function App() {
-  const [view, setView] = useState<AppView>("dashboard");
+  const [view, setView] = useState<AppView>("landing");
   const tobi = useTobiState();
 
   if (view === "landing") return <Landing openDashboard={() => setView("dashboard")} openOffice={() => setView("office")} tobi={tobi} />;

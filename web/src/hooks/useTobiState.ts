@@ -216,7 +216,7 @@ export function useTobiState() {
   const copyBddToClipboard = useCallback((bug: BugItem) => {
     const text = `Esquema de Plantilla Estandarizado:
 Definir el Escenario (Gherkin/BDD):
-Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
+Nombre y sección (${bug.id}: ${bug.title}, sección: ${bug.section}).
 Pasos para reproducir:
 Dado que ${bug.dadoQue}
 Cuando ${bug.cuando}
@@ -240,7 +240,7 @@ ${state.bugs.map((bug, index) => `---
 * **Ejecución Asociada:** ${bug.runId}
 
 #### Escenario (BDD / Gherkin):
-Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
+Nombre y sección (${bug.id}: ${bug.title}, sección: ${bug.section}).
 
 Pasos para reproducir:
 Dado que ${bug.dadoQue}

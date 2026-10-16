@@ -1,4 +1,6 @@
 {
+  "title": "TobiTests · Plataforma de QA autónoma con agentes IA",
+  "language": "es",
   "description": "Streamline end-to-end testing with TobiTests, a professional platform that utilizes AI agents for error diagnosis and automated test creation.",
   "robots": {
     "index": false
