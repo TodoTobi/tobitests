@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { OfficeAgent } from "../hooks/useTobiState";
-import { ROUTES, findPath, type Grid, type StopAction } from "./officeIso";
+import { ROUTES, STANDUP_POSITIONS, findPath, type Grid, type StopAction } from "./officeIso";
 
 export interface AgentPose {
   id: string;
@@ -18,6 +18,7 @@ interface MotionState {
   dwell: number;
   dir: 1 | -1;
   action: "walk" | StopAction;
+  prevStandup?: boolean;
 }
 
 const SPEED = 2.7; // grid cells per second
@@ -29,7 +30,7 @@ function dwellTime(action: StopAction): number {
   return 3 + Math.random() * 2.5;
 }
 
-export function useAgentMotion(agents: OfficeAgent[], isSimulating: boolean): AgentPose[] {
+export function useAgentMotion(agents: OfficeAgent[], isSimulating: boolean, isStandup = false): AgentPose[] {
   const store = useRef<Map<string, MotionState>>(new Map());
   const [poses, setPoses] = useState<AgentPose[]>([]);
   const lastT = useRef(0);
@@ -39,7 +40,7 @@ export function useAgentMotion(agents: OfficeAgent[], isSimulating: boolean): Ag
     for (const a of agents) {
       const route = (a.status === "working" ? ROUTES[a.id]?.working : ROUTES[a.id]?.idle) || [];
       const start = route[0] ? { x: route[0].gx, y: route[0].gy } : FALLBACK;
-      store.current.set(a.id, { x: start.x, y: start.y, path: [], goalIdx: 0, dwell: 0, dir: 1, action: "idle" });
+      store.current.set(a.id, { x: start.x, y: start.y, path: [], goalIdx: 0, dwell: 0, dir: 1, action: "idle", prevStandup: false });
     }
   }
 
@@ -54,6 +55,47 @@ export function useAgentMotion(agents: OfficeAgent[], isSimulating: boolean): Ag
       for (const a of agents) {
         const m = store.current.get(a.id);
         if (!m) continue;
+
+        // Reset path when transitioning in or out of standup
+        if (m.prevStandup !== isStandup) {
+          m.prevStandup = isStandup;
+          m.path = [];
+          m.dwell = 0;
+        }
+
+        if (isStandup) {
+          const standup = STANDUP_POSITIONS[a.id] || { gx: 9.6, gy: 10.4 };
+          const distToStandup = Math.hypot(standup.gx - m.x, standup.gy - m.y);
+
+          if (!m.path.length && distToStandup > 0.25) {
+            m.path = findPath({ x: m.x, y: m.y }, { x: standup.gx, y: standup.gy });
+          }
+
+          if (m.path.length) {
+            const next = m.path[0];
+            const dx = next.x - m.x;
+            const dy = next.y - m.y;
+            const dist = Math.hypot(dx, dy);
+            const stepLen = speed * dt;
+            if (dist <= stepLen || dist === 0) {
+              m.x = next.x;
+              m.y = next.y;
+              m.path.shift();
+            } else {
+              m.x += (dx / dist) * stepLen;
+              m.y += (dy / dist) * stepLen;
+            }
+            const sdx = dx - dy;
+            if (Math.abs(sdx) > 0.03) m.dir = sdx >= 0 ? 1 : -1;
+            m.action = "walk";
+          } else {
+            m.action = "idle";
+            // Face towards the center of the meeting table (approx gx 9.6)
+            m.dir = m.x > 9.6 ? -1 : 1;
+          }
+          continue;
+        }
+
         const route = (a.status === "working" ? ROUTES[a.id]?.working : ROUTES[a.id]?.idle) || ROUTES[a.id]?.working || [];
         if (!route.length) continue;
         const stop = route[m.goalIdx % route.length];
@@ -106,7 +148,7 @@ export function useAgentMotion(agents: OfficeAgent[], isSimulating: boolean): Ag
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [agents, isSimulating]);
+  }, [agents, isSimulating, isStandup]);
 
   return poses;
 }
