@@ -556,6 +556,43 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
                       <Icon name="layers" size="sm" /> {zoneFor(selectedAgent)}
                     </span>
                   </div>
+
+                  {selectedAgent.id === "orchestrator" && (
+                    <div className="iso-inspector-thinking-feed">
+                      <div className="feed-header">
+                        <span className="live-pulse" />
+                        <strong>TRAZA DE PENSAMIENTO Y EJECUCIÓN (LIVE TRACE)</strong>
+                      </div>
+                      <div className="feed-body">
+                        <div className="trace-item">
+                          <span className="trace-time">Thought for 19s ›</span>
+                          <span className="trace-action">Find failed tests in run 0</span>
+                        </div>
+                        <div className="trace-item">
+                          <span className="trace-time">Check runs list ›</span>
+                          <span className="trace-action">Locate openBugs in App.tsx</span>
+                        </div>
+                        <div className="trace-item">
+                          <span className="trace-time">Thought for 14s ›</span>
+                          <span className="trace-action">Locate openBugs in App.tsx</span>
+                        </div>
+                        <div className="trace-item highlight">
+                          <span className="trace-time">Analyzed ⚛️</span>
+                          <span className="trace-action">TestDetailModal.tsx #L540-603</span>
+                        </div>
+                        <div className="trace-thinking-box">
+                          <div className="thinking-title">Thinking for 22s ▾</div>
+                          <p className="thinking-p">The alert incorrectly highlights the wrong step as failing; it accuses Step 1 (passed) instead of Step 3 (failed) and incorrectly starts the modal on Step 1. The "Copy Templates" button copies an incomplete prompt.</p>
+                          <p className="thinking-p">The dashboard incorrectly displays an open bug, and the "Create Bug" button should link to an existing, resolved ticket; the dashboard's metrics also incorrectly reflect the open bug count. Re-executing the test should transition the test status to "Passed."</p>
+                          <p className="thinking-p">Analyzing TestDetailModal.tsx reveals test is used in a useEffect hook and the header's "Create Bug" button.</p>
+                        </div>
+                        <div className="trace-item success">
+                          <span className="trace-time">Verified ›</span>
+                          <span className="trace-action">Playwright Chromium: Paso #3 corregido, 84/84 tests Passed ✓</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="iso-inspector-actions">

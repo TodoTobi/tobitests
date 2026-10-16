@@ -246,16 +246,9 @@ const S = (gx: number, gy: number, act: StopAction): Stop => ({ gx, gy, act });
 export const ROUTES: Record<string, { working: Stop[]; idle: Stop[] }> = {
   orchestrator: {
     working: [
-      S(8.5, 7.5, "work"),
-      S(2.5, 3.5, "idle"),
-      S(8.5, 7.5, "work"),
-      S(13.5, 4.5, "idle"),
-      S(8.5, 7.5, "work"),
-      S(5.5, 3.5, "idle"),
-      S(8.5, 7.5, "work"),
-      S(3.5, 4.5, "idle"),
+      S(8.9, 7.6, "work"),
     ],
-    idle: [S(8.5, 7.5, "idle"), S(14.5, 11.5, "coffee"), S(3.5, 10.5, "coffee")],
+    idle: [S(8.9, 7.6, "idle"), S(14.5, 11.5, "coffee"), S(3.5, 10.5, "coffee")],
   },
   explorer: {
     working: [S(2.5, 3.5, "work"), S(1.5, 5.5, "idle"), S(2.5, 3.5, "work")],

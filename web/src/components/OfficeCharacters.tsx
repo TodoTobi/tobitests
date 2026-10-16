@@ -60,27 +60,59 @@ export const AgentFigure: FC<AgentFigureProps> = ({ id, status, size = 68 }) => 
           {/* Smile */}
           <path d="M37 39 Q40 42 43 39" stroke="#9a3412" strokeWidth="1.2" strokeLinecap="round" fill="none" />
 
-          {/* Working hands on holographic tablet / desk */}
+          {/* Working hands with open laptop computer on desk */}
           {isWorking ? (
             <g className="hands-typing">
               {/* Desk surface */}
-              <rect x="12" y="68" width="56" height="6" rx="3" fill="#334155" />
-              {/* Hologram tablet */}
-              <rect x="26" y="60" width="28" height="12" rx="2" fill="#2f7d55" opacity="0.9" />
-              <line x1="30" y1="64" x2="50" y2="64" stroke="#a5b4fc" strokeWidth="1.5" />
-              <line x1="30" y1="68" x2="44" y2="68" stroke="#7fc4a0" strokeWidth="1" />
-              {/* Hands */}
-              <circle cx="28" cy="64" r="3.5" fill="#fbd38d" />
-              <circle cx="52" cy="64" r="3.5" fill="#fbd38d" />
+              <rect x="8" y="68" width="64" height="6" rx="3" fill="#1e293b" />
+              
+              {/* Secondary vertical code monitor on the right */}
+              <g className="vertical-monitor">
+                <rect x="61" y="42" width="13" height="25" rx="2" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+                <rect x="62.5" y="43.5" width="10" height="22" rx="1" fill="#090d16" />
+                <line x1="64" y1="47" x2="71" y2="47" stroke="#10b981" strokeWidth="1" strokeLinecap="round" />
+                <line x1="64" y1="50" x2="71.5" y2="50" stroke="#38bdf8" strokeWidth="1" strokeLinecap="round" />
+                <line x1="64" y1="53" x2="69" y2="53" stroke="#a78bfa" strokeWidth="1" strokeLinecap="round" />
+                <line x1="64" y1="56" x2="71" y2="56" stroke="#10b981" strokeWidth="1" strokeLinecap="round" />
+                <line x1="64" y1="59" x2="70" y2="59" stroke="#f59e0b" strokeWidth="1" strokeLinecap="round" />
+                <line x1="64" y1="62" x2="68" y2="62" stroke="#94a3b8" strokeWidth="1" strokeLinecap="round" />
+                <rect x="66" y="67" width="3" height="2" fill="#475569" />
+              </g>
+
+              {/* Main Laptop - open display */}
+              <polygon points="21,46 59,46 56,64 24,64" fill="#0f172a" stroke="#475569" strokeWidth="1" />
+              {/* Illuminated IDE screen */}
+              <polygon points="22.5,47.5 57.5,47.5 55,62.5 25,62.5" fill="#090d16" />
+              
+              {/* Glowing code lines on laptop */}
+              <line x1="26" y1="51" x2="44" y2="51" stroke="#34d399" strokeWidth="1.3" strokeLinecap="round" />
+              <line x1="26" y1="54" x2="52" y2="54" stroke="#38bdf8" strokeWidth="1.3" strokeLinecap="round" />
+              <line x1="29" y1="57" x2="49" y2="57" stroke="#a78bfa" strokeWidth="1.1" strokeLinecap="round" />
+              <line x1="29" y1="60" x2="42" y2="60" stroke="#fbbf24" strokeWidth="1" strokeLinecap="round" />
+
+              {/* Laptop keyboard base */}
+              <polygon points="19,70 61,70 56,64 24,64" fill="#1e293b" stroke="#334155" strokeWidth="0.8" />
+              <line x1="26" y1="66.5" x2="54" y2="66.5" stroke="#64748b" strokeWidth="1" strokeDasharray="3 1.5" />
+              <line x1="23" y1="68.5" x2="57" y2="68.5" stroke="#64748b" strokeWidth="1" strokeDasharray="3 1.5" />
+              {/* Trackpad */}
+              <rect x="36" y="68" width="8" height="2" rx="0.5" fill="#0f172a" />
+
+              {/* Hands actively typing on keyboard */}
+              <circle cx="27" cy="65.5" r="3.2" fill="#fbd38d" className="typing-hand-left" />
+              <circle cx="53" cy="65.5" r="3.2" fill="#fbd38d" className="typing-hand-right" />
             </g>
           ) : (
             <g className="resting-mug">
+              {/* Desk surface */}
+              <rect x="12" y="68" width="56" height="6" rx="3" fill="#334155" />
+              {/* Closed laptop resting on desk */}
+              <rect x="24" y="65" width="22" height="3" rx="1" fill="#1e293b" stroke="#475569" strokeWidth="0.6" />
               {/* Mug of coffee */}
-              <rect x="48" y="58" width="8" height="10" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
-              <path d="M56 61 C59 61 59 66 56 66" stroke="#94a3b8" strokeWidth="1" fill="none" />
+              <rect x="50" y="58" width="8" height="10" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
+              <path d="M58 61 C61 61 61 66 58 66" stroke="#94a3b8" strokeWidth="1" fill="none" />
               {/* Steam */}
-              <path d="M50 54 Q52 50 50 48" stroke="#cbd5e1" strokeWidth="1" strokeLinecap="round" />
-              <path d="M54 55 Q56 51 54 49" stroke="#cbd5e1" strokeWidth="1" strokeLinecap="round" />
+              <path d="M52 54 Q54 50 52 48" stroke="#cbd5e1" strokeWidth="1" strokeLinecap="round" />
+              <path d="M56 55 Q58 51 56 49" stroke="#cbd5e1" strokeWidth="1" strokeLinecap="round" />
               {/* Resting arm */}
               <circle cx="48" cy="64" r="3" fill="#fbd38d" />
             </g>

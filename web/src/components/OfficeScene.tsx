@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import { AgentFigure } from "./OfficeCharacters";
 import type { OfficeAgent } from "../hooks/useTobiState";
 import type { AgentPose } from "./useAgentMotion";
@@ -22,6 +22,64 @@ import {
   getMonitorsForProject,
   type ScreenModal,
 } from "./officeIso";
+
+export interface AntigravityThought {
+  time: string;
+  action: string;
+  detail?: string;
+  icon?: string;
+}
+
+export const ANTIGRAVITY_REAL_THOUGHTS: AntigravityThought[] = [
+  {
+    time: "Thought for 19s",
+    action: "Find failed tests in run 0",
+    detail: "Inspeccionando suite #RUN-SELF-01 y aislando fallo en TC-OFFICE-13",
+    icon: "🔍"
+  },
+  {
+    time: "Thought for 14s",
+    action: "Locate openBugs in App.tsx",
+    detail: "Mapeando sincronización de métricas y contador dinámico de bugs",
+    icon: "📂"
+  },
+  {
+    time: "Thought for 9s",
+    action: "Analyzed ⚛️ TestDetailModal.tsx #L540-603",
+    detail: "Detectando origen de discrepancia en diagnóstico del paso #1 vs paso #3",
+    icon: "⚛️"
+  },
+  {
+    time: "Thinking for 22s",
+    action: "The alert incorrectly highlights Step 1 instead of Step 3",
+    detail: "Corrigiendo failingStepIdx, auto-focus en paso fallido y copia de plantillas BDD",
+    icon: "🧠"
+  },
+  {
+    time: "Thought for 11s",
+    action: "Minimal Fix en TestDetailModal & useTobiState",
+    detail: "Preservando retrocompatibilidad e inyectando re-ejecución en vivo",
+    icon: "🛠️"
+  },
+  {
+    time: "Thought for 16s",
+    action: "Playwright verify_modal_fix.py: status Passed ✓",
+    detail: "Validando en Chromium: Paso #3 enfocado, alerta correcta y 0 fallos",
+    icon: "▶"
+  },
+  {
+    time: "Thought for 8s",
+    action: "Git commit & push origin main › commit 53cf23f",
+    detail: "Pushed conventional commit con fix de diagnóstico y correlación de tickets",
+    icon: "🌿"
+  },
+  {
+    time: "Thought for 12s",
+    action: "Engram Memory Sync: rel-1fb99a4211ddf4cc",
+    detail: "Memoria persistente registrada y juzgada como compatible sin conflictos",
+    icon: "💾"
+  }
+];
 
 interface OfficeSceneProps {
   agents: OfficeAgent[];
@@ -203,6 +261,17 @@ export function OfficeScene({
   onSelect,
   onOpenScreen,
 }: OfficeSceneProps) {
+  const [thoughtIdx, setThoughtIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setThoughtIdx((prev) => (prev + 1) % ANTIGRAVITY_REAL_THOUGHTS.length);
+    }, 3800);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentThought = ANTIGRAVITY_REAL_THOUGHTS[thoughtIdx];
+
   const canvasStyle: React.CSSProperties = {
     width: SCENE_W,
     height: SCENE_H,
@@ -253,6 +322,8 @@ export function OfficeScene({
           ? agent.bubble
           : agent.idleBubble || "Descansando";
         const walking = pose.action === "walk";
+        const isOrchestratorThinking = agent.id === "orchestrator" && isWorking && !isStandup;
+
         return (
           <div
             key={agent.id}
@@ -270,7 +341,26 @@ export function OfficeScene({
               }
             }}
           >
-            <span className="iso-agent-bubble">{bubble}</span>
+            {isOrchestratorThinking ? (
+              <div className="iso-agent-bubble iso-antigravity-thinking-bubble">
+                <div className="thought-badge-row">
+                  <span className="thought-pulse-dot" />
+                  <span className="thought-time">{currentThought.time}</span>
+                  <span className="thought-chevron">›</span>
+                  <span className="thought-action">
+                    {currentThought.icon && <span className="thought-icon">{currentThought.icon}</span>}
+                    {currentThought.action}
+                  </span>
+                </div>
+                {currentThought.detail && (
+                  <div className="thought-detail-text">
+                    {currentThought.detail}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span className="iso-agent-bubble">{bubble}</span>
+            )}
             <span className="iso-agent-shadow" />
             <span className="iso-agent-flip" style={{ transform: pose.dir < 0 ? "scaleX(-1)" : "none" }}>
               <span className="iso-agent-figure">

@@ -439,6 +439,104 @@
   border-color: var(--agent);
   color: var(--agent);
 }
+
+/* Antigravity Real Thinking Bubble (matches IDE thought trace) */
+.iso-agent-bubble.iso-antigravity-thinking-bubble {
+  background: #111215;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #e2e8f0;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(16, 185, 129, 0.25);
+  padding: 6px 11px;
+  border-radius: 9px;
+  max-width: 280px;
+  white-space: normal;
+  text-align: left;
+  font-family: var(--font-mono, monospace);
+  animation: antigravityThoughtPulse 3.8s infinite ease-in-out;
+}
+.iso-agent-bubble.iso-antigravity-thinking-bubble::after {
+  background: #111215;
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+.thought-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 550;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+.thought-pulse-dot {
+  width: 6.5px;
+  height: 6.5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  flex-shrink: 0;
+  animation: pulse-ring 1.8s infinite;
+}
+.thought-time {
+  color: #94a3b8;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.thought-chevron {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+.thought-action {
+  color: #f8fafc;
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.thought-icon {
+  font-size: 11.5px;
+}
+.thought-detail-text {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  font-size: 10px;
+  color: #cbd5e1;
+  line-height: 1.4;
+  font-family: var(--font-sans, system-ui);
+}
+@keyframes antigravityThoughtPulse {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(16, 185, 129, 0.25);
+  }
+  50% {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 14px rgba(16, 185, 129, 0.35);
+  }
+}
+
+/* Hands typing micro-animation on keyboard */
+.typing-hand-left {
+  animation: typeKeyL 0.22s infinite alternate ease-in-out;
+}
+.typing-hand-right {
+  animation: typeKeyR 0.22s infinite alternate ease-in-out 0.11s;
+}
+@keyframes typeKeyL {
+  from { transform: translateY(0); }
+  to { transform: translateY(-1.2px) translateX(0.5px); }
+}
+@keyframes typeKeyR {
+  from { transform: translateY(0); }
+  to { transform: translateY(-1.2px) translateX(-0.5px); }
+}
+
 .iso-agent.is-in-standup .iso-agent-bubble {
   border-color: #10b981;
   background: #ffffff;
@@ -755,6 +853,83 @@
   font-size: 12.5px;
   line-height: 1.7;
   overflow-x: auto;
+}
+
+/* --- Live Thinking Trace inside Inspector Card --- */
+.iso-inspector-thinking-feed {
+  margin-top: 14px;
+  background: #111215;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-family: var(--font-mono, monospace);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+.iso-inspector-thinking-feed .feed-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 9px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.iso-inspector-thinking-feed .feed-header strong {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+.iso-inspector-thinking-feed .feed-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.iso-inspector-thinking-feed .trace-item {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+.iso-inspector-thinking-feed .trace-item.highlight {
+  color: #38bdf8;
+  font-weight: 550;
+}
+.iso-inspector-thinking-feed .trace-item.success {
+  color: #34d399;
+  font-weight: 550;
+}
+.iso-inspector-thinking-feed .trace-time {
+  color: #94a3b8;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.iso-inspector-thinking-feed .trace-action {
+  color: inherit;
+  font-size: 11px;
+}
+.iso-inspector-thinking-feed .trace-thinking-box {
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 2px solid #a78bfa;
+  border-radius: 4px;
+  padding: 7px 10px;
+  margin: 4px 0;
+}
+.iso-inspector-thinking-feed .thinking-title {
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 10.5px;
+  margin-bottom: 4px;
+}
+.iso-inspector-thinking-feed .thinking-p {
+  color: #94a3b8;
+  font-size: 10.5px;
+  line-height: 1.45;
+  margin: 0 0 4px;
+  font-family: var(--font-sans, system-ui);
+}
+.iso-inspector-thinking-feed .thinking-p:last-child {
+  margin-bottom: 0;
 }
 
 /* --- Mobile fallback ------------------------------------------------ */
