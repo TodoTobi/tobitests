@@ -1183,48 +1183,114 @@ function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
 function DiagnosticPage({ navigate, tobi }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState> }) {
   const bug = tobi.state.bugs[0];
   const { project, liveRun } = tobi.state;
+  const [viewMode, setViewMode] = useState<"video" | "snapshot">("video");
+
   const sections = [
-    ["Hechos observados", "success", `En ${project.name}, al cancelar desde la bandeja de Mensajes el ítem desaparece localmente, pero la vista de Mascotas -> Tus consultas mantiene el estado "En consulta".`],
-    ["Hipótesis técnica (White-Box)", "agent", "La mutación de cancelación en Mensajes actualiza la bandeja de conversación pero no sincroniza ni invalida el estado del turno/consulta asociado a la mascota."],
-    ["Verificación E2E", "info", "Documentado en specs/vetconnect-appointments.spec.ts y correlacionado con la plantilla BDD estandarizada."],
-    ["Acción recomendada", "warning", "Unificar la cancelación en el controlador backend y refrescar el estado compartido de consultas en el cliente React."],
+    { title: "Hechos observados (Black-Box)", tone: "success", text: `En ${project.name}, al presionar "Cancelar" en la bandeja de Mensajes, el ítem desaparece visualmente, pero al navegar a Mascotas → Tus consultas el registro permanece activo en estado "En consulta".` },
+    { title: "Hipótesis técnica (White-Box Code)", tone: "agent", text: "La mutación de cancelación en /client/messages invalida únicamente el estado local de mensajes sin emitir un evento de invalidación en la entidad Consultation ni actualizar el backend relacional." },
+    { title: "Verificación E2E (Playwright Specs)", tone: "info", text: "Registrado en specs/vetconnect-appointments.spec.ts. Automatización reproducible y correlacionada con la plantilla Gherkin/BDD oficial." },
+    { title: "Acción recomendada (Engineering Fix)", tone: "warning", text: "Unificar la cancelación en el controlador backend /api/consultations/:id/cancel y disparar la revalidación de caché en React Query para el cliente." },
   ];
+
   return <>
     <PageHeading title={`Diagnostic Studio · ${bug.id}`} subtitle={`${project.name} · ${bug.runId} · ${bug.section}`}>
       <Button variant="secondary" onClick={() => navigate("bug-detail")}>Ver Plantilla BDD</Button>
       <Button onClick={() => navigate("specs")}>Abrir Spec en Código <Icon name="arrow" size="sm" /></Button>
     </PageHeading>
+
     <div className="diagnostic-layout">
       <div className="diagnostic-main">
         <section className="panel diagnostic-summary">
           <div>
-            <Badge tone="danger">{bug.severity.toUpperCase()} IMPACT</Badge>
+            <div className="diag-title-row">
+              <Badge tone="danger">{bug.severity.toUpperCase()} IMPACT</Badge>
+              <span className="diag-breadcrumbs">VetConnect · Mensajes ↔ Consultas</span>
+            </div>
             <div className="heading-md">{bug.title}</div>
             <p>{bug.entonces}</p>
           </div>
-          <div className="diagnostic-score"><span>100%</span><small>BDD Verified</small></div>
-        </section>
-        <div className="diagnostic-browser panel real-screenshot-container">
-          <div className="mirror-bar"><div className="browser-dots"><span /><span /><span /></div><div className="mirror-url">{project.url}/terms · Inspección CDP</div><Badge tone="agent">White-Box + CDP</Badge></div>
-          <div className="real-shot-wrapper diag-real-wrapper">
-            <img src="/evidence/bugs/bug-01-divergence-evidence.png" alt="Diagnostic Viewport" className="real-shot-img" />
-            <div className="shot-dialog-bubble">
-              <strong>Divergencia: {bug.section}</strong>
-              <small>Mascotas → Tus consultas: Sigue figurando como "En consulta" tras cancelar en Mensajes</small>
+          <div className="diag-metrics-pill-group">
+            <div className="diag-stat-card success">
+              <strong>100%</strong>
+              <small>BDD VERIFICADO</small>
             </div>
-            <div className="diag-highlight"><span>BUG-01</span></div>
+            <div className="diag-stat-card danger">
+              <strong>409 SYNC</strong>
+              <small>DIVERGENCIA</small>
+            </div>
+          </div>
+        </section>
+
+        <div className="diagnostic-browser panel real-screenshot-container">
+          <div className="diag-mirror-bar">
+            <div className="browser-dots"><span /><span /><span /></div>
+            <div className="diag-browser-url">localhost:5173/client/consultations ↔ messages</div>
+            <div className="diag-viewport-tabs">
+              <button
+                type="button"
+                className={`diag-tab-btn ${viewMode === "video" ? "active" : ""}`}
+                onClick={() => setViewMode("video")}
+              >
+                ▶ Replay
+              </button>
+              <button
+                type="button"
+                className={`diag-tab-btn ${viewMode === "snapshot" ? "active" : ""}`}
+                onClick={() => setViewMode("snapshot")}
+              >
+                📷 Snapshot Real
+              </button>
+            </div>
+          </div>
+
+          <div className="real-shot-wrapper diag-real-wrapper">
+            {viewMode === "video" ? (
+              <video
+                src="/evidence/videos/bug-01-cancellation-replay.webm"
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="diag-video-player"
+              />
+            ) : (
+              <>
+                <img
+                  src="/evidence/bugs/bug-01-divergence-evidence.png"
+                  alt="Diagnostic Viewport"
+                  className="real-shot-img"
+                />
+                <div className="shot-dialog-bubble">
+                  <strong>Divergencia confirmada: {bug.section}</strong>
+                  <small>Mascotas → Tus consultas: Sigue figurando como "Confirmada / En consulta" tras cancelar en Mensajes</small>
+                </div>
+                <div className="diag-highlight"><span>BUG-01</span></div>
+              </>
+            )}
           </div>
         </div>
+
         <section className="panel analysis-grid">
-          {sections.map(([title, tone, text], i) => (
-            <div className={`analysis-block ${tone}`} key={title}>
+          {sections.map((sec, i) => (
+            <div className={`analysis-block ${sec.tone}`} key={sec.title}>
               <span>{i + 1}</span>
-              <div><div className="heading-sm">{title}</div><p>{text}</p></div>
+              <div>
+                <div className="heading-sm">{sec.title}</div>
+                <p>{sec.text}</p>
+              </div>
             </div>
           ))}
         </section>
+
         <section className="panel trace-panel">
-          <div className="panel-head"><div><div className="heading-sm">Línea temporal de eventos MCP</div><p>Eventos reales registrados en {liveRun.id}</p></div></div>
+          <div className="panel-head">
+            <div>
+              <div className="heading-sm">Línea temporal de eventos MCP & Telemetría</div>
+              <p>Eventos reales registrados en {liveRun.id} durante la ejecución del subagente</p>
+            </div>
+            <Badge tone="agent">Chrome DevTools Protocol</Badge>
+          </div>
           <div className="trace-list">
             {liveRun.telemetryLogs.map((log, i) => (
               <div key={i}>
@@ -1236,12 +1302,24 @@ function DiagnosticPage({ navigate, tobi }: { navigate: (view: AppView) => void;
           </div>
         </section>
       </div>
+
       <aside className="diagnostic-context panel">
-        <div className="panel-head"><div className="heading-sm">Contexto del Repositorio</div></div>
-        <div className="context-agent"><span>TA</span><div><small>AGENTE DETECTOR</small><strong>{bug.agent}</strong><p>Con acceso a Chrome DevTools MCP</p></div></div>
+        <div className="panel-head">
+          <div className="heading-sm">Contexto del Repositorio</div>
+        </div>
+        <div className="context-agent">
+          <span>TA</span>
+          <div>
+            <small>AGENTE DETECTOR</small>
+            <strong>{bug.agent}</strong>
+            <p>Conectado a Chrome DevTools MCP</p>
+          </div>
+        </div>
         <div className="context-section">
           <small>HERRAMIENTAS MCP ACTIVAS</small>
-          {["@playwright/mcp (Accessibility Tree)", "@chromedevtools/chrome-devtools-mcp", "Repo White-Box Access"].map((x) => <p key={x}><Icon name="check" size="sm" />{x}</p>)}
+          {["@playwright/mcp (Accessibility Tree)", "@chromedevtools/chrome-devtools-mcp", "Repo White-Box Access"].map((x) => (
+            <p key={x}><Icon name="check" size="sm" />{x}</p>
+          ))}
         </div>
         <div className="context-section">
           <small>ARCHIVOS VINCULADOS</small>
@@ -1249,7 +1327,16 @@ function DiagnosticPage({ navigate, tobi }: { navigate: (view: AppView) => void;
           <code>specs/vetconnect-auth.spec.ts</code>
           <code>specs/vetconnect-appointments.spec.ts</code>
         </div>
-        <Button variant="secondary" className="full-button" onClick={() => navigate("specs")}>Inspeccionar código del Spec</Button>
+        <div className="context-section">
+          <small>CUENTAS DE PRUEBA EMPLEADAS</small>
+          <p>Tutor: <code>tobias@gmail.com</code></p>
+          <p>Doctor: <code>doctor@gmail.com</code></p>
+        </div>
+        <div style={{ padding: "0 16px 16px" }}>
+          <Button variant="secondary" className="full-button" onClick={() => navigate("specs")}>
+            Inspeccionar código del Spec
+          </Button>
+        </div>
       </aside>
     </div>
   </>;
