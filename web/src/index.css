@@ -2465,3 +2465,218 @@ code { font-family: "JetBrains Mono", monospace; }
   font: 700 7.5px "JetBrains Mono";
 }
 
+/* ==========================================================================
+   Real Playwright Video Replay & Standardized BDD Template Layout
+   ========================================================================== */
+.bug-video-hero-panel {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #090d16;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.bug-video-hero-panel .panel-head {
+  padding: 14px 20px;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.video-head-titles .heading-sm {
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-head-titles p {
+  color: #94a3b8;
+  font-size: 7.5px;
+  margin: 3px 0 0;
+}
+
+.video-rec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulse 1.2s infinite;
+}
+
+.account-switcher-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #334155;
+  background: #1e293b;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.account-pill-btn:hover {
+  background: #334155;
+  color: white;
+}
+
+.account-pill-btn.active {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: #38bdf8;
+  color: white;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.role-tag {
+  font: 700 6.5px "JetBrains Mono";
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #0284c7;
+  color: white;
+  letter-spacing: 0.06em;
+}
+
+.role-tag.doc {
+  background: #059669;
+}
+
+.account-pill-btn strong {
+  font-size: 7.5px;
+}
+
+.account-pill-btn small {
+  font-size: 6.5px;
+  color: #94a3b8;
+  font-family: "JetBrains Mono";
+}
+
+.bug-video-viewport {
+  position: relative;
+  background: #050811;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  min-height: 380px;
+}
+
+.real-playwright-video-player {
+  width: 100%;
+  max-width: 960px;
+  max-height: 480px;
+  border-radius: 8px;
+  border: 1.5px solid #1e293b;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  background: black;
+}
+
+.video-viewport-badge {
+  position: absolute;
+  bottom: 24px;
+  left: 28px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font: 700 7px "JetBrains Mono";
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+}
+
+/* Standardized BDD Template Card */
+.standard-bdd-card {
+  padding: 18px 20px;
+  background: #fafcfe;
+  border: 1.5px solid #dcebf5;
+  border-radius: 10px;
+  margin: 12px;
+}
+
+.bdd-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.bdd-title-line {
+  color: var(--primary);
+  font: 700 8.5px "JetBrains Mono";
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.bdd-lbl {
+  font: 700 7.5px "JetBrains Mono";
+  color: #475569;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.bdd-val {
+  margin: 0;
+  color: var(--text);
+  font-size: 8.5px;
+}
+
+.bdd-steps-header {
+  margin-top: 14px;
+  color: var(--text-secondary);
+}
+
+.bdd-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding-left: 6px;
+}
+
+.bdd-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.gherkin-tag {
+  font: 700 7px "JetBrains Mono";
+  padding: 3px 8px;
+  border-radius: 5px;
+  color: white;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  min-width: 68px;
+  text-align: center;
+}
+
+.gherkin-tag.dado { background: #0284c7; }
+.gherkin-tag.cuando { background: #6750e9; }
+.gherkin-tag.entonces { background: #b91c1c; }
+
+.bdd-step-row p {
+  margin: 0;
+  font-size: 8.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+

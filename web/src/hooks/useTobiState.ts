@@ -72,6 +72,8 @@ export interface BugItem {
   cuando: string;
   entonces: string;
   screenshot?: string;
+  videoUrl?: string;
+  doctorVideoUrl?: string;
 }
 
 export interface SpecItem {
@@ -212,7 +214,8 @@ export function useTobiState() {
   }, [state.officeAgents, updateState]);
 
   const copyBddToClipboard = useCallback((bug: BugItem) => {
-    const text = `Escenario:
+    const text = `Esquema de Plantilla Estandarizado:
+Definir el Escenario (Gherkin/BDD):
 Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
 Pasos para reproducir:
 Dado que ${bug.dadoQue}

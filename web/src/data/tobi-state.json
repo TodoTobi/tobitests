@@ -207,8 +207,10 @@
       "scenario": "BUG-01: Inconsistencia al cancelar consulta entre Mensajes y Mascotas, seccion: Mensajes / Consultas",
       "dadoQue": "el usuario tiene una consulta activa (\"En consulta\") registrada para una mascota.",
       "cuando": "el usuario accede a la sección \"Mensajes\" y presiona el botón \"Cancelar\".",
-      "entonces": "el mensaje es removido de la bandeja (resultado real obtenido), pero al navegar a \"Mascotas -> Tus consultas\", el registro de la consulta sigue figurando erróneamente en estado \"En consulta\" (resultado real obtenido) cuando debería figurar como cancelado o haber sido eliminado de forma sincronizada en ambas secciones (resultado esperado).",
-      "screenshot": "/evidence/bugs/bug-01-divergence-evidence.png"
+      "entonces": "el mensaje es removido de la bandeja (resultado real obtenido), pero al navegar a \"Mascotas → Tus consultas\", el registro de la consulta sigue figurando erróneamente en estado \"En consulta\" (resultado real obtenido) frente a cuando debería figurar como cancelado o haber sido eliminado de forma sincronizada en ambas secciones (resultado esperado).",
+      "screenshot": "/evidence/bugs/bug-01-divergence-evidence.png",
+      "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+      "doctorVideoUrl": "/evidence/videos/doctor-portal-audit.webm"
     }
   ],
   "specs": [

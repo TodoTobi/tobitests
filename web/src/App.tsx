@@ -759,9 +759,10 @@ function RunDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
   </>;
 }
 
-function LiveRunPage({ tobi }: { tobi: ReturnType<typeof useTobiState> }) {
+function LiveRunPage({ tobi }: { navigate?: (view: AppView) => void; tobi: ReturnType<typeof useTobiState> }) {
   const [tab, setTab] = useState("Console");
   const [selected, setSelected] = useState(0);
+  const [viewMode, setViewMode] = useState<"screenshot" | "video">("screenshot");
   const { liveRun, project } = tobi.state;
   const activeStep = liveRun.steps[selected] || liveRun.steps[0];
 
@@ -786,29 +787,70 @@ function LiveRunPage({ tobi }: { tobi: ReturnType<typeof useTobiState> }) {
         <div className="mirror-bar">
           <div className="browser-dots"><span /><span /><span /></div>
           <div className="mirror-url"><Icon name="check" size="sm" /> {liveRun.target}{activeStep?.target.startsWith("/") ? activeStep.target : "/login"}</div>
-          <Badge tone="success">Playwright MCP</Badge>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <button
+              className={`account-pill-btn ${viewMode === "screenshot" ? "active" : ""}`}
+              onClick={() => setViewMode("screenshot")}
+              style={{ padding: "3px 8px" }}
+            >
+              📸 Capturas de Paso
+            </button>
+            <button
+              className={`account-pill-btn ${viewMode === "video" ? "active" : ""}`}
+              onClick={() => setViewMode("video")}
+              style={{ padding: "3px 8px" }}
+            >
+              📹 Video Replay (.webm)
+            </button>
+            <Badge tone="success">Playwright MCP</Badge>
+          </div>
         </div>
         <div className="live-real-mirror">
-          <img
-            src={activeStep?.screenshot || "/evidence/runs/02-login-inspection.png"}
-            alt={activeStep?.description || "Live Execution"}
-            className="real-mirror-img"
-          />
-          <div className="live-agent-hud">
-            <span className="hud-badge"><Icon name="spark" size="sm" /> {activeStep?.agent || "Explorer QA"} · @playwright/mcp</span>
-            <div className="hud-info">
-              <strong>Paso {activeStep?.index}: {activeStep?.action}</strong>
-              <code>{activeStep?.target}</code>
-              <small>{activeStep?.description}</small>
+          {viewMode === "screenshot" ? (
+            <>
+              <img
+                src={activeStep?.screenshot || "/evidence/runs/02-login-inspection.png"}
+                alt={activeStep?.description || "Live Execution"}
+                className="real-mirror-img"
+              />
+              <div className="live-agent-hud">
+                <span className="hud-badge"><Icon name="spark" size="sm" /> {activeStep?.agent || "Explorer QA"} · @playwright/mcp</span>
+                <div className="hud-info">
+                  <strong>Paso {activeStep?.index}: {activeStep?.action}</strong>
+                  <code>{activeStep?.target}</code>
+                  <small>{activeStep?.description}</small>
+                </div>
+                <Badge tone={activeStep?.status === "Passed" ? "success" : "agent"}>
+                  {activeStep?.status} ({activeStep?.duration})
+                </Badge>
+              </div>
+              <div className="step-pointer-live">
+                <span>{activeStep?.index}</span>
+                <p>{activeStep?.action} · {activeStep?.target}</p>
+              </div>
+            </>
+          ) : (
+            <div style={{ width: "100%", height: "100%", background: "#090d16", display: "flex", flexDirection: "column" }}>
+              <video
+                src="/evidence/videos/bug-01-cancellation-replay.webm"
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="real-mirror-img"
+                style={{ objectFit: "contain", maxHeight: 420 }}
+              />
+              <div className="live-agent-hud">
+                <span className="hud-badge"><Icon name="play" size="sm" /> Playwright Chromium Video · 1280x720</span>
+                <div className="hud-info">
+                  <strong>Grabación real de ejecución de pruebas en VetConnect</strong>
+                  <code>Cuentas: tobias@gmail.com (Tutor) · doctor@gmail.com (Doctor)</code>
+                  <small>Verificado con @playwright/test en Chromium headless shell</small>
+                </div>
+              </div>
             </div>
-            <Badge tone={activeStep?.status === "Passed" ? "success" : "agent"}>
-              {activeStep?.status} ({activeStep?.duration})
-            </Badge>
-          </div>
-          <div className="step-pointer-live">
-            <span>{activeStep?.index}</span>
-            <p>{activeStep?.action} · {activeStep?.target}</p>
-          </div>
+          )}
         </div>
       </section>
       <aside className="step-panel panel">
@@ -932,7 +974,12 @@ function BugTrackerPage({ navigate, tobi }: { navigate: (view: AppView) => void;
 function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState> }) {
   const [evidence, setEvidence] = useState("Visual State");
   const [copied, setCopied] = useState(false);
+  const [activeAccount, setActiveAccount] = useState<"tutor" | "doctor">("tutor");
   const bug = tobi.state.bugs[0];
+
+  const activeVideo = activeAccount === "tutor"
+    ? (bug.videoUrl || "/evidence/videos/bug-01-cancellation-replay.webm")
+    : (bug.doctorVideoUrl || "/evidence/videos/doctor-portal-audit.webm");
 
   const handleCopy = () => {
     tobi.copyBddToClipboard(bug);
@@ -941,13 +988,24 @@ function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
   };
 
   return <>
-    <div className="detail-back"><Button variant="ghost" onClick={() => navigate("bug-tracker")}><Icon name="arrow" size="sm" /> Volver a Bug Tracker</Button></div>
-    <PageHeading title={`${bug.id} · ${bug.title}`} subtitle={`Sección: ${bug.section} · Proyecto: ${tobi.state.project.name}`}>
+    <div className="detail-back">
+      <Button variant="ghost" onClick={() => navigate("bug-tracker")}>
+        <Icon name="arrow" size="sm" /> Volver a Bug Tracker
+      </Button>
+    </div>
+
+    <PageHeading
+      title={`${bug.id} · ${bug.title}`}
+      subtitle={`Sección: ${bug.section} · Proyecto: ${tobi.state.project.name}`}
+    >
       <Button variant={copied ? "primary" : "secondary"} onClick={handleCopy}>
         <Icon name="file" size="sm" /> {copied ? "✓ ¡Copiado con formato BDD!" : "Copiar Plantilla BDD"}
       </Button>
-      <Button onClick={() => tobi.downloadMasterBugReport()}><Icon name="spark" size="sm" /> Exportar Master Report (.md)</Button>
+      <Button onClick={() => tobi.downloadMasterBugReport()}>
+        <Icon name="spark" size="sm" /> Exportar Master Report (.md)
+      </Button>
     </PageHeading>
+
     <div className="bug-meta panel">
       <div><small>SEVERIDAD</small><Badge tone="danger">{bug.severity}</Badge></div>
       <div><small>ESTADO</small><Badge tone="agent">{bug.status}</Badge></div>
@@ -955,52 +1013,131 @@ function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
       <div><small>EJECUCIÓN</small><Button variant="ghost" onClick={() => navigate("run-detail")}>{bug.runId}</Button></div>
       <div><small>SPEC ASOCIADO</small><Button variant="ghost" onClick={() => navigate("specs")}>vetconnect-appointments.spec.ts</Button></div>
     </div>
-    <div className="bug-detail-grid">
+
+    {/* Video Replay Container (Top Priority) */}
+    <section className="panel bug-video-hero-panel">
+      <div className="panel-head">
+        <div className="video-head-titles">
+          <div className="heading-sm">
+            <span className="video-rec-dot" /> Reproducción de Video E2E · Grabación Real de Playwright
+          </div>
+          <p>Captura real en Chromium durante la ejecución automatizada del bug en VetConnect</p>
+        </div>
+        <div className="account-switcher-pills">
+          <button
+            className={`account-pill-btn ${activeAccount === "tutor" ? "active" : ""}`}
+            onClick={() => setActiveAccount("tutor")}
+          >
+            <span className="role-tag tutor">TUTOR</span>
+            <strong>tobias@gmail.com</strong>
+            <small>Pass: Tobias123+</small>
+          </button>
+          <button
+            className={`account-pill-btn ${activeAccount === "doctor" ? "active" : ""}`}
+            onClick={() => setActiveAccount("doctor")}
+          >
+            <span className="role-tag doc">DOC</span>
+            <strong>doctor@gmail.com</strong>
+            <small>Pass: Doctor 123+</small>
+          </button>
+        </div>
+      </div>
+
+      <div className="bug-video-viewport">
+        <video
+          key={activeVideo}
+          src={activeVideo}
+          controls
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="real-playwright-video-player"
+        />
+        <div className="video-viewport-badge">
+          <span className="live-pulse" />
+          <span>PLAYWRIGHT WEBM REPLAY · 1280x720 · {activeAccount === "tutor" ? "Cuenta Tutor (tobias@gmail.com)" : "Cuenta Doctor (doctor@gmail.com)"}</span>
+        </div>
+      </div>
+    </section>
+
+    {/* Directamente Debajo del Video: Esquema de Plantilla Estandarizado */}
+    <div className="bug-detail-grid" style={{ marginTop: 18 }}>
       <div>
         <section className="panel bdd-panel">
           <div className="panel-head">
-            <div><div className="heading-sm">Esquema de Plantilla Estandarizado (Gherkin / BDD)</div><p>Estructura obligatoria para reporte y reproducción de bugs</p></div>
-            <Badge tone="info">BDD Oficial</Badge>
+            <div>
+              <div className="heading-sm">Esquema de Plantilla Estandarizado:</div>
+              <p>Definir el Escenario (Gherkin/BDD):</p>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <Button variant="secondary" onClick={handleCopy}>
+                <Icon name="file" size="sm" /> {copied ? "✓ Copiado" : "Copiar Plantilla BDD"}
+              </Button>
+              <Badge tone="info">BDD Oficial</Badge>
+            </div>
           </div>
-          <div className="gherkin">
-            <div>
-              <span>Nombre y sección:</span>
-              <p><strong>({bug.id}: {bug.title}, seccion: {bug.section}).</strong></p>
+
+          <div className="standard-bdd-card">
+            <div className="bdd-line bdd-title-line">
+              <span className="bdd-lbl">Definir el Escenario (Gherkin/BDD):</span>
             </div>
-            <div>
-              <span>Pasos para reproducir:</span>
-              <p>Secuencia exacta verificada por {bug.agent}</p>
+
+            <div className="bdd-line bdd-name-line">
+              <span className="bdd-lbl">Nombre y sección:</span>
+              <p className="bdd-val">
+                <strong>({bug.id}: {bug.title}, seccion: {bug.section}).</strong>
+              </p>
             </div>
-            <div>
-              <code>Dado que</code>
-              <p>{bug.dadoQue}</p>
+
+            <div className="bdd-line bdd-steps-header">
+              <span className="bdd-lbl">Pasos para reproducir:</span>
             </div>
-            <div>
-              <code>Cuando</code>
-              <p>{bug.cuando}</p>
-            </div>
-            <div>
-              <code>Entonces</code>
-              <p>{bug.entonces}</p>
+
+            <div className="bdd-steps-list">
+              <div className="bdd-step-row">
+                <span className="gherkin-tag dado">Dado que</span>
+                <p>{bug.dadoQue}</p>
+              </div>
+
+              <div className="bdd-step-row">
+                <span className="gherkin-tag cuando">Cuando</span>
+                <p>{bug.cuando}</p>
+              </div>
+
+              <div className="bdd-step-row">
+                <span className="gherkin-tag entonces">Entonces</span>
+                <p>{bug.entonces}</p>
+              </div>
             </div>
           </div>
         </section>
-        <section className="panel content-panel">
-          <div className="panel-head"><div className="heading-sm">Contraste de Comportamiento</div></div>
+
+        <section className="panel content-panel" style={{ marginTop: 16 }}>
+          <div className="panel-head">
+            <div className="heading-sm">Contraste de Comportamiento Técnico</div>
+          </div>
           <div className="prose">
             <div className="fact-pair">
               <div>
                 <small>RESULTADO REAL OBTENIDO</small>
-                <p>El mensaje es removido de la bandeja de <strong>"Mensajes"</strong>, pero al navegar a <strong>"Mascotas → Tus consultas"</strong>, el registro sigue figurando erróneamente en estado <strong>"En consulta"</strong>.</p>
+                <p>
+                  El mensaje es removido de la bandeja (resultado real obtenido), pero al navegar a{" "}
+                  <strong>"Mascotas → Tus consultas"</strong>, el registro de la consulta sigue figurando erróneamente en estado{" "}
+                  <strong>"En consulta"</strong> (resultado real obtenido).
+                </p>
               </div>
               <div>
                 <small>RESULTADO ESPERADO</small>
-                <p>El registro de la consulta debería figurar como <strong>cancelado</strong> o haber sido eliminado de forma sincronizada en ambas secciones.</p>
+                <p>
+                  El registro de la consulta debería figurar como <strong>cancelado</strong> o haber sido eliminado de forma sincronizada en ambas secciones (resultado esperado).
+                </p>
               </div>
             </div>
           </div>
         </section>
       </div>
+
       <aside className="panel evidence-browser">
         <div className="evidence-tabs">
           {["Visual State", "Console & Network", "Playwright Spec"].map((t) => (
@@ -1030,7 +1167,10 @@ function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
             <code>{tobi.state.specs[1]?.code || "// Spec"}</code>
           </div>
         )}
-        <div className="evidence-caption"><span>Evidencia Real</span><p>Documentado por {bug.agent} para {tobi.state.project.name}.</p></div>
+        <div className="evidence-caption">
+          <span>Cuentas de Prueba Testeadas</span>
+          <p>Tutor: <code>tobias@gmail.com</code> (Tobias123+) · Doctor: <code>doctor@gmail.com</code> (Doctor 123+)</p>
+        </div>
         <div className="evidence-actions">
           <Button variant="secondary" onClick={() => tobi.downloadMasterBugReport()}>Descargar .md</Button>
           <Button onClick={handleCopy}>{copied ? "✓ Copiado" : "Copiar BDD"}</Button>
