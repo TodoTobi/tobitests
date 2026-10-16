@@ -1489,3 +1489,181 @@ code { font-family: "JetBrains Mono", monospace; }
     border-top: 1px solid var(--border);
   }
 }
+
+
+/* Real Screenshot & Live Execution Enhancements */
+.real-screenshot-container {
+  overflow: hidden;
+  position: relative;
+  background: #0f1c24;
+}
+
+.real-screenshot-mirror {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  min-height: 400px;
+  background: #0e171f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.real-shot-wrapper {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 28px);
+  min-height: 240px;
+  overflow: hidden;
+  background: #0f1c24;
+}
+
+.diag-real-wrapper {
+  min-height: 300px;
+}
+
+.real-shot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.real-shot-img:hover {
+  transform: scale(1.02);
+}
+
+.shot-overlay-tag {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 5;
+}
+
+.shot-dialog-bubble {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 6;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(23, 43, 58, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: var(--shadow-md);
+}
+
+.shot-dialog-bubble strong {
+  font-size: 8.5px;
+  color: #fff;
+}
+
+.shot-dialog-bubble small {
+  font-size: 7px;
+  color: #8fd3ff;
+}
+
+.live-real-mirror {
+  position: relative;
+  height: 520px;
+  overflow: hidden;
+  background: #0d1820;
+  display: flex;
+  flex-direction: column;
+}
+
+.real-mirror-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.live-agent-hud {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(15, 28, 36, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(124, 196, 242, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: white;
+  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+.hud-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #8fd3ff;
+  letter-spacing: 0.05em;
+}
+
+.hud-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.hud-info strong {
+  font-size: 9px;
+  color: #ffffff;
+}
+
+.hud-info code {
+  font-size: 7.5px;
+  color: #7cc4f2;
+}
+
+.hud-info small {
+  font-size: 7px;
+  color: #a4bed1;
+}
+
+.step-pointer-live {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.step-pointer-live span {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--agent);
+  color: white;
+  display: grid;
+  place-items: center;
+  font: 700 8px "JetBrains Mono";
+}
+
+.step-pointer-live p {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text);
+}

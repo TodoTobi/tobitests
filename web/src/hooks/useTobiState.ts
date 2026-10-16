@@ -46,6 +46,8 @@ export interface LiveStep {
   status: string;
   duration: string;
   description: string;
+  screenshot?: string;
+  agent?: string;
 }
 
 export interface TelemetryLog {
@@ -69,6 +71,7 @@ export interface BugItem {
   dadoQue: string;
   cuando: string;
   entonces: string;
+  screenshot?: string;
 }
 
 export interface SpecItem {
@@ -210,8 +213,7 @@ export function useTobiState() {
 
   const copyBddToClipboard = useCallback((bug: BugItem) => {
     const text = `Escenario:
-Nombre y sección: [${bug.id}]: ${bug.title}, sección: ${bug.section}
-
+Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
 Pasos para reproducir:
 Dado que ${bug.dadoQue}
 Cuando ${bug.cuando}
@@ -235,12 +237,12 @@ ${state.bugs.map((bug, index) => `---
 * **Ejecución Asociada:** ${bug.runId}
 
 #### Escenario (BDD / Gherkin):
-**Nombre y sección:** [${bug.id}]: ${bug.title}, sección: ${bug.section}
+Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
 
-**Pasos para reproducir:**
-* **Dado que** ${bug.dadoQue}
-* **Cuando** ${bug.cuando}
-* **Entonces** ${bug.entonces}
+Pasos para reproducir:
+Dado que ${bug.dadoQue}
+Cuando ${bug.cuando}
+Entonces ${bug.entonces}
 `).join('\n')}
 `;
 

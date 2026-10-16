@@ -124,18 +124,10 @@ function ProductDemo({ tobi }: { tobi: ReturnType<typeof useTobiState> }) {
           <span><Icon name="bug" size="sm" /></span>
           <span><Icon name="code" size="sm" /></span>
         </div>
-        <div className="demo-browser">
-          <div className="app-mini-header">
-            <span className="mini-logo">VC</span>
-            <span>{tobi.state.project.name}</span>
-            <div className="mini-nav"><span>Inicio</span><span className="active">Consultas</span><span>Mascotas</span></div>
-          </div>
-          <div className="browser-content">
-            <div className="mini-kicker">AUDITORÍA E2E EN VIVO</div>
-            <div className="mini-title">Validando rutas y estado en {tobi.state.project.name}</div>
-            <div className="mini-fields"><span /><span /><span /></div>
-            <div className="mini-button">Verificar Sincronización</div>
-            <div className="target-ring"><span>Step 0{liveRun.currentStep + 1}</span></div>
+        <div className="demo-browser real-screenshot-mirror">
+          <img src="/evidence/runs/01-landing-audit.png" alt="VetConnect Live Audit" className="real-shot-img" />
+          <div className="shot-overlay-tag">
+            <Badge tone="agent"><Icon name="spark" size="sm" /> Explorer QA · @playwright/mcp</Badge>
           </div>
         </div>
         <div className="demo-inspector">
@@ -236,9 +228,16 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
           </div>
           <div className="evidence-panel">
             <div className="evidence-panel-head"><div><Badge tone="danger">{bug.severity}</Badge><strong>{bug.title}</strong></div><span>{bug.id}</span></div>
-            <div className="evidence-screenshot">
-              <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url}</small></div>
-              <div className="shot-content"><div className="shot-dialog"><Icon name="bug" /><strong>Divergencia detectada en {bug.section}</strong><small>Estado en Mascotas permanece "En consulta"</small><span>Verificado</span></div></div>
+            <div className="evidence-screenshot real-screenshot-container">
+              <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url} · Captura CDP en Vivo</small></div>
+              <div className="real-shot-wrapper">
+                <img src="/evidence/bugs/bug-01-divergence-evidence.png" alt="Bug Evidence" className="real-shot-img" />
+                <div className="shot-dialog-bubble">
+                  <Icon name="bug" />
+                  <strong>Divergencia confirmada en {bug.section}</strong>
+                  <small>Detectado por {bug.agent}</small>
+                </div>
+              </div>
               <span className="evidence-pin">1</span>
             </div>
             <div className="evidence-error"><Icon name="terminal" /><div><small>DETECTADO POR · {bug.agent.toUpperCase()}</small><code>Sección: <em>{bug.section}</em> · Run {bug.runId}</code></div></div>
@@ -739,9 +738,15 @@ function RunDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
           <code>Mensajes (Cancelado) !== Mascotas ("En consulta")</code>
           <p>Al cancelar la consulta en Mensajes, la vista de Mascotas no invalida ni sincroniza el estado.</p>
         </div>
-        <div className="inspector-shot">
-          <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url}/client/dashboard</small></div>
-          <div><span>Mascotas → Tus consultas</span><strong>Estado actual: "En consulta"</strong><i>Esperado: "Cancelado" o eliminado</i></div>
+        <div className="inspector-shot real-screenshot-container">
+          <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url}/client/dashboard · Real Trace</small></div>
+          <div className="real-shot-wrapper">
+            <img src="/evidence/runs/03-rbac-guard-redirect.png" alt="RBAC Inspection" className="real-shot-img" />
+            <div className="shot-dialog-bubble">
+              <strong>Mascotas → Tus consultas</strong>
+              <small>Estado: "En consulta" (Esperado: "Cancelado")</small>
+            </div>
+          </div>
         </div>
         <div className="evidence-links">
           <Button variant="secondary" onClick={() => navigate("diagnostic")}><Icon name="pulse" size="sm" /> Diagnostic Studio</Button>
@@ -782,19 +787,27 @@ function LiveRunPage({ tobi }: { tobi: ReturnType<typeof useTobiState> }) {
           <div className="mirror-url"><Icon name="check" size="sm" /> {liveRun.target}{activeStep?.target.startsWith("/") ? activeStep.target : "/login"}</div>
           <Badge tone="success">Playwright MCP</Badge>
         </div>
-        <div className="vet-login">
-          <div className="vet-brand"><span>V</span><strong>{project.name}</strong></div>
-          <div className="login-card">
-            <div className="heading-md">Inspección Activa: {activeStep?.action}</div>
-            <p>{activeStep?.description}</p>
-            <label>Objetivo / Selector</label>
-            <div className="mock-input active">{activeStep?.target}<span className="cursor" /></div>
-            <label>Estado de Verificación</label>
-            <div className="mock-input">{activeStep?.status} ({activeStep?.duration})</div>
-            <div className="login-button">Ejecutando con @playwright/mcp<span className="interaction-ring" /></div>
-            <small>Sincronizado con {project.repoPath}</small>
+        <div className="live-real-mirror">
+          <img
+            src={activeStep?.screenshot || "/evidence/runs/02-login-inspection.png"}
+            alt={activeStep?.description || "Live Execution"}
+            className="real-mirror-img"
+          />
+          <div className="live-agent-hud">
+            <span className="hud-badge"><Icon name="spark" size="sm" /> {activeStep?.agent || "Explorer QA"} · @playwright/mcp</span>
+            <div className="hud-info">
+              <strong>Paso {activeStep?.index}: {activeStep?.action}</strong>
+              <code>{activeStep?.target}</code>
+              <small>{activeStep?.description}</small>
+            </div>
+            <Badge tone={activeStep?.status === "Passed" ? "success" : "agent"}>
+              {activeStep?.status} ({activeStep?.duration})
+            </Badge>
           </div>
-          <div className="step-pointer"><span>{activeStep?.index}</span><p>{activeStep?.action} · {activeStep?.target}</p></div>
+          <div className="step-pointer-live">
+            <span>{activeStep?.index}</span>
+            <p>{activeStep?.action} · {activeStep?.target}</p>
+          </div>
         </div>
       </section>
       <aside className="step-panel panel">
@@ -994,12 +1007,15 @@ function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
           ))}
         </div>
         {evidence === "Visual State" && (
-          <div className="bug-screenshot">
-            <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url} · Evidencia Sincronizada</small></div>
-            <div>
-              <div className="message-item"><span>VC</span><p><strong>Sección: Mensajes</strong><small>Botón "Cancelar" presionado → Removido de bandeja</small></p><Badge tone="neutral">Removido</Badge></div>
-              <div className="inconsistency-arrow"><Icon name="arrow" /></div>
-              <div className="consult-item"><p><small>SECCIÓN: MASCOTAS → TUS CONSULTAS</small><strong>Estado desincronizado</strong></p><Badge tone="danger">En consulta</Badge></div>
+          <div className="bug-screenshot real-screenshot-container">
+            <div className="shot-header"><span /><span /><span /><small>{tobi.state.project.url} · Evidencia Capturada en Vivo</small></div>
+            <div className="real-shot-wrapper">
+              <img src="/evidence/bugs/bug-01-divergence-evidence.png" alt="Bug Divergence" className="real-shot-img" />
+              <div className="shot-dialog-bubble">
+                <Icon name="bug" />
+                <strong>Divergencia confirmada: Mensajes ↔ Mascotas</strong>
+                <small>Capturado por Telemetry Auditor con Chrome DevTools MCP</small>
+              </div>
             </div>
           </div>
         )}
@@ -1047,15 +1063,15 @@ function DiagnosticPage({ navigate, tobi }: { navigate: (view: AppView) => void;
           </div>
           <div className="diagnostic-score"><span>100%</span><small>BDD Verified</small></div>
         </section>
-        <div className="diagnostic-browser panel">
-          <div className="mirror-bar"><div className="browser-dots"><span /><span /><span /></div><div className="mirror-url">{project.url}/client/dashboard</div><Badge tone="agent">White-Box + CDP</Badge></div>
-          <div className="diag-viewport">
-            <div className="diag-sidebar"><span /><span /><span /></div>
-            <div className="diag-content">
+        <div className="diagnostic-browser panel real-screenshot-container">
+          <div className="mirror-bar"><div className="browser-dots"><span /><span /><span /></div><div className="mirror-url">{project.url}/terms · Inspección CDP</div><Badge tone="agent">White-Box + CDP</Badge></div>
+          <div className="real-shot-wrapper diag-real-wrapper">
+            <img src="/evidence/bugs/bug-01-divergence-evidence.png" alt="Diagnostic Viewport" className="real-shot-img" />
+            <div className="shot-dialog-bubble">
               <strong>Divergencia: {bug.section}</strong>
-              <div className="diag-message"><span>VC</span><p><strong>Mascotas → Tus consultas</strong><small>Sigue figurando como "En consulta" tras cancelar en Mensajes</small></p></div>
-              <div className="diag-highlight"><span>BUG-01</span></div>
+              <small>Mascotas → Tus consultas: Sigue figurando como "En consulta" tras cancelar en Mensajes</small>
             </div>
+            <div className="diag-highlight"><span>BUG-01</span></div>
           </div>
         </div>
         <section className="panel analysis-grid">
