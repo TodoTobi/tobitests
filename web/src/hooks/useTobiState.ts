@@ -6,11 +6,37 @@ export interface OfficeAgent {
   initials: string;
   name: string;
   role: string;
-  status: string;
+  employment: string;
+  status: 'working' | 'idle' | string;
+  activity?: 'desk' | 'server' | 'whiteboard' | 'lounge' | string;
   bubble: string;
+  idleBubble?: string;
   task: string;
+  mcp?: string;
   tone: "agent" | "info" | "danger" | "success" | "neutral" | "warning";
   run: string;
+}
+
+export interface RunTestItem {
+  name: string;
+  spec: string;
+  status: string;
+  duration: string;
+}
+
+export interface RunItem {
+  id: string;
+  suite: string;
+  branch: string;
+  status: string;
+  total: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+  duration: string;
+  date: string;
+  commit: string;
+  tests: RunTestItem[];
 }
 
 export interface LiveStep {
@@ -45,10 +71,32 @@ export interface BugItem {
   entonces: string;
 }
 
+export interface SpecItem {
+  name: string;
+  domain: string;
+  status: string;
+  testsCount: number;
+  lastRun: string;
+  code: string;
+}
+
+export interface SuiteItem {
+  name: string;
+  description: string;
+  tests: number;
+  status: string;
+  passRate: string;
+  duration: string;
+  lastRun: string;
+  specFile: string;
+}
+
 export interface TobiState {
   project: {
     name: string;
+    repoPath?: string;
     url: string;
+    backendUrl?: string;
     branch: string;
     environment: string;
     lastAudit: string;
@@ -61,6 +109,7 @@ export interface TobiState {
     avgDuration: string;
     activeRun: string;
   };
+  runs: RunItem[];
   officeAgents: OfficeAgent[];
   liveRun: {
     id: string;
@@ -74,13 +123,8 @@ export interface TobiState {
     telemetryLogs: TelemetryLog[];
   };
   bugs: BugItem[];
-  specs: Array<{
-    name: string;
-    domain: string;
-    status: string;
-    testsCount: number;
-    lastRun: string;
-  }>;
+  specs: SpecItem[];
+  suites: SuiteItem[];
 }
 
 export function useTobiState() {
@@ -107,7 +151,6 @@ export function useTobiState() {
       es.onerror = () => {
         setConnected(false);
         es?.close();
-        // Fallback polling
         pollInterval = setInterval(async () => {
           try {
             const res = await fetch('/api/state');
@@ -142,6 +185,28 @@ export function useTobiState() {
       console.warn('[TobiTests Bridge] Could not push state update:', e);
     }
   }, [state]);
+
+  const toggleAgentStatus = useCallback((agentId: string) => {
+    const updatedAgents = state.officeAgents.map((agent) => {
+      if (agent.id !== agentId) return agent;
+      const nextStatus = agent.status === 'working' ? 'idle' : 'working';
+      return {
+        ...agent,
+        status: nextStatus,
+        activity: nextStatus === 'idle' ? 'desk' : (agent.id === 'telemetry' ? 'server' : 'desk'),
+      };
+    });
+    updateState({ officeAgents: updatedAgents });
+  }, [state.officeAgents, updateState]);
+
+  const setAllAgentsMode = useCallback((mode: 'working' | 'idle') => {
+    const updatedAgents = state.officeAgents.map((agent) => ({
+      ...agent,
+      status: mode,
+      activity: mode === 'idle' ? 'desk' : (agent.id === 'telemetry' ? 'server' : 'desk'),
+    }));
+    updateState({ officeAgents: updatedAgents });
+  }, [state.officeAgents, updateState]);
 
   const copyBddToClipboard = useCallback((bug: BugItem) => {
     const text = `Escenario:
@@ -193,6 +258,8 @@ ${state.bugs.map((bug, index) => `---
     state,
     connected,
     updateState,
+    toggleAgentStatus,
+    setAllAgentsMode,
     copyBddToClipboard,
     downloadMasterBugReport,
   };

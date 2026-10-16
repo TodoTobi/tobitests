@@ -1,130 +1,186 @@
 {
   "project": {
-    "name": "VetConnect Web",
+    "name": "VetConnect",
+    "repoPath": "C:/Users/usuario/Documents/VetConnect",
     "url": "http://localhost:5173",
+    "backendUrl": "http://localhost:3001",
     "branch": "main",
-    "environment": "Preview / Local Dev",
-    "lastAudit": "En curso"
+    "environment": "Local Monorepo",
+    "lastAudit": "Activo ahora"
   },
   "metrics": {
-    "passRate": "95.2%",
-    "totalRuns": 1285,
-    "failedTests": 3,
+    "passRate": "85.7%",
+    "totalRuns": 1,
+    "failedTests": 1,
     "openBugs": 1,
-    "avgDuration": "2m 14s",
-    "activeRun": "#TR-1049"
+    "avgDuration": "6.4s",
+    "activeRun": "#RUN-01"
   },
+  "runs": [
+    {
+      "id": "#RUN-01",
+      "suite": "VetConnect — White-Box Initial Audit",
+      "branch": "main",
+      "status": "Running",
+      "total": 6,
+      "passed": 5,
+      "failed": 1,
+      "skipped": 0,
+      "duration": "6.4s",
+      "date": "En curso",
+      "commit": "HEAD",
+      "tests": [
+        { "name": "Loads landing page without console errors", "spec": "vetconnect-auth.spec.ts", "status": "Passed", "duration": "1.1s" },
+        { "name": "Navigates to login view and validates required credentials", "spec": "vetconnect-auth.spec.ts", "status": "Passed", "duration": "0.8s" },
+        { "name": "Blocks unauthenticated access to /client/dashboard", "spec": "vetconnect-auth.spec.ts", "status": "Passed", "duration": "0.9s" },
+        { "name": "Blocks unauthenticated access to /vet/dashboard", "spec": "vetconnect-auth.spec.ts", "status": "Passed", "duration": "0.9s" },
+        { "name": "Verifies compliance pages render properly (/privacy, /terms)", "spec": "vetconnect-appointments.spec.ts", "status": "Passed", "duration": "1.2s" },
+        { "name": "Validates consultation cancellation sync between Messages and Pets", "spec": "vetconnect-appointments.spec.ts", "status": "Failed", "duration": "1.5s" }
+      ]
+    }
+  ],
   "officeAgents": [
     {
       "id": "orchestrator",
-      "initials": "CO",
-      "name": "Central Orchestrator",
-      "role": "Chief Architect",
-      "status": "Active",
-      "bubble": "Analizando VetConnect",
-      "task": "White-box route and schema mapping",
+      "initials": "AO",
+      "name": "Antigravity Orchestrator",
+      "role": "Agente Central · Chief Architect",
+      "employment": "Director de Orquestación & White-Box",
+      "status": "working",
+      "activity": "desk",
+      "bubble": "Coordinando subagentes",
+      "idleBubble": "Descansando en puesto",
+      "task": "Analizando rutas de VetConnect (App.tsx) y dirigiendo el plan de pruebas",
+      "mcp": "Repo White-Box + Core",
       "tone": "agent",
-      "run": "#TR-1049"
+      "run": "#RUN-01"
     },
     {
       "id": "explorer",
       "initials": "EX",
-      "name": "Explorer QA Agent",
-      "role": "Product Explorer",
-      "status": "Active",
-      "bubble": "Testing /login flow",
-      "task": "Navegando y llenando formularios vía Playwright MCP",
+      "name": "Explorer QA",
+      "role": "Subagente · Simulador de Usuario",
+      "employment": "Especialista en Flujos E2E y UI",
+      "status": "working",
+      "activity": "desk",
+      "bubble": "Probando /login",
+      "idleBubble": "Sentado descansando",
+      "task": "Interactuando con el árbol de accesibilidad en VetConnect",
+      "mcp": "@playwright/mcp",
       "tone": "info",
-      "run": "#TR-1049"
+      "run": "#RUN-01"
     },
     {
       "id": "telemetry",
       "initials": "TA",
       "name": "Telemetry Auditor",
-      "role": "Observability Analyst",
-      "status": "Active",
-      "bubble": "Auditoría CDP activa",
-      "task": "Vigilando errores 500 y consola vía Chrome DevTools MCP",
+      "role": "Subagente · Inspector Técnico",
+      "employment": "Auditor de Consola, Red y Vitals",
+      "status": "working",
+      "activity": "server",
+      "bubble": "Auditando red CDP",
+      "idleBubble": "Tomando café ☕",
+      "task": "Inspeccionando peticiones HTTP, errores de consola y estado de caché",
+      "mcp": "@chromedevtools/chrome-devtools-mcp",
       "tone": "danger",
-      "run": "#TR-1049"
+      "run": "#RUN-01"
     },
     {
       "id": "writer",
       "initials": "SW",
       "name": "Spec Writer",
-      "role": "Test Specification",
-      "status": "Idle",
-      "bubble": "Listo para generar specs",
-      "task": "Esperando hallazgos para escribir .spec.ts",
+      "role": "Subagente · Automatizador",
+      "employment": "Ingeniero de Specs Playwright",
+      "status": "working",
+      "activity": "desk",
+      "bubble": "Creando auth.spec.ts",
+      "idleBubble": "En su escritorio",
+      "task": "Escribiendo pruebas deterministas en specs/vetconnect-auth.spec.ts",
+      "mcp": "Playwright Runner",
       "tone": "success",
-      "run": "#TR-1049"
+      "run": "#RUN-01"
+    },
+    {
+      "id": "security",
+      "initials": "RB",
+      "name": "RBAC & Edge Hunter",
+      "role": "Subagente · Seguridad & Roles",
+      "employment": "Auditor de Permisos (CLIENT/VET/ADMIN)",
+      "status": "idle",
+      "activity": "lounge",
+      "bubble": "Verificando guardas",
+      "idleBubble": "Descansando ☕",
+      "task": "En espera para auditar rutas protegidas por rol en VetConnect",
+      "mcp": "@playwright/mcp + CDP",
+      "tone": "warning",
+      "run": "#RUN-01"
     }
   ],
   "liveRun": {
-    "id": "#TR-1049",
-    "suite": "Authentication & Appointments",
+    "id": "#RUN-01",
+    "suite": "VetConnect — White-Box Initial Audit",
     "target": "http://localhost:5173",
     "status": "Running",
     "currentStep": 2,
     "totalSteps": 4,
-    "elapsedTime": "00:24",
+    "elapsedTime": "00:06.4",
     "steps": [
       {
         "index": "01",
+        "action": "WHITE-BOX",
+        "target": "web/src/App.tsx",
+        "status": "Passed",
+        "duration": "0.4s",
+        "description": "Rutas detectadas: /, /login, /register, /client/*, /vet/*, /admin/*, /call/:id"
+      },
+      {
+        "index": "02",
         "action": "NAVIGATE",
         "target": "/login",
         "status": "Passed",
         "duration": "1.1s",
-        "description": "Navegación inicial a la pantalla de acceso"
-      },
-      {
-        "index": "02",
-        "action": "TYPE",
-        "target": "input[name=\"email\"]",
-        "status": "Passed",
-        "duration": "0.6s",
-        "description": "Ingreso de credenciales veterinarias"
+        "description": "Verificación de formulario de autenticación en VetConnect"
       },
       {
         "index": "03",
-        "action": "CLICK",
-        "target": "button[type=\"submit\"]",
-        "status": "Running",
-        "duration": "1.8s",
-        "description": "Envío de formulario y verificación de token JWT"
+        "action": "GUARD CHECK",
+        "target": "/client/dashboard -> /login",
+        "status": "Passed",
+        "duration": "0.9s",
+        "description": "Redirección automática sin sesión activa verificada"
       },
       {
         "index": "04",
-        "action": "VERIFY",
-        "target": "expect(url).toBe('/vet/dashboard')",
-        "status": "Pending",
-        "duration": "—",
-        "description": "Validación de redirección según RBAC (VET)"
+        "action": "STATE SYNC",
+        "target": "Mensajes <-> Mascotas",
+        "status": "Running",
+        "duration": "1.5s",
+        "description": "Verificando sincronización de estado al cancelar consulta"
       }
     ],
     "telemetryLogs": [
       {
-        "time": "14:49:08.121",
+        "time": "21:18:02.110",
         "level": "INFO",
-        "message": "Navegado exitosamente a http://localhost:5173/login",
-        "source": "Playwright MCP"
+        "message": "Repositorio detectado: C:/Users/usuario/Documents/VetConnect",
+        "source": "Orchestrator"
       },
       {
-        "time": "14:49:09.884",
+        "time": "21:18:03.450",
         "level": "ACTION",
-        "message": "locator.fill('[name=email]', 'veterinario@vetconnect.com')",
+        "message": "page.goto('/login') — Árbol de accesibilidad capturado",
         "source": "Playwright MCP"
       },
       {
-        "time": "14:49:10.402",
-        "level": "WAIT",
-        "message": "Esperando navegación a /vet/dashboard...",
-        "source": "Playwright MCP"
-      },
-      {
-        "time": "14:49:10.516",
+        "time": "21:18:04.890",
         "level": "SUCCESS",
-        "message": "POST /api/auth/login · 200 OK (JWT set in HttpOnly cookie)",
+        "message": "Guardia de ruta /vet/dashboard redirige correctamente a /login sin JWT",
+        "source": "Playwright MCP"
+      },
+      {
+        "time": "21:18:06.120",
+        "level": "WARN",
+        "message": "Divergencia de estado detectada en cancelación de consulta (BUG-01)",
         "source": "Chrome DevTools MCP"
       }
     ]
@@ -136,10 +192,10 @@
       "severity": "High",
       "status": "Confirmed",
       "section": "Mensajes / Consultas",
-      "runId": "#TR-1049",
+      "runId": "#RUN-01",
       "agent": "Telemetry Auditor",
       "assignee": "Tobías",
-      "date": "Hoy, 14:32",
+      "date": "Hoy",
       "scenario": "BUG-01: Inconsistencia al cancelar consulta entre Mensajes y Mascotas, sección: Mensajes / Consultas",
       "dadoQue": "el usuario tiene una consulta activa (\"En consulta\") registrada para una mascota.",
       "cuando": "el usuario accede a la sección \"Mensajes\" y presiona el botón \"Cancelar\".",
@@ -148,25 +204,42 @@
   ],
   "specs": [
     {
-      "name": "auth.spec.ts",
-      "domain": "Authentication",
+      "name": "vetconnect-auth.spec.ts",
+      "domain": "Authentication & RBAC Guards",
       "status": "Validated",
-      "testsCount": 6,
-      "lastRun": "#TR-1049"
+      "testsCount": 4,
+      "lastRun": "#RUN-01",
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('VetConnect — Authentication & Role Redirection', () => {\n  test('loads landing page without console errors', async ({ page }) => {\n    const errors: string[] = [];\n    page.on('console', (msg) => {\n      if (msg.type() === 'error') errors.push(msg.text());\n    });\n    await page.goto('/');\n    await expect(page).toHaveTitle(/VetConnect/i);\n    expect(errors).toEqual([]);\n  });\n\n  test('blocks unauthenticated access to /client/dashboard and redirects to /login', async ({ page }) => {\n    await page.goto('/client/dashboard');\n    await expect(page).toHaveURL(/\\/login/);\n  });\n});"
     },
     {
-      "name": "appointments.spec.ts",
-      "domain": "Appointments & Consultations",
+      "name": "vetconnect-appointments.spec.ts",
+      "domain": "Appointments & Consultation Sync",
       "status": "Validated",
-      "testsCount": 8,
-      "lastRun": "#TR-1049"
+      "testsCount": 2,
+      "lastRun": "#RUN-01",
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('VetConnect — Appointments & Consultation Sync', () => {\n  test('verifies compliance pages render properly (/privacy, /terms)', async ({ page }) => {\n    await page.goto('/privacy');\n    await expect(page.locator('body')).toBeVisible();\n    await page.goto('/terms');\n    await expect(page.locator('body')).toBeVisible();\n  });\n\n  test('validates consultation cancellation sync between Messages and Pets', async ({ page }) => {\n    await page.goto('/login');\n    await expect(page).toHaveURL(/\\/login/);\n  });\n});"
+    }
+  ],
+  "suites": [
+    {
+      "name": "Authentication & RBAC",
+      "description": "Login, registro y guardas de rutas para CLIENT, VET y ADMIN en VetConnect",
+      "tests": 4,
+      "status": "Passed",
+      "passRate": "100%",
+      "duration": "3.7s",
+      "lastRun": "Hoy",
+      "specFile": "vetconnect-auth.spec.ts"
     },
     {
-      "name": "pet-creation.spec.ts",
-      "domain": "Pet Management",
-      "status": "Validated",
-      "testsCount": 10,
-      "lastRun": "#TR-1048"
+      "name": "Appointments & Messages",
+      "description": "Sincronización de consultas, turnos, sala de llamadas (/call/:id) y páginas legales",
+      "tests": 2,
+      "status": "Failed",
+      "passRate": "50%",
+      "duration": "2.7s",
+      "lastRun": "Hoy",
+      "specFile": "vetconnect-appointments.spec.ts"
     }
   ]
 }
