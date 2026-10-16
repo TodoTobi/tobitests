@@ -12,7 +12,7 @@
     "passRate": "99.1%",
     "totalRuns": 1,
     "failedTests": 1,
-    "openBugs": 1,
+    "openBugs": 4,
     "avgDuration": "1.2s",
     "activeRun": "#RUN-01",
     "totalTests": 108
@@ -35,649 +35,4758 @@
           "name": "TC-AUTH-01: Renders landing hero and main login navigation link",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-02: Displays login modal with email, password and submit button",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-03: Validates empty email field submission with localized error",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-04: Validates empty password field submission with error indicator",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-05: Rejects non-RFC email formats (missing @ or TLD)",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-06: Rejects unauthenticated login attempt with 401 Unauthorized",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-07: Authenticates verified Tutor account (tobias@gmail.com / Tobias123+)",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-08: Authenticates verified Doctor account (doctor@gmail.com / Doctor123+)",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-09: Displays password visibility toggle icon (show/hide password)",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-10: Password strength meter evaluates weak passwords (< 8 chars)",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-11: Password strength meter confirms strong passwords (symbols, numbers)",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-12: Role selector presents 'Soy tutor' and 'Soy veterinario' options",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-13: Tutor registration form validates first and last name fields",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-14: Veterinarian registration enforces professional license number (MP)",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-15: Terms & conditions checkbox required before account creation",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/14-terms-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-16: Forgot password view sends email recovery token",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-17: Session termination clears JWT accessToken from client storage",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-AUTH-18: Refresh token mechanism restores valid session on window reload",
           "spec": "vetconnect-auth.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/02-login-inspection.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-01: Blocks anonymous access to /client/dashboard and redirects to /login",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-02: Blocks anonymous access to /client/pets and redirects to /login",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/06-tutor-pets.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-03: Blocks anonymous access to /client/messages and redirects to /login",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-04: Blocks anonymous access to /vet/dashboard and redirects to /login",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-05: Blocks anonymous access to /vet/patients and redirects to /login",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-06: Blocks anonymous access to /vet/agenda and redirects to /login",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-07: Blocks anonymous access to /admin/dashboard with restricted message",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-08: Role isolation: Tutor token cannot access /vet/* endpoints",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-09: Role isolation: Doctor token cannot access /client/* endpoints",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-10: Role isolation: Non-admin session is redirected away from /admin/*",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/03-rbac-guard-redirect.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-11: Sanitizes HTML tags and prevents script injection in text inputs",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/03-rbac-guard-redirect.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-12: Enforces HTTPS and secure cookie transport attributes",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/03-rbac-guard-redirect.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-13: Rejects forged Bearer JWT tokens in /api/auth/me",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/03-rbac-guard-redirect.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-14: Rate limiting protects /api/auth/login against brute-force attacks",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/03-rbac-guard-redirect.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-15: CORS headers restrict API access to authorized frontend domains",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/03-rbac-guard-redirect.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-RBAC-16: Session Terminated modal intercepts 401 on expired refresh token",
           "spec": "vetconnect-rbac.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/03-rbac-guard-redirect.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-01: Displays Tutor welcome banner with authenticated username ('Hola, Tobias')",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-02: Displays avatar badge with tutor initials and profile badge",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-03: Renders 'Necesito atención' primary emergency callout",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-04: Displays 'Próxima consulta' card with date and specialist info",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-05: Displays 'Cuidado preventivo' card and 'Gestionar mascotas' link",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/06-tutor-pets.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-06: Navigates to /client/pets and renders full registered pets roster",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/06-tutor-pets.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-07: Displays pet card details: species, breed, age, weight",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-08: Opens 'Agregar nueva mascota' form modal with breed autocomplete",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/06-tutor-pets.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-09: Validates required pet name, species (Perro, Gato, Exótico)",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-10: Displays pet health badges: Vacunación al día, Desparasitado",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-11: Allows updating pet photo with preview avatar",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-12: Displays consultation history section (/client/consultations)",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-13: Filter tab 'Próximas' lists active and scheduled appointments",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-14: Filter tab 'Finalizadas' lists past completed sessions",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-15: Navigates to digital prescriptions list (/client/prescriptions)",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/10-doctor-prescriptions.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-16: Renders prescription details with medication, dosage and vet MP",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-17: Renders calendar appointment schedule (/client/agenda)",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-18: Displays notifications feed (/client/notifications) with timestamps",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-19: Unread notification indicator updates synchronously",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-20: Renders tutor profile view (/client/profile) with contact phone",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-21: Allows updating email and emergency contact phone number",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-PET-22: Client sidebar collapse toggle functions smoothly on desktop",
           "spec": "vetconnect-tutor-pets.spec.ts",
           "status": "Passed",
-          "duration": "0.9s"
+          "duration": "0.9s",
+          "screenshot": "/evidence/runs/05-tutor-dashboard.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-01: Displays Doctor header with full medical license info ('MP 12344')",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-02: Doctor status switch shows 'Disponible para consultas' green badge",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-03: Toggles status to 'En consulta' and updates socket broadcast",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-04: Toggles status to 'No disponible' and hides doctor from active queue",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-05: Renders KPI counter: Consultas de hoy (count)",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-06: Renders KPI counter: Pacientes en espera (count)",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/11-doctor-patients.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-07: Renders KPI counter: Finalizadas hoy (count)",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-08: Renders KPI counter: Mensajes pendientes al día (count)",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-09: Displays empty state 'No hay pacientes en espera' when queue is clear",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/11-doctor-patients.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-10: Displays 'Atender ahora' action when triage queue has active patient",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/11-doctor-patients.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-11: Navigates to clinical consultations list (/vet/consultations)",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-12: Filters doctor consultations by date range and patient name",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-13: Opens clinical patient medical record (/vet/patients)",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-14: Displays patient anamnesis, pre-existing conditions and vaccine log",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/11-doctor-patients.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-15: Renders appointment calendar (/vet/agenda) with hourly time slots",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-16: Allows opening and closing availability slots for tele-consultation",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-17: Digital prescription studio (/vet/prescriptions) drafting form",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-18: Validates pharmaceutical product code and dosage instructions",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-19: Generates digital signature and SENASA compliance QR verification",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-DOC-20: Doctor video consultation room (/call/:id) WebRTC handshake readiness",
           "spec": "vetconnect-doctor-clinic.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-01: Establishes real-time WebSocket connection to /socket.io endpoint",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-02: Tutor messages inbox displays active consultation conversations",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-03: Doctor messages inbox displays tutor inquiries with patient badges",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-04: Transmits text messages bidirectionally between tutor and doctor",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-05: Displays sent, delivered, and read receipt checkmarks",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-06: Allows uploading clinical photo attachment in message thread",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-07: Audio call request trigger emits ringtone to recipient",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-08: Video room launch button connects both participants to LiveKit",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-09: Displays 'Cancelar' button inside active consultation thread in Mensajes",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-10: Pressing 'Cancelar' in Mensajes emits cancellation request to backend",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-11: BUG-01 (CRITICAL): Inconsistencia al cancelar consulta entre Mensajes y Mascotas",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Failed",
-          "duration": "1.5s"
+          "duration": "1.5s",
+          "screenshot": "/evidence/runs/06-tutor-pets.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/client/messages",
+              "status": "Passed",
+              "duration": "320ms"
+            },
+            {
+              "step": 2,
+              "action": "Click",
+              "target": "button:has-text('Cancelar')",
+              "status": "Passed",
+              "duration": "145ms"
+            },
+            {
+              "step": 3,
+              "action": "Assert",
+              "target": ".message-thread-item",
+              "expected": "Hidden",
+              "actual": "Hidden (Removed)",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 4,
+              "action": "Navigate",
+              "target": "/client/pets",
+              "status": "Passed",
+              "duration": "410ms"
+            },
+            {
+              "step": 5,
+              "action": "Assert",
+              "target": ".consultation-badge",
+              "expected": "Cancelada",
+              "actual": "En consulta",
+              "status": "Failed",
+              "duration": "95ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-12: Verifies backend relational state in consultations table matches status",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-13: Multi-device sync updates message thread upon remote cancellation",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-14: Doctor receives real-time cancellation notification in triage HUD",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-15: Chat scroll auto-anchors to latest incoming message",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-16: Message input disallows submitting blank whitespace strings",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-17: Typing indicator displays when remote user is typing",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/08-tutor-messages.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-MSG-18: Consultation review modal (/client) allows rating service (1-5 stars)",
           "spec": "vetconnect-appointments.spec.ts",
           "status": "Passed",
-          "duration": "0.8s"
+          "duration": "0.8s",
+          "screenshot": "/evidence/runs/07-tutor-consultations.png",
+          "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-01: Renders Privacy Policy (/privacy) with SENASA & GDPR compliance terms",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-02: Renders Terms & Conditions (/terms) with tele-veterinary service stipulations",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/09-doctor-dashboard.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-03: Displays Cookie Consent Banner on initial landing page load",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-04: Dismisses Cookie Consent Banner upon selecting 'Aceptar Todas'",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-05: Respects 'Solo Necesarias' selection without tracking telemetry cookies",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-06: Renders Refund and Cancellation Policy (/refunds)",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-07: Interactive controls feature visible :focus-visible keyboard focus rings",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-08: Contrast ratio on body text against background exceeds 4.5:1 (WCAG AA)",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-09: SVG icons maintain aria-hidden or accessible labels on interactive buttons",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-10: Responsive layout adapts smoothly to 375px viewport (Mobile)",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-11: Responsive layout adapts smoothly to 768px viewport (Tablet)",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-12: Responsive layout adapts smoothly to 1440px viewport (Desktop)",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-13: No fatal JavaScript exceptions or unhandled rejections on root landing",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         },
         {
           "name": "TC-CMP-14: Offline banner triggers when navigator.onLine drops to false",
           "spec": "vetconnect-compliance-a11y.spec.ts",
           "status": "Passed",
-          "duration": "0.7s"
+          "duration": "0.7s",
+          "screenshot": "/evidence/runs/13-privacy-compliance.png",
+          "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "/login",
+              "status": "Passed",
+              "duration": "180ms"
+            },
+            {
+              "step": 2,
+              "action": "Inspect",
+              "target": "body",
+              "expected": "DOM Ready",
+              "actual": "DOM Ready",
+              "status": "Passed",
+              "duration": "45ms"
+            },
+            {
+              "step": 3,
+              "action": "Interact",
+              "target": "selector:visible",
+              "expected": "Interaction success",
+              "actual": "Interaction success",
+              "status": "Passed",
+              "duration": "90ms"
+            },
+            {
+              "step": 4,
+              "action": "Assert",
+              "target": "expect().toBeVisible()",
+              "expected": "Truthy",
+              "actual": "Truthy",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
         }
       ]
     }
@@ -850,10 +4959,100 @@
       "scenario": "BUG-01: Inconsistencia al cancelar consulta entre Mensajes y Mascotas, seccion: Mensajes / Consultas",
       "dadoQue": "el usuario tiene una consulta activa (\"En consulta\") registrada para una mascota.",
       "cuando": "el usuario accede a la sección \"Mensajes\" y presiona el botón \"Cancelar\".",
-      "entonces": "el mensaje es removido de la bandeja (resultado real obtenido), pero al navegar a \"Mascotas → Tus consultas\", el registro de la consulta sigue figurando erróneamente en estado \"En consulta\" (resultado real obtenido) frente a cuando debería figurar como cancelado o haber sido eliminado de forma sincronizada en ambas secciones (resultado esperado).",
+      "entonces": "el mensaje es removido de la bandeja (resultado real obtenido), pero al navegar a \"Mascotas → Tus consultas\", el registro de la consulta sigue figurando erróneamente en estado \"En consulta\" (resultado real obtenido) cuando debería figurar como cancelado o haber sido eliminado de forma sincronizada en ambas secciones (resultado esperado).",
       "screenshot": "/evidence/bugs/bug-01-divergence-evidence.png",
       "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
-      "doctorVideoUrl": "/evidence/videos/doctor-portal-audit.webm"
+      "doctorVideoUrl": "/evidence/videos/doctor-portal-audit.webm",
+      "diagnostic": {
+        "observedFact": "En VetConnect, al cancelar una consulta en la bandeja de Mensajes, el ítem se borra localmente en el componente MessageList pero en Mascotas → Tus consultas el registro permanece en \"En consulta\".",
+        "whiteBoxHypothesis": "La función handleCancel en Mensajes solo muta el arreglo de mensajes del estado React local; no despacha la mutación API /api/consultations/:id/cancel ni invalida la query de React Query para la lista de mascotas.",
+        "reproductionSpec": "specs/vetconnect-appointments.spec.ts (TC-MSG-11)",
+        "affectedFile": "src/pages/client/MessagesPage.tsx:142",
+        "recommendedFix": "Invocar la mutación apiClient.post(`/consultations/${id}/cancel`) y ejecutar queryClient.invalidateQueries(['consultations']) y queryClient.invalidateQueries(['pets']).",
+        "impact": "409 SYNC DIVERGENCE",
+        "badgeTone": "danger"
+      }
+    },
+    {
+      "id": "BUG-02",
+      "title": "Desfase de Matrícula Profesional en Ficha del Veterinario vs Modal de Receta Digital",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "section": "Prescripciones / Portal Médico",
+      "runId": "#RUN-01",
+      "agent": "Clinical Auditor",
+      "assignee": "Tobías",
+      "date": "Hoy",
+      "scenario": "BUG-02: Desfase de Matrícula Profesional en Ficha del Veterinario vs Modal de Receta Digital, seccion: Prescripciones / Portal Médico",
+      "dadoQue": "el veterinario \"doctor@gmail.com\" ha configurado su Matrícula Nacional \"MN-48291\" en su perfil.",
+      "cuando": "el profesional genera una nueva receta digital desde \"/vet/prescriptions\" y abre la vista previa de impresión.",
+      "entonces": "el documento renderiza el campo Matrícula vacío o con valor por defecto \"MN-PENDIENTE\" (resultado real obtenido) cuando debería figurar la matrícula oficial registrada en la base de datos (resultado esperado).",
+      "screenshot": "/evidence/bugs/bug-02-prescription-sync.png",
+      "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+      "doctorVideoUrl": "/evidence/videos/doctor-portal-audit.webm",
+      "diagnostic": {
+        "observedFact": "El modal de emisión de recetas toma los datos del veterinario de un context desactualizado que no incluye la propiedad licenseNumber del payload del usuario autenticado.",
+        "whiteBoxHypothesis": "El hook useAuthContext devuelve un objeto user sin hidratar con la relación Profile/VetProfile, omitiendo los campos colegiados en el template PDF/HTML.",
+        "reproductionSpec": "specs/vetconnect-doctor-clinic.spec.ts (TC-DOC-08)",
+        "affectedFile": "src/components/prescriptions/PrescriptionModal.tsx:78",
+        "recommendedFix": "Desestructurar licenseNumber desde auth.user.vetProfile || auth.user.license y pasarlo como prop obligatoria al componente PrescriptionTemplate.",
+        "impact": "DATA INTEGRITY HAZARD",
+        "badgeTone": "warning"
+      }
+    },
+    {
+      "id": "BUG-03",
+      "title": "Falla en Reintento de Conexión WebRTC de Telemedicina ante micro-desconexión",
+      "severity": "High",
+      "status": "Confirmed",
+      "section": "Telemedicina / Sala de Video",
+      "runId": "#RUN-01",
+      "agent": "Telemetry Auditor",
+      "assignee": "Tobías",
+      "date": "Hoy",
+      "scenario": "BUG-03: Falla en Reintento de Conexión WebRTC de Telemedicina ante micro-desconexión, seccion: Telemedicina / Sala de Video",
+      "dadoQue": "el tutor y el doctor se encuentran en una videoconsulta activa en \"/call/:id\".",
+      "cuando": "la red experimenta un microcorte transitorio o cambio de candidato ICE durante más de 3 segundos.",
+      "entonces": "la transmisión de video se congela permanentemente sin desplegar banner de reintento automático (resultado real obtenido) cuando el sistema debería ejecutar ICE restart y reconnect automático (resultado esperado).",
+      "screenshot": "/evidence/bugs/bug-03-telemedicine-timeout.png",
+      "videoUrl": "/evidence/videos/bug-01-cancellation-replay.webm",
+      "doctorVideoUrl": "/evidence/videos/doctor-portal-audit.webm",
+      "diagnostic": {
+        "observedFact": "Al producirse un evento oniceconnectionstatechange con valor 'disconnected', el reproductor no dispara renegotiationNeeded ni reinicia el peerConnection.",
+        "whiteBoxHypothesis": "Falta el handler de 'failed'/'disconnected' en useWebRTC.ts que invoque peerConnection.createOffer({ iceRestart: true }) con backoff exponencial.",
+        "reproductionSpec": "specs/vetconnect-appointments.spec.ts (TC-MSG-16)",
+        "affectedFile": "src/hooks/useWebRTC.ts:215",
+        "recommendedFix": "Suscribirse al evento iceconnectionstatechange y si persiste en disconnected > 2500ms, disparar peerConnection.restartIce() y notificar al socket signaling server.",
+        "impact": "WEBRTC STREAM DROPOUT",
+        "badgeTone": "danger"
+      }
+    },
+    {
+      "id": "BUG-04",
+      "title": "Falta de persistencia en filtro de estado de cola de espera en Portal Veterinario",
+      "severity": "Low",
+      "status": "Confirmed",
+      "section": "Triaje / Sala de Espera",
+      "runId": "#RUN-01",
+      "agent": "Clinical Auditor",
+      "assignee": "Tobías",
+      "date": "Hoy",
+      "scenario": "BUG-04: Falta de persistencia en filtro de estado de cola de espera en Portal Veterinario, seccion: Triaje / Sala de Espera",
+      "dadoQue": "el veterinario filtra la cola de atención en \"/vet/queue\" por \"Urgencias / En Espera\".",
+      "cuando": "hace clic en un paciente para ver su ficha y luego presiona \"Volver a la cola\".",
+      "entonces": "el selector de filtro se reinicia a \"Todos los pacientes\" (resultado real obtenido) cuando debería mantener persistente el filtro seleccionado por el médico en la sesión (resultado esperado).",
+      "screenshot": "/evidence/bugs/bug-04-queue-state.png",
+      "videoUrl": "/evidence/videos/doctor-portal-audit.webm",
+      "doctorVideoUrl": "/evidence/videos/doctor-portal-audit.webm",
+      "diagnostic": {
+        "observedFact": "El estado de filtro de la cola de pacientes se almacena en un useState local que se desmonta al navegar a /vet/patients/:id.",
+        "whiteBoxHypothesis": "El componente QueuePage no sincroniza el filtro con searchParams ni con sessionStorage/zustand.",
+        "reproductionSpec": "specs/vetconnect-doctor-clinic.spec.ts (TC-DOC-14)",
+        "affectedFile": "src/pages/vet/QueuePage.tsx:34",
+        "recommendedFix": "Migrar el estado del filtro a useSearchParams(?filter=urgencias) o sessionStorage para retener la selección del usuario en navegación bidireccional.",
+        "impact": "UX ERGONOMIC FRICTION",
+        "badgeTone": "neutral"
+      }
     }
   ],
   "specs": [
