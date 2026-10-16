@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import initialData from '../data/tobi-state.json';
+import tobiData from '../data/tobi-state.json';
+import vetData from '../data/vetconnect-state.json';
 
 export interface OfficeAgent {
   id: string;
@@ -132,9 +133,58 @@ export interface TobiState {
   suites: SuiteItem[];
 }
 
+export interface ProjectOption {
+  id: string;
+  name: string;
+  environment: string;
+  branch: string;
+  repoPath: string;
+}
+
+const AVAILABLE_PROJECTS: ProjectOption[] = [
+  {
+    id: "tobitests",
+    name: "TobiTests (Self-Audit)",
+    environment: "Dogfooding Local",
+    branch: "main",
+    repoPath: "C:/Users/usuario/Documents/tobitests"
+  },
+  {
+    id: "vetconnect",
+    name: "VetConnect",
+    environment: "Staging Local",
+    branch: "main",
+    repoPath: "C:/Users/usuario/Documents/VetConnect"
+  }
+];
+
 export function useTobiState() {
-  const [state, setState] = useState<TobiState>(initialData as unknown as TobiState);
+  const [activeProjectId, setActiveProjectId] = useState<string>(() => {
+    return localStorage.getItem("tobitests_active_project") || "tobitests";
+  });
+  const [state, setState] = useState<TobiState>(() => {
+    const saved = localStorage.getItem("tobitests_active_project");
+    const raw = (saved === "vetconnect" ? vetData : tobiData) as unknown as TobiState;
+    const idleAgents = (raw.officeAgents || []).map((a) => ({
+      ...a,
+      status: "idle",
+      bubble: a.idleBubble || "Descansando en la cafetería tras completar el run",
+    }));
+    return { ...raw, officeAgents: idleAgents };
+  });
   const [connected, setConnected] = useState(false);
+
+  const switchProject = useCallback((projectId: string) => {
+    setActiveProjectId(projectId);
+    localStorage.setItem("tobitests_active_project", projectId);
+    const raw = (projectId === "vetconnect" ? vetData : tobiData) as unknown as TobiState;
+    const idleAgents = (raw.officeAgents || []).map((a) => ({
+      ...a,
+      status: "idle",
+      bubble: a.idleBubble || "Descansando en la cafetería tras completar el run",
+    }));
+    setState({ ...raw, officeAgents: idleAgents });
+  }, []);
 
   useEffect(() => {
     let es: EventSource | null = null;
@@ -216,11 +266,41 @@ export function useTobiState() {
   const copyBddToClipboard = useCallback((bug: BugItem) => {
     const text = `Esquema de Plantilla Estandarizado:
 Definir el Escenario (Gherkin/BDD):
-Nombre y sección (${bug.id}: ${bug.title}, sección: ${bug.section}).
+Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
 Pasos para reproducir:
 Dado que ${bug.dadoQue}
 Cuando ${bug.cuando}
-Entonces ${bug.entonces}`;
+Entonces ${bug.entonces}
+
+==================================================
+Protocolo Anti-Regresiones con Blindaje (Quirófano de Código)
+==================================================
+Fase 1: Identificar el escenario & Aislamiento en Capas:
+- Capa UI/Vista: ${bug.diagnostic?.affectedFile || "web/src/components/OfficeView.tsx"}
+- Capa de Hooks/Estado: Búfer reactivo y discriminación de stream
+- Capa de Red/Request: Verificado con DevTools CDP y Playwright MCP
+- Capa Backend/API: Contratos de eventos preservados
+- Capa de Base de Datos: Estado sincronizado en tobi-state.json
+
+Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode):
+1. ARCHIVOS DENTRO DEL ALCANCE: [${bug.diagnostic?.affectedFile || "web/src/components/OfficeView.tsx"}, web/src/data/tobi-state.json]
+2. ARCHIVOS FUERA DEL ALCANCE: [useAgentMotion.ts, OfficeScene.tsx, JourneyCanvas.tsx]
+3. EVALUACIÓN DE RIESGOS: Cero roturas en componentes externos preservando contratos retrocompatibles
+4. ESTRATEGIA DE FIX: ${bug.diagnostic?.recommendedFix || "Minimal Fix estricto en el área del cerco"}
+
+Fase 3: Análisis de Impacto Global (El Blindaje Anti-Regresiones):
+- Rastreo de Referencias Cruzadas (Find-All-References)
+- Preservación de Contratos: Retrocompatibilidad garantizada
+- Mapeo de Efectos Secundarios en Cascada (Cascade Failure Mapping)
+
+Fase 4: El Quirófano (Minimal Fix en Rama Aislada):
+- Rama dedicada: bugfix/cerco-${bug.id.toLowerCase()}-fix
+- Minimal Fix aplicado estrictamente sin tocar código no relacionado
+
+Fase 5: El Bucle de Validación (Testing Global y Refactor Seguro):
+- Testing de Tres Capas (Unitario, Regresión e Integración)
+- Verificación estricta del compilador TypeScript (tsc / vite build)
+- Matriz de Control de Calidad del Bugfix con Blindaje verificada`;
 
     navigator.clipboard.writeText(text);
     return text;
@@ -239,13 +319,33 @@ ${state.bugs.map((bug, index) => `---
 * **Agente Detector:** ${bug.agent}
 * **Ejecución Asociada:** ${bug.runId}
 
-#### Escenario (BDD / Gherkin):
-Nombre y sección (${bug.id}: ${bug.title}, sección: ${bug.section}).
+#### 1. Esquema de Plantilla Estandarizado (Gherkin/BDD):
+Nombre y sección (${bug.id}: ${bug.title}, seccion: ${bug.section}).
 
 Pasos para reproducir:
 Dado que ${bug.dadoQue}
 Cuando ${bug.cuando}
 Entonces ${bug.entonces}
+
+#### 2. Protocolo de Cerco de Seguridad & Quirófano Anti-Regresiones:
+* **Fase 1 (Aislamiento en Capas):**
+  - Capa UI/Vista: ${bug.diagnostic?.affectedFile || "web/src/components/OfficeView.tsx"}
+  - Capa Hooks/Estado: Aislamiento por agente en el búfer reactivo
+  - Capa Red/Request: Verificado con DevTools CDP y Playwright MCP
+  - Capa Backend/API: Contratos de eventos preservados
+  - Capa Base de Datos: Estado sincronizado en tobi-state.json
+* **Fase 2 (Cerco de Seguridad - Plan Mode):**
+  1. ARCHIVOS DENTRO DEL ALCANCE: [${bug.diagnostic?.affectedFile || "web/src/components/OfficeView.tsx"}, tobi-state.json]
+  2. ARCHIVOS FUERA DEL ALCANCE: [useAgentMotion.ts, OfficeScene.tsx, JourneyCanvas.tsx]
+  3. EVALUACIÓN DE RIESGOS: Mitigación de regresiones con parámetros opcionales y retrocompatibilidad
+  4. ESTRATEGIA DE FIX: ${bug.diagnostic?.recommendedFix || "Minimal Fix estricto en el área del cerco"}
+* **Fase 3 (Análisis de Impacto Global):**
+  - Mapeo de referencias y preservación de firmas públicas
+* **Fase 4 (El Quirófano):**
+  - Rama: \`bugfix/cerco-${bug.id.toLowerCase()}\`
+  - Minimal fix verificado
+* **Fase 5 (Validación):**
+  - Testing de tres capas y typechecking estricto
 `).join('\n')}
 `;
 
@@ -262,6 +362,9 @@ Entonces ${bug.entonces}
   return {
     state,
     connected,
+    activeProjectId,
+    availableProjects: AVAILABLE_PROJECTS,
+    switchProject,
     updateState,
     toggleAgentStatus,
     setAllAgentsMode,

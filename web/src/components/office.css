@@ -110,19 +110,174 @@
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: radial-gradient(120% 90% at 50% 0%, #ffffff 0%, #f1f4f8 55%, #e6ebf1 100%);
+  background: radial-gradient(120% 90% at 50% 0%, #ffffff 0%, #f3f1ec 55%, #e9e6df 100%);
+  cursor: grab;
+  user-select: none;
+}
+.iso-viewport.is-dragging {
+  cursor: grabbing;
 }
 .iso-canvas {
   position: absolute;
-  left: 50%;
+  left: 0;
   top: 0;
-  transform: translateX(-50%) scale(var(--iso-scale));
-  transform-origin: top center;
+  transform-origin: 0 0;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.iso-viewport.is-dragging .iso-canvas {
+  transition: none;
 }
 .iso-svg {
   display: block;
   overflow: visible;
   pointer-events: none;
+}
+
+/* --- Floating Viewport HUD Controls -------------------------------- */
+.iso-viewport-hud {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  pointer-events: auto;
+}
+.iso-hud-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.iso-hud-btn:hover {
+  background: var(--bg-alt);
+  color: var(--text);
+  border-color: #cbd5e1;
+}
+.iso-hud-btn:active {
+  transform: scale(0.96);
+}
+.iso-hud-zoom {
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+  font-weight: 700;
+  min-width: 44px;
+  padding: 0 6px;
+}
+.iso-hud-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 2px;
+}
+.iso-hud-pill {
+  font-size: 11.5px;
+}
+.iso-hud-pill.active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+  font-weight: 700;
+}
+.iso-hud-standup.active {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+  font-weight: 700;
+  animation: standupPulse 1.8s infinite ease-in-out;
+}
+@keyframes standupPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+}
+
+/* --- Desk Status LEDs & Dynamic Glow ------------------------------- */
+.iso-desk-led {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.iso-desk-led-halo {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  opacity: 0.45;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.iso-desk-led:hover .iso-desk-led-halo {
+  transform: scale(1.35);
+  opacity: 0.8;
+}
+.iso-desk-led-bulb {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+/* Verde / Cyan Neón: Estación trabajando */
+.iso-desk-led.is-working .iso-desk-led-halo {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.6) 0%, rgba(16, 185, 129, 0) 70%);
+  animation: ledPulseGreen 2s infinite ease-in-out;
+}
+.iso-desk-led.is-working .iso-desk-led-bulb {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981, inset 0 1px 1px #a7f3d0;
+}
+/* Ámbar suave: Estación idle / descanso */
+.iso-desk-led.is-idle .iso-desk-led-halo {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.5) 0%, rgba(245, 158, 11, 0) 70%);
+}
+.iso-desk-led.is-idle .iso-desk-led-bulb {
+  background: #f59e0b;
+  box-shadow: 0 0 5px #f59e0b, inset 0 1px 1px #fde68a;
+}
+/* Rojo pulsante: Alerta o telemetría */
+.iso-desk-led.is-alert .iso-desk-led-halo {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.8) 0%, rgba(239, 68, 68, 0) 70%);
+  animation: ledPulseRed 1s infinite alternate;
+}
+.iso-desk-led.is-alert .iso-desk-led-bulb {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444, inset 0 1px 1px #fecaca;
+}
+@keyframes ledPulseGreen {
+  0%, 100% { transform: scale(1); opacity: 0.45; }
+  50% { transform: scale(1.3); opacity: 0.85; }
+}
+@keyframes ledPulseRed {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.45); opacity: 1; }
 }
 
 /* --- Zone labels ---------------------------------------------------- */
@@ -163,7 +318,7 @@
   border-bottom-width: 7px;
   border-radius: 5px;
   overflow: hidden;
-  background: #0f172a;
+  background: #1c1b18;
   box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -180,7 +335,7 @@
 .iso-screen-frame code {
   display: block;
   padding: 5px 6px;
-  color: #c7d2fe;
+  color: #c9dccd;
   font: 400 9px / 1.45 var(--font-mono, monospace);
   white-space: pre;
 }
@@ -283,6 +438,18 @@
 .iso-agent.is-working .iso-agent-bubble {
   border-color: var(--agent);
   color: var(--agent);
+}
+.iso-agent.is-in-standup .iso-agent-bubble {
+  border-color: #10b981;
+  background: #ffffff;
+  color: #065f46;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.24);
+  animation: standupBubbleFloat 2.6s infinite ease-in-out;
+}
+@keyframes standupBubbleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3.5px); }
 }
 .iso-agent-name {
   position: absolute;
@@ -484,7 +651,7 @@
 /* --- Operations terminal ------------------------------------------- */
 .iso-terminal {
   border-top: 1px solid var(--border);
-  background: #0f172a;
+  background: #1c1b18;
 }
 .iso-terminal-header {
   display: flex;
@@ -498,7 +665,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #e2e8f0;
+  color: #e6e4dd;
 }
 .iso-terminal-title strong {
   font-size: 11.5px;
@@ -508,7 +675,7 @@
   padding: 2px 7px;
   border-radius: 4px;
   background: rgba(34, 197, 94, 0.16);
-  color: #4ade80;
+  color: #6fcf8a;
   font: 700 10px / 1 var(--font-mono, monospace);
 }
 .iso-terminal-filters {
@@ -523,14 +690,14 @@
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
   background: transparent;
-  color: #94a3b8;
+  color: #9a988f;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.15s ease;
 }
 .iso-filter:hover {
-  color: #e2e8f0;
+  color: #e6e4dd;
   border-color: rgba(255, 255, 255, 0.3);
 }
 .iso-filter.active {
@@ -551,29 +718,29 @@
   gap: 10px;
 }
 .iso-term-time {
-  color: #64748b;
+  color: #6a6860;
   flex: 0 0 auto;
 }
 .iso-term-source {
   flex: 0 0 auto;
   font-weight: 700;
 }
-.iso-term-source.tag-orchestrator { color: #a78bfa; }
-.iso-term-source.tag-playwright { color: #38bdf8; }
-.iso-term-source.tag-devtools_cdp { color: #f472b6; }
-.iso-term-source.tag-explorer { color: #4ade80; }
+.iso-term-source.tag-orchestrator { color: #a9d3b9; }
+.iso-term-source.tag-playwright { color: #9ec9d8; }
+.iso-term-source.tag-devtools_cdp { color: #e0a0a0; }
+.iso-term-source.tag-explorer { color: #6fcf8a; }
 .iso-term-source.tag-security { color: #fbbf24; }
 .iso-term-source.tag-spec { color: #60a5fa; }
-.iso-term-source.tag-subagent { color: #94a3b8; }
+.iso-term-source.tag-subagent { color: #9a988f; }
 .iso-term-msg {
-  color: #cbd5e1;
+  color: #d6d3c9;
   min-width: 0;
 }
-.iso-term-line.log-warn .iso-term-msg { color: #fca5a5; }
+.iso-term-line.log-warn .iso-term-msg { color: #e59a94; }
 .iso-term-line.log-success .iso-term-msg { color: #86efac; }
 .iso-term-line.log-accent .iso-term-msg { color: #c4b5fd; }
 .iso-term-empty {
-  color: #64748b;
+  color: #6a6860;
   padding: 6px 0;
 }
 
@@ -582,8 +749,8 @@
   margin: 0;
   padding: 20px;
   border-radius: 10px;
-  background: #0f172a;
-  color: #c7d2fe;
+  background: #1c1b18;
+  color: #c9dccd;
   font-family: var(--font-mono, monospace);
   font-size: 12.5px;
   line-height: 1.7;
