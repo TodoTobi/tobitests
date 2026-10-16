@@ -1023,7 +1023,7 @@ function LiveRunPage({ tobi }: { navigate?: (view: AppView) => void; tobi: Retur
   </>;
 }
 
-function BugTrackerPage({ navigate, tobi }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState> }) {
+function BugTrackerPage({ navigate, tobi, onSelectBug }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState>; onSelectBug?: (bugId: string) => void }) {
   const [reportOpen, setReportOpen] = useState(false);
   const [search, setSearch] = useState("");
   const bugList = tobi.state.bugs.filter(
@@ -1053,7 +1053,15 @@ function BugTrackerPage({ navigate, tobi }: { navigate: (view: AppView) => void;
         <div className="bug-table">
           <div className="bug-row bug-head"><span>BUG / TÍTULO</span><span>SEVERIDAD</span><span>ESTADO</span><span>SECCIÓN AFECTADA</span><span>EJECUCIÓN</span><span>AGENTE DETECTOR</span><span>RESPONSABLE</span><span /></div>
           {bugList.map((bug) => (
-            <div className="bug-row" key={bug.id} onClick={() => navigate("bug-detail")} style={{ cursor: "pointer" }}>
+            <div
+              className="bug-row"
+              key={bug.id}
+              onClick={() => {
+                if (onSelectBug) onSelectBug(bug.id);
+                navigate("bug-detail");
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <div><strong>{bug.id}</strong><p>{bug.title}</p><small>{tobi.state.project.name} · {bug.date}</small></div>
               <Badge tone={bug.severity === "Critical" || bug.severity === "High" ? "danger" : "warning"}>{bug.severity}</Badge>
               <Badge tone="agent">{bug.status}</Badge>
@@ -1061,7 +1069,17 @@ function BugTrackerPage({ navigate, tobi }: { navigate: (view: AppView) => void;
               <Button variant="ghost" onClick={() => navigate("run-detail")}>{bug.runId}</Button>
               <span>{bug.agent}</span>
               <span>{bug.assignee}</span>
-              <Button variant="icon" label={`Abrir ${bug.id}`} onClick={() => navigate("bug-detail")}><Icon name="chevron" size="sm" /></Button>
+              <Button
+                variant="icon"
+                label={`Abrir ${bug.id}`}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  if (onSelectBug) onSelectBug(bug.id);
+                  navigate("bug-detail");
+                }}
+              >
+                <Icon name="chevron" size="sm" />
+              </Button>
             </div>
           ))}
         </div>
@@ -1094,11 +1112,11 @@ function BugTrackerPage({ navigate, tobi }: { navigate: (view: AppView) => void;
   </>;
 }
 
-function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState> }) {
+function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState>; selectedBugId?: string }) {
   const [evidence, setEvidence] = useState("Visual State");
   const [copied, setCopied] = useState(false);
   const [activeAccount, setActiveAccount] = useState<"tutor" | "doctor">("tutor");
-  const bug = tobi.state.bugs[0];
+  const bug = tobi.state.bugs.find((b) => b.id === selectedBugId) || tobi.state.bugs[0];
 
   const activeVideo = activeAccount === "tutor"
     ? (bug.videoUrl || "/evidence/videos/bug-01-cancellation-replay.webm")
@@ -1303,9 +1321,29 @@ function BugDetailPage({ navigate, tobi }: { navigate: (view: AppView) => void; 
   </>;
 }
 
-function DiagnosticPage({ navigate, tobi }: { navigate: (view: AppView) => void; tobi: ReturnType<typeof useTobiState> }) {
+function DiagnosticPage({
+  navigate,
+  tobi,
+  selectedBugId: propSelectedBugId,
+  onSelectBug,
+}: {
+  navigate: (view: AppView) => void;
+  tobi: ReturnType<typeof useTobiState>;
+  selectedBugId?: string;
+  onSelectBug?: (id: string) => void;
+}) {
   const bugs = tobi.state.bugs;
-  const [selectedBugId, setSelectedBugId] = useState(bugs[0]?.id || "BUG-01");
+  const [selectedBugId, setSelectedBugId] = useState(propSelectedBugId || bugs[0]?.id || "BUG-01");
+
+  useEffect(() => {
+    if (propSelectedBugId) setSelectedBugId(propSelectedBugId);
+  }, [propSelectedBugId]);
+
+  const selectBug = (id: string) => {
+    setSelectedBugId(id);
+    if (onSelectBug) onSelectBug(id);
+  };
+
   const bug = bugs.find((b) => b.id === selectedBugId) || bugs[0];
   const { project, liveRun } = tobi.state;
   const [viewMode, setViewMode] = useState<"video" | "snapshot">("video");
@@ -1329,20 +1367,74 @@ function DiagnosticPage({ navigate, tobi }: { navigate: (view: AppView) => void;
 
   return <>
     <PageHeading title={`Diagnostic Studio · ${bug.id}`} subtitle={`${project.name} · ${bug.runId} · ${bug.section}`}>
-      <Button variant="secondary" onClick={() => navigate("bug-detail")}>Ver Plantilla BDD</Button>
+      <Button variant="secondary" onClick={() => { if (onSelectBug) onSelectBug(bug.id); navigate("bug-detail"); }}>Ver Plantilla BDD</Button>
       <Button onClick={() => navigate("specs")}>Abrir Spec en Código <Icon name="arrow" size="sm" /></Button>
     </PageHeading>
 
+    {/* Matriz Integral de Todos los Diagnósticos */}
+    <section className="diag-matrix-panel">
+      <div className="diag-matrix-header">
+        <div>
+          <h3>Matriz de Diagnósticos White-Box ({bugs.length} Incidencias Detectadas)</h3>
+          <small style={{ color: "var(--text-muted)" }}>
+            Inspección integral de estado, causas raíz en código fuente y planes de mitigación de ingeniería
+          </small>
+        </div>
+        <Badge tone="agent">Dual-MCP CDP Trace</Badge>
+      </div>
+
+      <div className="all-diagnostics-grid">
+        {bugs.map((b) => {
+          const bDiag = (b as any).diagnostic || {};
+          const isSelected = b.id === bug.id;
+          return (
+            <div
+              key={b.id}
+              className={`diag-overview-card ${isSelected ? "active" : ""}`}
+              onClick={() => selectBug(b.id)}
+            >
+              <div className="diag-card-head">
+                <Badge tone={b.severity === "Critical" || b.severity === "High" ? "danger" : "warning"}>
+                  {b.id} · {b.severity}
+                </Badge>
+                {isSelected ? <Badge tone="agent">Inspeccionando</Badge> : <span className="diag-card-meta">{b.section}</span>}
+              </div>
+              <h4 className="diag-card-title">{b.title}</h4>
+              <p className="diag-card-fact">
+                <strong>Hecho:</strong> {b.entonces}
+              </p>
+              <div className="diag-card-fix">
+                <strong>Fix:</strong> {bDiag.recommendedFix || "Refactorizar sincronización reactiva de estado."}
+              </div>
+              <div className="diag-card-badge-row">
+                <code style={{ fontSize: 11, color: "var(--primary)" }}>{bDiag.affectedFile || b.section}</code>
+                <Button
+                  variant={isSelected ? "primary" : "secondary"}
+                  style={{ marginLeft: "auto", minHeight: 26, fontSize: 11, padding: "2px 8px" }}
+                  onClick={(e: any) => {
+                    e.stopPropagation();
+                    selectBug(b.id);
+                  }}
+                >
+                  {isSelected ? "Activo" : "Inspeccionar"}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
     <div className="bug-selector-bar panel" style={{ marginBottom: 14, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, overflowX: "auto" }}>
       <span style={{ fontSize: 13, fontWeight: 700, color: "var(--placeholder)", letterSpacing: ".06em", whiteSpace: "nowrap" }}>
-        DIAGNÓSTICOS DISPONIBLES ({bugs.length}):
+        DETALLE DE TRAZA SELECCIONADA:
       </span>
       {bugs.map((b) => (
         <button
           key={b.id}
           type="button"
           className={`diag-tab-btn ${b.id === selectedBugId ? "active" : ""}`}
-          onClick={() => { setSelectedBugId(b.id); setViewMode("video"); }}
+          onClick={() => { selectBug(b.id); setViewMode("video"); }}
           style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 34, padding: "4px 12px", borderRadius: 7, fontSize: 13, cursor: "pointer", border: b.id === selectedBugId ? "1px solid var(--primary)" : "1px solid var(--border)", background: b.id === selectedBugId ? "var(--nav-selected)" : "white" }}
         >
           <Badge tone={b.severity === "High" ? "danger" : b.severity === "Medium" ? "warning" : "neutral"}>
@@ -1780,6 +1872,7 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
   const [compact, setCompact] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [notifications, setNotifications] = useState(false);
+  const [activeBugId, setActiveBugId] = useState<string>("BUG-01");
 
   const labels: Record<AppView, string> = {
     landing: "Portada",
@@ -1788,7 +1881,7 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
     "run-detail": `Run ${tobi.state.runs[0]?.id || "#RUN-01"}`,
     "live-run": "Live Run",
     "bug-tracker": "Bug Tracker",
-    "bug-detail": tobi.state.bugs[0]?.id || "BUG-01",
+    "bug-detail": activeBugId || "BUG-01",
     diagnostic: "Diagnostic Studio",
     office: "La Oficina",
     specs: "Test Specs",
@@ -1802,9 +1895,9 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
     view === "test-runs" ? <TestRunsPage navigate={navigate} tobi={tobi} /> :
     view === "run-detail" ? <RunDetailPage navigate={navigate} tobi={tobi} /> :
     view === "live-run" ? <LiveRunPage tobi={tobi} /> :
-    view === "bug-tracker" ? <BugTrackerPage navigate={navigate} tobi={tobi} /> :
-    view === "bug-detail" ? <BugDetailPage navigate={navigate} tobi={tobi} /> :
-    view === "diagnostic" ? <DiagnosticPage navigate={navigate} tobi={tobi} /> :
+    view === "bug-tracker" ? <BugTrackerPage navigate={navigate} tobi={tobi} onSelectBug={setActiveBugId} /> :
+    view === "bug-detail" ? <BugDetailPage navigate={navigate} tobi={tobi} selectedBugId={activeBugId} /> :
+    view === "diagnostic" ? <DiagnosticPage navigate={navigate} tobi={tobi} selectedBugId={activeBugId} onSelectBug={setActiveBugId} /> :
     view === "office" ? <OfficePage navigate={navigate} tobi={tobi} /> :
     view === "specs" ? <SpecsPage navigate={navigate} tobi={tobi} /> :
     view === "suites" ? <SuitesPage navigate={navigate} tobi={tobi} /> :

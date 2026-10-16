@@ -184,13 +184,13 @@ const IsoStatic = memo(function IsoStatic({ onOpenScreen }: { onOpenScreen: (mod
   );
 });
 
-export function OfficeScene({ agents, poses, selectedId, onSelect, onOpenScreen }: OfficeSceneProps) {
+export function OfficeScene({ agents, poses = [], selectedId, onSelect, onOpenScreen }: OfficeSceneProps) {
   return (
     <div className="iso-canvas" style={{ width: SCENE_W, height: SCENE_H }}>
       <IsoStatic onOpenScreen={onOpenScreen} />
 
       {agents.map((agent) => {
-        const pose = poses.find((p) => p.id === agent.id);
+        const pose = (poses || []).find((p) => p.id === agent.id);
         if (!pose) return null;
         const p = project(pose.x, pose.y, 0);
         const isWorking = agent.status === "working";

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode, type JSX } from "react";
 import type { useTobiState, OfficeAgent } from "../hooks/useTobiState";
 import { OfficeScene } from "./OfficeScene";
+import { useAgentMotion } from "./useAgentMotion";
 import type { ScreenModal } from "./officeIso";
 import "./office.css";
 
@@ -45,6 +46,8 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
   const [terminalFilter, setTerminalFilter] = useState<"all" | "mcp" | "subagent" | "warn">("all");
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationStep, setSimulationStep] = useState(0);
+
+  const poses = useAgentMotion(agents, isSimulating);
 
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: "l-1", time: "21:50:01", source: "ORCHESTRATOR", message: "Antigravity conectado al workspace local (C:/Users/usuario/Documents/VetConnect)", level: "accent" },
@@ -186,11 +189,10 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
             <div className="iso-viewport">
               <OfficeScene
                 agents={agents}
+                poses={poses}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 onOpenScreen={setActiveScreenModal}
-                isSimulating={isSimulating}
-                beat={beat}
               />
             </div>
 
