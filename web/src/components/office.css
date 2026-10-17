@@ -574,13 +574,168 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
-@keyframes isoIdle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2.5px); }
+/* --- Ceiling Lamps & Light Pools ------------------------------------ */
+.iso-lamp {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 120;
 }
+.iso-lamp-cord {
+  width: 1.5px;
+  height: 38px;
+  background: #64748b;
+}
+.iso-lamp-shade {
+  width: 18px;
+  height: 9px;
+  background: #1e293b;
+  border-radius: 9px 9px 2px 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 -2px 3px #fef08a;
+}
+.iso-lamp-glow {
+  position: absolute;
+  width: 150px;
+  height: 75px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(254, 240, 138, 0.24) 0%, rgba(254, 240, 138, 0.08) 50%, transparent 75%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(4px);
+  z-index: 5;
+}
+
+/* --- Among Us Character Animations --------------------------------- */
+@keyframes isoIdle {
+  0%, 100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: translateY(-2.5px) scale(1.02, 0.98);
+  }
+}
+
+/* Authentic Among Us Waddle (Left-Right tilt rocking) */
 @keyframes isoWalk {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-6px) rotate(2deg); }
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-6.5deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(6.5deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* Active working bob */
+.anim-working {
+  animation: amongUsWorkBob 1.8s ease-in-out infinite;
+}
+.anim-resting {
+  animation: amongUsBreathe 3.2s ease-in-out infinite;
+}
+
+@keyframes amongUsWorkBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.2px); }
+}
+
+@keyframes amongUsBreathe {
+  0%, 100% { transform: scale(1, 1) translateY(0); }
+  50% { transform: scale(1.015, 0.985) translateY(0.8px); }
+}
+
+/* Glass Visor Specular Reflection Sweep */
+.crewmate-visor-shine {
+  animation: visorShineSweep 4.2s ease-in-out infinite;
+  transform-origin: 44px 33px;
+}
+@keyframes visorShineSweep {
+  0%, 75%, 100% {
+    opacity: 0.9;
+    transform: rotate(-15deg) translate(0, 0);
+  }
+  82% {
+    opacity: 1;
+    transform: rotate(-15deg) translate(2.5px, -1px);
+  }
+  90% {
+    opacity: 0.75;
+    transform: rotate(-15deg) translate(-1px, 0.5px);
+  }
+}
+
+/* Floating Typing Crewmate Hands */
+.hands-typing .hand-left {
+  animation: typingHandLeft 0.28s ease-in-out infinite alternate;
+}
+.hands-typing .hand-right {
+  animation: typingHandRight 0.28s ease-in-out infinite alternate 0.14s;
+}
+@keyframes typingHandLeft {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2.5px); }
+}
+@keyframes typingHandRight {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2.5px); }
+}
+
+/* Telemetry Antenna Beacon LED & Signal Waves */
+.antenna-beacon {
+  animation: beaconBlink 1s infinite;
+}
+@keyframes beaconBlink {
+  0%, 100% { fill: #ef4444; filter: drop-shadow(0 0 2px #ef4444); }
+  50% { fill: #22c55e; filter: drop-shadow(0 0 5px #22c55e); }
+}
+
+.signal-wave {
+  animation: signalWavePulse 1.8s infinite ease-out;
+  transform-origin: 40px 5px;
+}
+@keyframes signalWavePulse {
+  0% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 0.9; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* QA Radar Grid */
+.radar-pulse {
+  animation: radarRotate 2.8s linear infinite;
+  transform-origin: 40px 66px;
+}
+@keyframes radarRotate {
+  0% { transform: rotate(0deg); opacity: 0.85; }
+  50% { opacity: 0.35; }
+  100% { transform: rotate(360deg); opacity: 0.85; }
+}
+
+/* Datacenter Server Rack Blinking LED Clusters */
+.server-led-cluster circle {
+  animation: serverLedBlink 0.65s infinite alternate;
+}
+.server-led-cluster circle:nth-child(2n) {
+  animation-duration: 0.42s;
+  animation-delay: 0.12s;
+}
+.server-led-cluster circle:nth-child(3n) {
+  animation-duration: 0.85s;
+  animation-delay: 0.22s;
+}
+@keyframes serverLedBlink {
+  0% { opacity: 0.25; }
+  100% { opacity: 1; filter: drop-shadow(0 0 3px currentColor); }
 }
 
 /* --- Inspector ------------------------------------------------------ */

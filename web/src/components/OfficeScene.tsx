@@ -120,73 +120,139 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
     <>
       <svg className="iso-svg" viewBox={`0 0 ${SCENE_W} ${SCENE_H}`} width={SCENE_W} height={SCENE_H} aria-hidden="true">
         <defs>
-          <linearGradient id="isoFloor" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#f4f2ec" />
-            <stop offset="100%" stopColor="#e7e4dc" />
+          {/* Architectural floor: warm oak/micro-cement gradient */}
+          <linearGradient id="isoFloor" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#f3efe6" />
+            <stop offset="50%" stopColor="#eae5d8" />
+            <stop offset="100%" stopColor="#dfd9cb" />
           </linearGradient>
+
+          {/* Clean modern minimalist wall gradients with ceiling bounce lighting */}
           <linearGradient id="isoWallL" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#f8f6f1" />
-            <stop offset="100%" stopColor="#ebe8e0" />
+            <stop offset="0%" stopColor="#faf9f6" />
+            <stop offset="60%" stopColor="#eeebe2" />
+            <stop offset="100%" stopColor="#dfdbd0" />
           </linearGradient>
           <linearGradient id="isoWallR" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#f4f2ec" />
-            <stop offset="100%" stopColor="#e2dfd6" />
+            <stop offset="0%" stopColor="#f5f3ec" />
+            <stop offset="60%" stopColor="#e8e4da" />
+            <stop offset="100%" stopColor="#d8d4c7" />
           </linearGradient>
-          <linearGradient id="isoGlass" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#d4e6e0" />
-            <stop offset="100%" stopColor="#eaf3ef" />
+
+          {/* Architectural tinted glass with sky reflection */}
+          <linearGradient id="isoGlass" x1="0" y1="0" x2="0.8" y2="1">
+            <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.85" />
+            <stop offset="45%" stopColor="#bae6fd" stopOpacity="0.7" />
+            <stop offset="85%" stopColor="#7dd3fc" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.65" />
+          </linearGradient>
+
+          {/* Soft volumetric sunbeams streaming onto the floor */}
+          <linearGradient id="isoSunbeam" x1="0" y1="0" x2="0.6" y2="1">
+            <stop offset="0%" stopColor="#fffbeb" stopOpacity="0.18" />
+            <stop offset="40%" stopColor="#fef3c7" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Ambient occlusion shadow along left wall base */}
+          <linearGradient id="isoWallShadowL" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="rgba(15, 23, 42, 0.18)" />
+            <stop offset="100%" stopColor="rgba(15, 23, 42, 0)" />
+          </linearGradient>
+
+          {/* Ambient occlusion shadow along right wall base */}
+          <linearGradient id="isoWallShadowR" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(15, 23, 42, 0.18)" />
+            <stop offset="100%" stopColor="rgba(15, 23, 42, 0)" />
           </linearGradient>
         </defs>
 
         {/* Walls */}
-        <polygon points={wallLeft} fill="url(#isoWallL)" stroke="#d9d5ca" strokeWidth="1" />
-        <polygon points={wallRight} fill="url(#isoWallR)" stroke="#d9d5ca" strokeWidth="1" />
+        <polygon points={wallLeft} fill="url(#isoWallL)" stroke="#d2cdbf" strokeWidth="1" />
+        <polygon points={wallRight} fill="url(#isoWallR)" stroke="#d2cdbf" strokeWidth="1" />
+
+        {/* Baseboard molding (zócalo) for architectural realism */}
+        <polygon points={wallPanel("y", 0, ROWS, 0, 4)} fill="#cfc8b8" stroke="#bab3a0" strokeWidth="0.8" />
+        <polygon points={wallPanel("x", 0, COLS, 0, 4)} fill="#cfc8b8" stroke="#bab3a0" strokeWidth="0.8" />
 
         {/* Windows */}
         {RIGHT_WINDOWS.map(([a, b], i) => (
           <g key={`rw${i}`}>
-            <polygon points={wallPanel("x", a, b, 64, 116)} fill="url(#isoGlass)" stroke="#9fbfb0" strokeWidth="2" />
-            <polyline points={pts([project((a + b) / 2, 0, 116), project((a + b) / 2, 0, 64)])} fill="none" stroke="#9fbfb0" strokeWidth="1.5" />
-            <polyline points={pts([project(a, 0, 90), project(b, 0, 90)])} fill="none" stroke="#9fbfb0" strokeWidth="1.5" />
+            <polygon points={wallPanel("x", a, b, 64, 116)} fill="url(#isoGlass)" stroke="#64748b" strokeWidth="2.2" />
+            <polyline points={pts([project((a + b) / 2, 0, 116), project((a + b) / 2, 0, 64)])} fill="none" stroke="#475569" strokeWidth="1.5" />
+            <polyline points={pts([project(a, 0, 90), project(b, 0, 90)])} fill="none" stroke="#475569" strokeWidth="1.5" />
+            {/* Glass reflection streak */}
+            <polygon points={pts([project(a + 0.3, 0, 112), project(a + 0.8, 0, 112), project(a + 0.2, 0, 68), project(a - 0.3, 0, 68)])} fill="rgba(255,255,255,0.3)" />
           </g>
         ))}
         {LEFT_WINDOWS.map(([a, b], i) => (
           <g key={`lw${i}`}>
-            <polygon points={wallPanel("y", a, b, 64, 116)} fill="url(#isoGlass)" stroke="#9fbfb0" strokeWidth="2" />
-            <polyline points={pts([project(0, (a + b) / 2, 116), project(0, (a + b) / 2, 64)])} fill="none" stroke="#9fbfb0" strokeWidth="1.5" />
-            <polyline points={pts([project(0, a, 90), project(0, b, 90)])} fill="none" stroke="#9fbfb0" strokeWidth="1.5" />
+            <polygon points={wallPanel("y", a, b, 64, 116)} fill="url(#isoGlass)" stroke="#64748b" strokeWidth="2.2" />
+            <polyline points={pts([project(0, (a + b) / 2, 116), project(0, (a + b) / 2, 64)])} fill="none" stroke="#475569" strokeWidth="1.5" />
+            <polyline points={pts([project(0, a, 90), project(0, b, 90)])} fill="none" stroke="#475569" strokeWidth="1.5" />
+            <polygon points={pts([project(0, a + 0.3, 112), project(0, a + 0.8, 112), project(0, a + 0.2, 68), project(0, a - 0.3, 68)])} fill="rgba(255,255,255,0.3)" />
           </g>
         ))}
 
         {/* Wall sign (TobiTests mark) on the right wall */}
         <g>
-          <polygon points={wallPanel("x", 13.4, 16.4, 70, 122)} fill="#eaf4ee" stroke="#b8dcc6" strokeWidth="1.5" />
-          <polygon points={wallPanel("x", 13.9, 14.3, 82, 112)} fill="#1f9d63" />
-          <polygon points={wallPanel("x", 14.6, 14.9, 82, 112)} fill="#1f9d63" />
-          <polygon points={wallPanel("x", 15.2, 16.0, 90, 112)} fill="#1f9d63" />
+          <polygon points={wallPanel("x", 13.4, 16.4, 70, 122)} fill="#0f172a" stroke="#334155" strokeWidth="1.5" />
+          <polygon points={wallPanel("x", 13.9, 14.3, 82, 112)} fill="#10b981" />
+          <polygon points={wallPanel("x", 14.6, 14.9, 82, 112)} fill="#06b6d4" />
+          <polygon points={wallPanel("x", 15.2, 16.0, 90, 112)} fill="#8b5cf6" />
         </g>
 
         {/* Exit sign */}
-        <polygon points={wallPanel("x", 17.0, 17.6, 96, 110)} fill="#2a7d3f" stroke="#ffffff" strokeWidth="1" />
+        <polygon points={wallPanel("x", 17.0, 17.6, 96, 110)} fill="#15803d" stroke="#ffffff" strokeWidth="1" />
 
         {/* Wall clock */}
         <g>
-          <circle cx={project(0, 4.9, 104).x} cy={project(0, 4.9, 104).y} r={15} fill="#ffffff" stroke="#cfccc2" strokeWidth="3" />
-          <line x1={project(0, 4.9, 104).x} y1={project(0, 4.9, 104).y} x2={project(0, 4.9, 104).x} y2={project(0, 4.9, 104).y - 8} stroke="#334155" strokeWidth="2" />
-          <line x1={project(0, 4.9, 104).x} y1={project(0, 4.9, 104).y} x2={project(0, 4.9, 104).x + 6} y2={project(0, 4.9, 104).y} stroke="#334155" strokeWidth="2" />
+          <circle cx={project(0, 4.9, 104).x} cy={project(0, 4.9, 104).y} r={15} fill="#ffffff" stroke="#94a3b8" strokeWidth="3" />
+          <line x1={project(0, 4.9, 104).x} y1={project(0, 4.9, 104).y} x2={project(0, 4.9, 104).x} y2={project(0, 4.9, 104).y - 8} stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
+          <line x1={project(0, 4.9, 104).x} y1={project(0, 4.9, 104).y} x2={project(0, 4.9, 104).x + 6} y2={project(0, 4.9, 104).y} stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
+          <circle cx={project(0, 4.9, 104).x} cy={project(0, 4.9, 104).y} r={2} fill="#ef4444" />
         </g>
 
-        {/* Floor */}
-        <polygon points={floor} fill="url(#isoFloor)" stroke="#d9d5ca" strokeWidth="1" />
-        {gridLines.map((l) => (
-          <polyline key={l.key} points={l.points} fill="none" stroke="rgba(120,140,160,.13)" strokeWidth="1" />
+        {/* Floor with rich warm gradient */}
+        <polygon points={floor} fill="url(#isoFloor)" stroke="#cfc8b8" strokeWidth="1" />
+
+        {/* Ambient Occlusion base shadows */}
+        <polygon
+          points={pts([project(0, 0, 0), project(0, ROWS, 0), project(0.45, ROWS, 0), project(0.45, 0, 0)])}
+          fill="url(#isoWallShadowL)"
+          style={{ pointerEvents: "none" }}
+        />
+        <polygon
+          points={pts([project(0, 0, 0), project(COLS, 0, 0), project(COLS, 0.45, 0), project(0, 0.45, 0)])}
+          fill="url(#isoWallShadowR)"
+          style={{ pointerEvents: "none" }}
+        />
+
+        {/* Soft volumetric sunbeams from the windows onto the floor */}
+        {RIGHT_WINDOWS.map(([a, b], i) => (
+          <polygon
+            key={`sunbeam-${i}`}
+            points={pts([
+              project(a, 0, 64),
+              project(b, 0, 64),
+              project(b + 2.8, 5.2, 0),
+              project(a + 2.8, 5.2, 0),
+            ])}
+            fill="url(#isoSunbeam)"
+            style={{ mixBlendMode: "screen", pointerEvents: "none" }}
+          />
         ))}
 
-        {/* Zone rugs */}
+        {/* Grid lines with soft architectural refinement */}
+        {gridLines.map((l) => (
+          <polyline key={l.key} points={l.points} fill="none" stroke="rgba(100, 116, 139, 0.11)" strokeWidth="1" />
+        ))}
+
+        {/* Zone rugs with subtle tactile texture */}
         {ZONES.map((z) => (
           <g key={z.id}>
             <polygon points={rugPolygon(z.gx, z.gy, z.w, z.d, 0.4)} fill={z.floor} />
-            <polygon points={rugPolygon(z.gx, z.gy, z.w, z.d, 0.6)} fill={z.fill} stroke={z.stroke} strokeWidth="1.5" strokeDasharray="6 5" />
+            <polygon points={rugPolygon(z.gx, z.gy, z.w, z.d, 0.6)} fill={z.fill} stroke={z.stroke} strokeWidth="1.6" strokeDasharray="6 5" />
           </g>
         ))}
 
@@ -197,10 +263,45 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
             <g key={i}>
               <polygon points={p.left} fill={b.left} />
               <polygon points={p.right} fill={b.right} />
-              <polygon points={p.top} fill={b.top} stroke="rgba(0,0,0,.06)" strokeWidth="1" />
+              <polygon points={p.top} fill={b.top} stroke="rgba(0,0,0,.08)" strokeWidth="1" />
             </g>
           );
         })}
+
+        {/* Central Command Desk Cyan Ambient LED Strip */}
+        <polyline
+          points={pts([project(7.3, 6.1 + 1.3, 28), project(7.3 + 3.2, 6.1 + 1.3, 28)])}
+          stroke="#06b6d4"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          style={{ filter: "drop-shadow(0 0 5px #06b6d4)" }}
+        />
+
+        {/* Datacenter Server Rack Blinking LED Clusters */}
+        <g className="server-led-cluster">
+          {/* Rack 1 (13.2, 1.2, h: 66) */}
+          {[0, 1, 2, 3, 4, 5, 6].map((row) => {
+            const ptL = project(13.2 + 1.2, 1.2 + 0.25, 20 + row * 6);
+            const ptR = project(13.2 + 1.2, 1.2 + 0.75, 20 + row * 6);
+            return (
+              <g key={`rack1-led-${row}`}>
+                <circle cx={ptL.x} cy={ptL.y} r={1.6} fill={row % 3 === 0 ? "#10b981" : row % 3 === 1 ? "#06b6d4" : "#f59e0b"} />
+                <circle cx={ptR.x} cy={ptR.y} r={1.6} fill={row % 2 === 0 ? "#10b981" : "#38bdf8"} />
+              </g>
+            );
+          })}
+          {/* Rack 2 (14.9, 1.2, h: 66) */}
+          {[0, 1, 2, 3, 4, 5, 6].map((row) => {
+            const ptL = project(14.9 + 1.2, 1.2 + 0.25, 20 + row * 6);
+            const ptR = project(14.9 + 1.2, 1.2 + 0.75, 20 + row * 6);
+            return (
+              <g key={`rack2-led-${row}`}>
+                <circle cx={ptL.x} cy={ptL.y} r={1.6} fill={row % 2 === 0 ? "#10b981" : "#f59e0b"} />
+                <circle cx={ptR.x} cy={ptR.y} r={1.6} fill={row % 3 === 0 ? "#38bdf8" : "#10b981"} />
+              </g>
+            );
+          })}
+        </g>
       </svg>
 
       {/* Zone labels + ceiling lamps (upright) */}
