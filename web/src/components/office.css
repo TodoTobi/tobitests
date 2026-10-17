@@ -1136,3 +1136,36 @@
     animation: none !important;
   }
 }
+
+/* --- Enterprise ICT Infrastructure Polish --------------------------- */
+.iso-noc-wall {
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45));
+}
+.iso-noc-wall text {
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+.iso-architecture-whiteboard {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
+}
+.iso-architecture-whiteboard text {
+  user-select: none;
+}
+.datacenter-raised-floor {
+  pointer-events: none;
+}
+.iso-datacenter-partition {
+  pointer-events: none;
+}
+.overhead-fiber-trays {
+  pointer-events: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.22));
+}
+.wifi-ap-node circle:last-child {
+  animation: wifiRingPulse 2.4s infinite ease-in-out;
+}
+@keyframes wifiRingPulse {
+  0%, 100% { filter: drop-shadow(0 0 3px #38bdf8); }
+  50% { filter: drop-shadow(0 0 7px #38bdf8); opacity: 0.8; }
+}
+

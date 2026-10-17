@@ -213,8 +213,109 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
           <circle cx={project(0, 4.9, 104).x} cy={project(0, 4.9, 104).y} r={2} fill="#ef4444" />
         </g>
 
+        {/* ============================================================ */}
+        {/* NOC / SOC Operations Video Wall (Left Wall: gy 0.6 to 4.2)   */}
+        {/* ============================================================ */}
+        <g className="iso-noc-wall">
+          {/* Bezel frame */}
+          <polygon points={wallPanel("y", 0.5, 4.3, 53, 127)} fill="#0f172a" stroke="#334155" strokeWidth="2" />
+          
+          {/* Screen 1 (Top Left): Kubernetes Cluster Pod Matrix */}
+          <polygon points={wallPanel("y", 0.65, 2.3, 92, 125)} fill="#030712" stroke="#1e293b" strokeWidth="1" />
+          <text x={project(0, 0.8, 122).x} y={project(0, 0.8, 122).y} fill="#10b981" fontSize="5" fontFamily="monospace" fontWeight="bold">K8S CLUSTER: 24/24 PODS OK</text>
+          {[0, 1, 2].map((r) =>
+            [0, 1, 2, 3, 4, 5].map((c) => {
+              const pt = project(0, 0.8 + c * 0.28, 115 - r * 8);
+              return <circle key={`pod-${r}-${c}`} cx={pt.x} cy={pt.y} r={2} fill={r === 2 && c === 4 ? "#38bdf8" : "#10b981"} />;
+            })
+          )}
+
+          {/* Screen 2 (Top Right): Global CDN & Low-Latency Edge Map */}
+          <polygon points={wallPanel("y", 2.5, 4.15, 92, 125)} fill="#030712" stroke="#1e293b" strokeWidth="1" />
+          <text x={project(0, 2.65, 122).x} y={project(0, 2.65, 122).y} fill="#38bdf8" fontSize="5" fontFamily="monospace" fontWeight="bold">EDGE CDN: LON 14ms · NYC 22ms</text>
+          <polyline points={pts([project(0, 2.8, 110), project(0, 3.3, 106), project(0, 3.8, 112)])} stroke="#0284c7" strokeWidth="1" fill="none" strokeDasharray="2 1.5" />
+          <circle cx={project(0, 2.8, 110).x} cy={project(0, 2.8, 110).y} r={2.2} fill="#38bdf8" />
+          <circle cx={project(0, 3.3, 106).x} cy={project(0, 3.3, 106).y} r={2.2} fill="#10b981" />
+          <circle cx={project(0, 3.8, 112).x} cy={project(0, 3.8, 112).y} r={2.2} fill="#f59e0b" />
+
+          {/* Screen 3 (Bottom Left): Prometheus & Grafana Traffic Metrics Wave */}
+          <polygon points={wallPanel("y", 0.65, 2.3, 56, 89)} fill="#030712" stroke="#1e293b" strokeWidth="1" />
+          <text x={project(0, 0.8, 86).x} y={project(0, 0.8, 86).y} fill="#f59e0b" fontSize="5" fontFamily="monospace" fontWeight="bold">GRAFANA: 8.4k req/s · CPU 18%</text>
+          <polyline
+            points={pts([
+              project(0, 0.75, 64),
+              project(0, 1.0, 72),
+              project(0, 1.3, 68),
+              project(0, 1.6, 78),
+              project(0, 1.9, 70),
+              project(0, 2.2, 75),
+            ])}
+            stroke="#f59e0b"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <polyline
+            points={pts([
+              project(0, 0.75, 60),
+              project(0, 1.0, 63),
+              project(0, 1.3, 62),
+              project(0, 1.6, 66),
+              project(0, 1.9, 64),
+              project(0, 2.2, 65),
+            ])}
+            stroke="#10b981"
+            strokeWidth="1.2"
+            fill="none"
+          />
+
+          {/* Screen 4 (Bottom Right): SOC Cybersecurity & DDoS Firewall */}
+          <polygon points={wallPanel("y", 2.5, 4.15, 56, 89)} fill="#030712" stroke="#1e293b" strokeWidth="1" />
+          <text x={project(0, 2.65, 86).x} y={project(0, 2.65, 86).y} fill="#a855f7" fontSize="5" fontFamily="monospace" fontWeight="bold">SOC WAF: ZERO TRUST ACTIVE</text>
+          <polygon points={pts([project(0, 3.3, 76), project(0, 3.45, 74), project(0, 3.45, 66), project(0, 3.3, 62), project(0, 3.15, 66), project(0, 3.15, 74)])} fill="#10b981" opacity="0.8" />
+          <text x={project(0, 2.7, 62).x} y={project(0, 2.7, 62).y} fill="#94a3b8" fontSize="4.5" fontFamily="monospace">Blocked: 1,420 DDoS/hr</text>
+        </g>
+
+        {/* System Architecture Glass Whiteboard (Left Wall: gy 4.6 to 5.8) */}
+        <g className="iso-architecture-whiteboard">
+          <polygon points={wallPanel("y", 4.5, 5.85, 44, 108)} fill="#f8fafc" stroke="#64748b" strokeWidth="1.8" />
+          <polygon points={wallPanel("y", 4.5, 5.85, 44, 47)} fill="#cbd5e1" />
+          <text x={project(0, 4.65, 102).x} y={project(0, 4.65, 102).y} fill="#0f172a" fontSize="5.5" fontFamily="sans-serif" fontWeight="bold">Cloud Architecture</text>
+          
+          <polygon points={wallPanel("y", 4.65, 5.0, 84, 94)} fill="#dbeafe" stroke="#3b82f6" strokeWidth="0.8" />
+          <text x={project(0, 4.7, 89).x} y={project(0, 4.7, 89).y} fill="#1e3a8a" fontSize="3.8" fontFamily="monospace">API Gateway</text>
+          
+          <polygon points={wallPanel("y", 5.35, 5.75, 84, 94)} fill="#fef3c7" stroke="#f59e0b" strokeWidth="0.8" />
+          <text x={project(0, 5.4, 89).x} y={project(0, 5.4, 89).y} fill="#78350f" fontSize="3.8" fontFamily="monospace">Kafka Bus</text>
+
+          <polyline points={pts([project(0, 5.0, 89), project(0, 5.35, 89)])} stroke="#3b82f6" strokeWidth="1" strokeDasharray="1.5 1" />
+
+          <polygon points={wallPanel("y", 4.8, 5.6, 62, 74)} fill="#dcfce7" stroke="#10b981" strokeWidth="0.8" />
+          <text x={project(0, 4.85, 68).x} y={project(0, 4.85, 68).y} fill="#065f46" fontSize="3.8" fontFamily="monospace">Postgres + Redis HA</text>
+          
+          {/* Sprint sticky notes */}
+          <polygon points={wallPanel("y", 4.7, 4.95, 50, 58)} fill="#fde047" stroke="#eab308" strokeWidth="0.5" />
+          <polygon points={wallPanel("y", 5.1, 5.35, 50, 58)} fill="#f472b6" stroke="#db2777" strokeWidth="0.5" />
+          <polygon points={wallPanel("y", 5.5, 5.75, 50, 58)} fill="#38bdf8" stroke="#0284c7" strokeWidth="0.5" />
+        </g>
+
         {/* Floor with rich warm gradient */}
         <polygon points={floor} fill="url(#isoFloor)" stroke="#cfc8b8" strokeWidth="1" />
+
+        {/* Datacenter Raised Perforated Floor Grid (Suelo Técnico) */}
+        <g className="datacenter-raised-floor">
+          <polygon points={pts([project(10.5, 0.8, 0.5), project(16.7, 0.8, 0.5), project(16.7, 5.4, 0.5), project(10.5, 5.4, 0.5)])} fill="rgba(6, 182, 212, 0.08)" stroke="#06b6d4" strokeWidth="1.2" strokeDasharray="4 3" />
+          {[1.4, 2.4, 3.4, 4.4].map((y) =>
+            [11.0, 12.4, 13.8, 15.2].map((x) => (
+              <polygon
+                key={`vent-tile-${x}-${y}`}
+                points={pts([project(x, y, 0.6), project(x + 0.95, y, 0.6), project(x + 0.95, y + 0.75, 0.6), project(x, y + 0.75, 0.6)])}
+                fill="#1e293b"
+                stroke="rgba(56, 189, 248, 0.4)"
+                strokeWidth="0.8"
+              />
+            ))
+          )}
+        </g>
 
         {/* Ambient Occlusion base shadows */}
         <polygon
@@ -248,6 +349,24 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
           <polyline key={l.key} points={l.points} fill="none" stroke="rgba(100, 116, 139, 0.11)" strokeWidth="1" />
         ))}
 
+        {/* Flush Floor Power & RJ45 Data Grommets */}
+        {[
+          { x: 2.2, y: 2.5 },
+          { x: 5.5, y: 2.5 },
+          { x: 3.8, y: 4.8 },
+          { x: 7.2, y: 6.8 },
+          { x: 10.6, y: 6.8 },
+        ].map((grommet, i) => {
+          const pt = project(grommet.x, grommet.y, 0.4);
+          return (
+            <g key={`grommet-${i}`} opacity={0.9}>
+              <rect x={pt.x - 4} y={pt.y - 2.5} width="8" height="5" rx="1" fill="#334155" stroke="#1e293b" strokeWidth="0.8" />
+              <circle cx={pt.x - 1.5} cy={pt.y} r={0.8} fill="#38bdf8" />
+              <circle cx={pt.x + 1.5} cy={pt.y} r={0.8} fill="#38bdf8" />
+            </g>
+          );
+        })}
+
         {/* Zone rugs with subtle tactile texture */}
         {ZONES.map((z) => (
           <g key={z.id}>
@@ -268,6 +387,18 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
           );
         })}
 
+        {/* Datacenter Glass Security Partition with Biometric Scanner */}
+        <g className="iso-datacenter-partition">
+          <polygon points={pts([project(10.4, 0.6, 88), project(10.4, 5.4, 88), project(10.4, 5.4, 0), project(10.4, 0.6, 0)])} fill="rgba(6, 182, 212, 0.08)" stroke="#475569" strokeWidth="1.8" />
+          <polyline points={pts([project(10.4, 0.6, 44), project(10.4, 5.4, 44)])} stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.8" />
+          <polyline points={pts([project(10.4, 0.6, 48), project(10.4, 5.4, 48)])} stroke="#38bdf8" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6" />
+          {/* Sliding door mullion */}
+          <polyline points={pts([project(10.4, 3.6, 88), project(10.4, 3.6, 0)])} stroke="#1e293b" strokeWidth="2.2" />
+          {/* Biometric RFID badge access reader */}
+          <rect x={project(10.4, 3.8, 38).x - 3} y={project(10.4, 3.8, 38).y - 6} width="6" height="12" rx="1.5" fill="#0f172a" stroke="#64748b" strokeWidth="0.8" />
+          <circle cx={project(10.4, 3.8, 38).x} cy={project(10.4, 3.8, 38).y - 2} r={1.6} fill="#10b981" style={{ filter: "drop-shadow(0 0 3px #10b981)" }} />
+        </g>
+
         {/* Central Command Desk Cyan Ambient LED Strip */}
         <polyline
           points={pts([project(7.3, 6.1 + 1.3, 28), project(7.3 + 3.2, 6.1 + 1.3, 28)])}
@@ -277,12 +408,16 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
           style={{ filter: "drop-shadow(0 0 5px #06b6d4)" }}
         />
 
-        {/* Datacenter Server Rack Blinking LED Clusters */}
+        {/* Datacenter 3-Rack Blinking LED Clusters & CRAC cooling indicator */}
         <g className="server-led-cluster">
-          {/* Rack 1 (13.2, 1.2, h: 66) */}
-          {[0, 1, 2, 3, 4, 5, 6].map((row) => {
-            const ptL = project(13.2 + 1.2, 1.2 + 0.25, 20 + row * 6);
-            const ptR = project(13.2 + 1.2, 1.2 + 0.75, 20 + row * 6);
+          {/* CRAC Cooling Digital Temp Readout (10.6, 1.1) */}
+          <rect x={project(10.6 + 0.9, 1.1 + 0.3, 48).x - 2} y={project(10.6 + 0.9, 1.1 + 0.3, 48).y - 4} width="16" height="7" rx="1" fill="#030712" stroke="#38bdf8" strokeWidth="0.6" />
+          <text x={project(10.6 + 0.9, 1.1 + 0.3, 48).x} y={project(10.6 + 0.9, 1.1 + 0.3, 48).y + 1} fill="#38bdf8" fontSize="4.2" fontFamily="monospace">19.2°C</text>
+
+          {/* Rack 1 (11.8, 1.1, h: 72) */}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((row) => {
+            const ptL = project(11.8 + 1.25, 1.1 + 0.25, 18 + row * 6.5);
+            const ptR = project(11.8 + 1.25, 1.1 + 0.75, 18 + row * 6.5);
             return (
               <g key={`rack1-led-${row}`}>
                 <circle cx={ptL.x} cy={ptL.y} r={1.6} fill={row % 3 === 0 ? "#10b981" : row % 3 === 1 ? "#06b6d4" : "#f59e0b"} />
@@ -290,10 +425,10 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
               </g>
             );
           })}
-          {/* Rack 2 (14.9, 1.2, h: 66) */}
-          {[0, 1, 2, 3, 4, 5, 6].map((row) => {
-            const ptL = project(14.9 + 1.2, 1.2 + 0.25, 20 + row * 6);
-            const ptR = project(14.9 + 1.2, 1.2 + 0.75, 20 + row * 6);
+          {/* Rack 2 (13.5, 1.1, h: 72) */}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((row) => {
+            const ptL = project(13.5 + 1.25, 1.1 + 0.25, 18 + row * 6.5);
+            const ptR = project(13.5 + 1.25, 1.1 + 0.75, 18 + row * 6.5);
             return (
               <g key={`rack2-led-${row}`}>
                 <circle cx={ptL.x} cy={ptL.y} r={1.6} fill={row % 2 === 0 ? "#10b981" : "#f59e0b"} />
@@ -301,7 +436,63 @@ const IsoStatic = memo(function IsoStatic({ projectName = "TobiTests", onOpenScr
               </g>
             );
           })}
+          {/* Rack 3 (15.2, 1.1, h: 72) */}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((row) => {
+            const ptL = project(15.2 + 1.25, 1.1 + 0.25, 18 + row * 6.5);
+            const ptR = project(15.2 + 1.25, 1.1 + 0.75, 18 + row * 6.5);
+            return (
+              <g key={`rack3-led-${row}`}>
+                <circle cx={ptL.x} cy={ptL.y} r={1.6} fill={row % 3 === 0 ? "#38bdf8" : "#10b981"} />
+                <circle cx={ptR.x} cy={ptR.y} r={1.6} fill={row % 2 === 0 ? "#f59e0b" : "#10b981"} />
+              </g>
+            );
+          })}
         </g>
+
+        {/* Overhead Yellow Fiber-Optic Ducts & Blue Cable Ladders */}
+        <g className="overhead-fiber-trays">
+          <polyline
+            points={pts([
+              project(15.0, 1.8, 145),
+              project(10.5, 1.8, 145),
+              project(8.9, 3.8, 145),
+              project(8.9, 6.2, 145),
+            ])}
+            stroke="#f59e0b"
+            strokeWidth="3.2"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <polyline
+            points={pts([
+              project(15.0, 2.1, 144),
+              project(10.5, 2.1, 144),
+              project(8.6, 4.0, 144),
+              project(8.6, 6.2, 144),
+            ])}
+            stroke="#0284c7"
+            strokeWidth="2.5"
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray="4 2"
+          />
+        </g>
+
+        {/* Enterprise Wi-Fi 7 Ceiling Access Points */}
+        {[
+          { x: 4.2, y: 3.2, z: 195 },
+          { x: 13.5, y: 3.5, z: 195 },
+          { x: 9.0, y: 8.8, z: 195 },
+        ].map((ap, i) => {
+          const pt = project(ap.x, ap.y, ap.z);
+          return (
+            <g key={`wifi-ap-${i}`} className="wifi-ap-node">
+              <circle cx={pt.x} cy={pt.y} r={6.5} fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" />
+              <circle cx={pt.x} cy={pt.y} r={4} fill="#0f172a" />
+              <circle cx={pt.x} cy={pt.y} r={2} fill="#38bdf8" style={{ filter: "drop-shadow(0 0 4px #38bdf8)" }} />
+            </g>
+          );
+        })}
       </svg>
 
       {/* Zone labels + ceiling lamps (upright) */}

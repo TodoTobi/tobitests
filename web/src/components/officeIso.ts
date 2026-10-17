@@ -107,59 +107,78 @@ export const ZONES: Zone[] = [
 /* ------------------------------------------------------------------ */
 
 export const FURNITURE: BoxSpec[] = [
-  // --- Development zone: three wood desks ---
-  { gx: 1.4, gy: 1.3, w: 1.7, d: 1.0, h: 26, top: "#e8d7bf", left: "#cbb69a", right: "#dcc8ac" },
-  { gx: 4.7, gy: 1.3, w: 1.7, d: 1.0, h: 26, top: "#e8d7bf", left: "#cbb69a", right: "#dcc8ac" },
-  { gx: 3.0, gy: 3.6, w: 1.7, d: 1.0, h: 26, top: "#e8d7bf", left: "#cbb69a", right: "#dcc8ac" },
-  // keyboards / mice on desks + desk lamps
-  { gx: 1.7, gy: 1.75, w: 0.7, d: 0.28, h: 30, top: "#3a3935", left: "#25241f", right: "#2e2d28" },
-  { gx: 5.0, gy: 1.75, w: 0.7, d: 0.28, h: 30, top: "#3a3935", left: "#25241f", right: "#2e2d28" },
-  { gx: 3.3, gy: 4.05, w: 0.7, d: 0.28, h: 30, top: "#3a3935", left: "#25241f", right: "#2e2d28" },
-  { gx: 2.9, gy: 1.55, w: 0.55, d: 0.4, h: 31, top: "#fff7e6", left: "#d9c9a6", right: "#e9dcc0" },
-  // chairs (kept out of the collision grid — they are low)
-  { gx: 1.85, gy: 2.65, w: 0.7, d: 0.7, h: 15, top: "#8fb29e", left: "#5f8c74", right: "#76a08a" },
-  { gx: 5.15, gy: 2.65, w: 0.7, d: 0.7, h: 15, top: "#8fb29e", left: "#5f8c74", right: "#76a08a" },
-  { gx: 3.45, gy: 4.95, w: 0.7, d: 0.7, h: 15, top: "#8fb29e", left: "#5f8c74", right: "#76a08a" },
-  // filing cabinets against the wall
-  { gx: 7.6, gy: 0.7, w: 0.9, d: 0.9, h: 42, top: "#dedbd2", left: "#b0ac9f", right: "#c6c2b6" },
-  { gx: 8.7, gy: 0.7, w: 0.9, d: 0.9, h: 42, top: "#dedbd2", left: "#b0ac9f", right: "#c6c2b6" },
+  // --- Development Zone: Modern Titanium Standing Desks with Cable Trays ---
+  { gx: 1.4, gy: 1.3, w: 1.7, d: 1.0, h: 27, top: "#1e293b", left: "#0f172a", right: "#1e293b" },
+  { gx: 4.7, gy: 1.3, w: 1.7, d: 1.0, h: 27, top: "#1e293b", left: "#0f172a", right: "#1e293b" },
+  { gx: 3.0, gy: 3.6, w: 1.7, d: 1.0, h: 27, top: "#1e293b", left: "#0f172a", right: "#1e293b" },
+  
+  // Workstation PC towers under desks with tinted side glass & subtle RGB fan
+  { gx: 1.45, gy: 2.05, w: 0.35, d: 0.65, h: 18, top: "#0f172a", left: "#020617", right: "#1e293b" },
+  { gx: 4.75, gy: 2.05, w: 0.35, d: 0.65, h: 18, top: "#0f172a", left: "#020617", right: "#1e293b" },
+  { gx: 3.05, gy: 4.35, w: 0.35, d: 0.65, h: 18, top: "#0f172a", left: "#020617", right: "#1e293b" },
 
-  // --- Server room: two racks + telemetry console ---
-  { gx: 13.2, gy: 1.2, w: 1.2, d: 1.0, h: 66, top: "#3a3935", left: "#25241f", right: "#2e2d28" },
-  { gx: 14.9, gy: 1.2, w: 1.2, d: 1.0, h: 66, top: "#3a3935", left: "#25241f", right: "#2e2d28" },
-  { gx: 12.2, gy: 3.2, w: 1.7, d: 1.0, h: 26, top: "#dedbd2", left: "#c3bfb3", right: "#d0ccc1" },
-  { gx: 12.5, gy: 3.65, w: 0.7, d: 0.28, h: 30, top: "#3a3935", left: "#25241f", right: "#2e2d28" },
-  { gx: 13.05, gy: 4.55, w: 0.7, d: 0.7, h: 15, top: "#8fb29e", left: "#5f8c74", right: "#76a08a" },
+  // Keyboards / mice on desks
+  { gx: 1.7, gy: 1.75, w: 0.7, d: 0.28, h: 30, top: "#334155", left: "#1e293b", right: "#253346" },
+  { gx: 5.0, gy: 1.75, w: 0.7, d: 0.28, h: 30, top: "#334155", left: "#1e293b", right: "#253346" },
+  { gx: 3.3, gy: 4.05, w: 0.7, d: 0.28, h: 30, top: "#334155", left: "#1e293b", right: "#253346" },
+  { gx: 2.9, gy: 1.55, w: 0.55, d: 0.4, h: 31, top: "#0284c7", left: "#0369a1", right: "#075985" },
 
-  // --- Central command desk ---
-  { gx: 7.3, gy: 6.1, w: 3.2, d: 1.3, h: 28, top: "#dedbd2", left: "#c3bfb3", right: "#d0ccc1" },
-  { gx: 8.9, gy: 7.75, w: 0.8, d: 0.8, h: 17, top: "#4fb585", left: "#2f7d55", right: "#3f9468" },
+  // Ergonomic mesh office chairs
+  { gx: 1.85, gy: 2.65, w: 0.7, d: 0.7, h: 15, top: "#334155", left: "#1e293b", right: "#293749" },
+  { gx: 5.15, gy: 2.65, w: 0.7, d: 0.7, h: 15, top: "#334155", left: "#1e293b", right: "#293749" },
+  { gx: 3.45, gy: 4.95, w: 0.7, d: 0.7, h: 15, top: "#334155", left: "#1e293b", right: "#293749" },
 
-  // --- Reception ---
-  { gx: 1.4, gy: 9.5, w: 2.7, d: 0.8, h: 32, top: "#f4f2ec", left: "#cfccc2", right: "#e0ddd4" },
-  { gx: 1.8, gy: 9.75, w: 0.6, d: 0.35, h: 40, top: "#1c1b18", left: "#12110f", right: "#2a2925" },
-  { gx: 0.9, gy: 8.7, w: 0.6, d: 0.6, h: 34, top: "#6fbf8f", left: "#d9b98f", right: "#e4c9a4" },
-  { gx: 4.4, gy: 11.6, w: 0.5, d: 0.5, h: 22, top: "#e6e3da", left: "#b0ac9f", right: "#c6c2b6" },
+  // High-density enterprise storage cabinets against wall
+  { gx: 7.6, gy: 0.7, w: 0.9, d: 0.9, h: 44, top: "#334155", left: "#1e293b", right: "#273549" },
+  { gx: 8.7, gy: 0.7, w: 0.9, d: 0.9, h: 44, top: "#334155", left: "#1e293b", right: "#273549" },
 
-  // --- Meeting room: table + chairs ---
-  { gx: 8.3, gy: 9.6, w: 2.7, d: 1.6, h: 23, top: "#e9d5ba", left: "#c9b294", right: "#dcc7aa" },
-  { gx: 8.7, gy: 9.0, w: 0.6, d: 0.6, h: 14, top: "#8fb29e", left: "#5f8c74", right: "#76a08a" },
-  { gx: 10.0, gy: 10.9, w: 0.6, d: 0.6, h: 14, top: "#8fb29e", left: "#5f8c74", right: "#76a08a" },
-  { gx: 8.9, gy: 10.1, w: 0.7, d: 0.4, h: 25, top: "#dedbd2", left: "#b0ac9f", right: "#c6c2b6" },
+  // --- Enterprise Datacenter / Server Room ---
+  // In-Row CRAC Precision Air Cooling Unit
+  { gx: 10.6, gy: 1.1, w: 0.9, d: 1.0, h: 70, top: "#334155", left: "#1e293b", right: "#475569" },
+  // 3 Enterprise 42U Server Rack Cabinets with Glass/Mesh Doors
+  { gx: 11.8, gy: 1.1, w: 1.25, d: 1.0, h: 72, top: "#0f172a", left: "#020617", right: "#1e293b" },
+  { gx: 13.5, gy: 1.1, w: 1.25, d: 1.0, h: 72, top: "#0f172a", left: "#020617", right: "#1e293b" },
+  { gx: 15.2, gy: 1.1, w: 1.25, d: 1.0, h: 72, top: "#0f172a", left: "#020617", right: "#1e293b" },
 
-  // --- Break room ---
-  { gx: 15.3, gy: 9.2, w: 0.9, d: 0.7, h: 44, top: "#f6f4ef", left: "#cfccc2", right: "#e0ddd4" },
-  { gx: 13.4, gy: 10.4, w: 1.8, d: 0.8, h: 24, top: "#4fb585", left: "#2f7d55", right: "#3f9468" },
-  { gx: 14.0, gy: 9.9, w: 1.1, d: 0.6, h: 12, top: "#e9d5ba", left: "#c9b294", right: "#dcc7aa" },
-  { gx: 16.4, gy: 10.6, w: 0.6, d: 0.6, h: 32, top: "#6fbf8f", left: "#d9b98f", right: "#e4c9a4" },
-  { gx: 12.5, gy: 11.5, w: 0.6, d: 0.6, h: 32, top: "#6fbf8f", left: "#d9b98f", right: "#e4c9a4" },
+  // Server maintenance diagnostic crash cart with monitor
+  { gx: 11.2, gy: 2.6, w: 0.75, d: 0.55, h: 32, top: "#475569", left: "#334155", right: "#64748b" },
+  // Telemetry Auditor Operations Console Desk
+  { gx: 12.4, gy: 3.3, w: 1.7, d: 1.0, h: 27, top: "#1e293b", left: "#0f172a", right: "#1e293b" },
+  { gx: 12.7, gy: 3.75, w: 0.7, d: 0.28, h: 30, top: "#334155", left: "#1e293b", right: "#253346" },
+  { gx: 13.2, gy: 4.65, w: 0.7, d: 0.7, h: 15, top: "#ea580c", left: "#c2410c", right: "#9a3412" },
 
-  // corridor props: plants, water cooler, bins
-  { gx: 6.0, gy: 5.1, w: 0.6, d: 0.6, h: 34, top: "#6fbf8f", left: "#d9b98f", right: "#e4c9a4" },
-  { gx: 11.4, gy: 8.4, w: 0.6, d: 0.6, h: 34, top: "#6fbf8f", left: "#d9b98f", right: "#e4c9a4" },
-  { gx: 7.2, gy: 8.5, w: 0.5, d: 0.5, h: 30, top: "#e3efe6", left: "#a9cdb6", right: "#c0dcc9" },
-  { gx: 5.4, gy: 6.2, w: 0.45, d: 0.45, h: 16, top: "#cfccc2", left: "#a39f93", right: "#b9b5a9" },
-  { gx: 12.0, gy: 5.4, w: 0.45, d: 0.45, h: 16, top: "#cfccc2", left: "#a39f93", right: "#b9b5a9" },
+  // --- Central Command Hub (Antigravity Chief Station) ---
+  { gx: 7.3, gy: 6.1, w: 3.2, d: 1.3, h: 28, top: "#0f172a", left: "#020617", right: "#1e293b" },
+  { gx: 8.9, gy: 7.75, w: 0.8, d: 0.8, h: 17, top: "#0284c7", left: "#0369a1", right: "#075985" },
+
+  // --- Reception & Security Access ---
+  { gx: 1.4, gy: 9.5, w: 2.7, d: 0.8, h: 32, top: "#1e293b", left: "#0f172a", right: "#334155" },
+  { gx: 1.8, gy: 9.75, w: 0.6, d: 0.35, h: 42, top: "#0f172a", left: "#020617", right: "#1e293b" },
+  // Security speed-gate turnstile with RFID reader
+  { gx: 4.3, gy: 10.2, w: 0.35, d: 0.85, h: 32, top: "#cbd5e1", left: "#94a3b8", right: "#64748b" },
+  { gx: 0.9, gy: 8.7, w: 0.6, d: 0.6, h: 34, top: "#10b981", left: "#047857", right: "#059669" },
+
+  // --- Meeting / War Room ---
+  { gx: 8.3, gy: 9.6, w: 2.7, d: 1.6, h: 24, top: "#1e293b", left: "#0f172a", right: "#334155" },
+  // Telepresence conference soundbar console
+  { gx: 8.8, gy: 9.1, w: 1.7, d: 0.3, h: 20, top: "#0f172a", left: "#020617", right: "#1e293b" },
+  { gx: 8.7, gy: 9.0, w: 0.6, d: 0.6, h: 14, top: "#475569", left: "#334155", right: "#64748b" },
+  { gx: 10.0, gy: 10.9, w: 0.6, d: 0.6, h: 14, top: "#475569", left: "#334155", right: "#64748b" },
+  { gx: 8.9, gy: 10.1, w: 0.7, d: 0.4, h: 26, top: "#334155", left: "#1e293b", right: "#475569" },
+
+  // --- Break Room / Enterprise Café ---
+  { gx: 15.3, gy: 9.2, w: 0.9, d: 0.7, h: 44, top: "#e2e8f0", left: "#94a3b8", right: "#cbd5e1" },
+  { gx: 13.4, gy: 10.4, w: 1.8, d: 0.8, h: 26, top: "#1e293b", left: "#0f172a", right: "#334155" },
+  { gx: 14.0, gy: 9.9, w: 1.1, d: 0.6, h: 13, top: "#475569", left: "#334155", right: "#64748b" },
+  { gx: 16.4, gy: 10.6, w: 0.6, d: 0.6, h: 32, top: "#10b981", left: "#047857", right: "#059669" },
+  { gx: 12.5, gy: 11.5, w: 0.6, d: 0.6, h: 32, top: "#10b981", left: "#047857", right: "#059669" },
+
+  // Corridor Biophilic planters & water coolers
+  { gx: 6.0, gy: 5.1, w: 0.6, d: 0.6, h: 34, top: "#10b981", left: "#047857", right: "#059669" },
+  { gx: 11.4, gy: 8.4, w: 0.6, d: 0.6, h: 34, top: "#10b981", left: "#047857", right: "#059669" },
+  { gx: 7.2, gy: 8.5, w: 0.5, d: 0.5, h: 30, top: "#38bdf8", left: "#0284c7", right: "#0369a1" },
+  { gx: 5.4, gy: 6.2, w: 0.45, d: 0.45, h: 16, top: "#475569", left: "#334155", right: "#64748b" },
+  { gx: 12.0, gy: 5.4, w: 0.45, d: 0.45, h: 16, top: "#475569", left: "#334155", right: "#64748b" },
 ];
 
 /* ------------------------------------------------------------------ */

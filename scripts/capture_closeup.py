@@ -12,8 +12,12 @@ async def run():
         if await tab.count() > 0:
             await tab.first.click()
             await page.wait_for_timeout(1500)
+            
+        # 1. Full office capture
+        await page.screenshot(path="web/public/evidence/runs/among-us-enterprise-office.png", full_page=True)
+        print("Full office captured!")
         
-        # Click Foco Antigravity
+        # 2. Viewport closeup
         focus_btn = page.locator("button:has-text('Foco: Antigravity')")
         if await focus_btn.count() > 0:
             await focus_btn.click()
@@ -28,8 +32,9 @@ async def run():
             
         viewport = page.locator(".iso-viewport")
         if await viewport.count() > 0:
-            await viewport.screenshot(path="web/public/evidence/runs/among-us-characters-closeup.png")
-            print("Closeup captured successfully!")
+            await viewport.screenshot(path="web/public/evidence/runs/among-us-enterprise-closeup.png")
+            print("Enterprise closeup captured!")
+            
         await browser.close()
 
 asyncio.run(run())
