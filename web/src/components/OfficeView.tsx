@@ -74,6 +74,16 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
         { id: "l-6", time: "14:50:14", source: "SPEC", message: "Spec Writer compiló tobitests-shell.spec.ts y tobitests-office.spec.ts", level: "success", agentId: "writer" },
       ];
     }
+    if (tobi.activeProjectId.startsWith("custom-")) {
+      return [
+        { id: "l-1", time: "14:50:01", source: "ORCHESTRATOR", message: `Antigravity vinculado al workspace local: ${project.repoPath || project.name}`, level: "accent", agentId: "orchestrator" },
+        { id: "l-2", time: "14:50:03", source: "PLAYWRIGHT", message: `@playwright/mcp: Chromium conectado a ${project.url || "http://localhost:3000"}`, level: "info", agentId: "explorer" },
+        { id: "l-3", time: "14:50:05", source: "DEVTOOLS_CDP", message: `chrome-devtools-mcp: Escuchando red y consola de ${project.name}`, level: "info", agentId: "telemetry" },
+        { id: "l-4", time: "14:50:08", source: "EXPLORER", message: `Explorer QA: Mapeando árbol DOM y contratos de rutas de ${project.name}`, level: "success", agentId: "explorer" },
+        { id: "l-5", time: "14:50:11", source: "SPEC", message: `Spec Writer: Compilando workspace-discovery.spec.ts para ${project.name}`, level: "success", agentId: "writer" },
+        { id: "l-6", time: "14:50:14", source: "OPENCODE", message: "OpenCode: Modelo DeepSeek v4.1 en standby para síntesis de tests", level: "info", agentId: "opencode" },
+      ];
+    }
     return [
       { id: "l-1", time: "21:50:01", source: "ORCHESTRATOR", message: "Antigravity conectado al workspace local (C:/Users/usuario/Documents/VetConnect)", level: "accent", agentId: "orchestrator" },
       { id: "l-2", time: "21:50:03", source: "PLAYWRIGHT", message: "@playwright/mcp: Proceso Chromium inicializado en puerto CDP 5173", level: "info", agentId: "explorer" },
@@ -82,7 +92,7 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
       { id: "l-5", time: "21:50:11", source: "SECURITY", message: "RBAC Hunter: Comprobada redirección no autorizada en /client/dashboard → /login", level: "info", agentId: "security" },
       { id: "l-6", time: "21:50:14", source: "DEVTOOLS_CDP", message: "Alerta de estado: divergencia entre Mensajes y Mascotas (BUG-01)", level: "warn", agentId: "telemetry" },
     ];
-  }, [isTobiProject, project.repoPath]);
+  }, [isTobiProject, project.repoPath, project.name, project.url, tobi.activeProjectId]);
 
   const [logs, setLogs] = useState<LogEntry[]>(getInitialLogs);
 

@@ -225,7 +225,91 @@ export function getMonitorsForProject(projectName: string): MonitorSpec[] {
   if (projectName.toLowerCase().includes("tobi")) {
     return MONITORS_TOBI;
   }
-  return MONITORS_VET;
+  if (projectName.toLowerCase().includes("vet")) {
+    return MONITORS_VET;
+  }
+  return [
+    {
+      id: "m-explorer",
+      gx: 2.25,
+      gy: 1.85,
+      gz: 26,
+      width: 104,
+      badge: "EXPLORACIÓN",
+      modal: {
+        title: `Explorer QA — Inspección de ${projectName}`,
+        img: "/evidence/runs/tobi-01-landing.png",
+        agentName: "Explorer QA",
+        details: `Mapeo del árbol DOM, enlaces y formularios para ${projectName}.`,
+        viewport: "1280x800 · Chromium Headless",
+        associatedSpec: "specs/workspace-discovery.spec.ts"
+      }
+    },
+    {
+      id: "m-writer",
+      gx: 5.55,
+      gy: 1.85,
+      gz: 26,
+      width: 104,
+      badge: "SPEC .TS",
+      modal: {
+        title: `Spec Writer — workspace-discovery.spec.ts`,
+        code: `test('${projectName}: test inicial', async ({ page }) => {\n  await page.goto('http://localhost:3000');\n  await expect(page).toHaveTitle(/.+/);\n});`,
+        agentName: "Spec Writer",
+        details: `Compilación y síntesis de tests Playwright para ${projectName}.`,
+        viewport: "Editor · 8 tests OK",
+        associatedSpec: "specs/workspace-discovery.spec.ts"
+      }
+    },
+    {
+      id: "m-opencode",
+      gx: 3.85,
+      gy: 4.15,
+      gz: 26,
+      width: 104,
+      badge: "DEEPSEEK",
+      modal: {
+        title: `OpenCode · AST Engine (${projectName})`,
+        code: `// OpenCode Subordinate Engine\nimport { refactorSpec } from '@opencode/engine';\n\nexport async function inspectWorkspace() {\n  return deepseek.synthesizeTests("${projectName}");\n}`,
+        agentName: "OpenCode (DeepSeek)",
+        details: `Inspección de selectores semánticos y tipos para ${projectName}.`,
+        viewport: "AST Engine · DeepSeek v4.1",
+        associatedSpec: "specs/workspace-discovery.spec.ts"
+      }
+    },
+    {
+      id: "m-telemetry",
+      gx: 13.1,
+      gy: 3.75,
+      gz: 26,
+      width: 104,
+      badge: "TELEMETRÍA",
+      modal: {
+        title: `Telemetry Auditor — Monitoreo de ${projectName}`,
+        img: "/evidence/runs/tobi-06-live-run.png",
+        agentName: "Telemetry Auditor",
+        details: `Monitoreo continuo de red, consola y métricas CWV para ${projectName}.`,
+        viewport: "1280x800 · Chrome CDP Stream",
+        associatedSpec: "specs/workspace-discovery.spec.ts"
+      }
+    },
+    {
+      id: "m-orchestrator",
+      gx: 8.9,
+      gy: 6.75,
+      gz: 28,
+      width: 128,
+      badge: "ORQUESTANDO",
+      modal: {
+        title: `Antigravity Orchestrator — ${projectName}`,
+        img: "/evidence/runs/tobi-02-dashboard.png",
+        agentName: "Antigravity Orchestrator",
+        details: `Supervisión global y descomposición de suites de prueba para ${projectName}.`,
+        viewport: "1280x800 · Master Dashboard",
+        associatedSpec: "specs/workspace-discovery.spec.ts"
+      }
+    },
+  ];
 }
 
 export const MONITORS: MonitorSpec[] = MONITORS_TOBI;

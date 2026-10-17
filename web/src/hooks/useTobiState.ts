@@ -160,31 +160,235 @@ export interface ProjectOption {
   environment: string;
   branch: string;
   repoPath: string;
+  url?: string;
+  isCustom?: boolean;
 }
 
-const AVAILABLE_PROJECTS: ProjectOption[] = [
+const DEFAULT_PROJECTS: ProjectOption[] = [
   {
     id: "tobitests",
     name: "TobiTests (Self-Audit)",
     environment: "Dogfooding Local",
     branch: "main",
-    repoPath: "C:/Users/usuario/Documents/tobitests"
+    repoPath: "C:/Users/usuario/Documents/tobitests",
+    url: "http://localhost:5173",
+    isCustom: false
   },
   {
     id: "vetconnect",
     name: "VetConnect",
     environment: "Staging Local",
     branch: "main",
-    repoPath: "C:/Users/usuario/Documents/VetConnect"
+    repoPath: "C:/Users/usuario/Documents/VetConnect",
+    url: "http://localhost:3000",
+    isCustom: false
   }
 ];
 
+function createCustomProjectInitialState(proj: ProjectOption): TobiState {
+  const currentDate = new Date().toLocaleDateString("es-AR");
+  return {
+    project: {
+      name: proj.name,
+      repoPath: proj.repoPath,
+      url: proj.url || "http://localhost:3000",
+      branch: proj.branch || "main",
+      environment: proj.environment || "Local Workspace",
+      lastAudit: "Recién vinculado",
+    },
+    metrics: {
+      passRate: "100%",
+      totalRuns: 1,
+      failedTests: 0,
+      openBugs: 0,
+      avgDuration: "12s",
+      activeRun: "#RUN-INIT-01",
+    },
+    runs: [
+      {
+        id: "run-init-01",
+        suite: "Baseline Workspace Discovery",
+        branch: proj.branch || "main",
+        status: "Passed",
+        total: 8,
+        passed: 8,
+        failed: 0,
+        skipped: 0,
+        duration: "12s",
+        date: currentDate,
+        commit: "HEAD",
+        tests: [
+          { name: "Verificar estructura del repositorio y árbol de archivos", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.2s" },
+          { name: "Inspeccionar package.json y dependencias del proyecto", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "0.8s" },
+          { name: "Auditar disponibilidad del puerto local del servicio web", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.5s" },
+          { name: "Escanear contratos de rutas y endpoints principales", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "2.1s" },
+          { name: "Verificar árbol DOM de accesibilidad y roles semánticos", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "2.4s" },
+          { name: "Verificar consistencia de navegación en formularios", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.6s" },
+          { name: "Comprobar errores en consola y excepciones no capturadas", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.1s" },
+          { name: "Generar fixture inicial de Playwright para testing continuo", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.3s" },
+        ],
+      },
+    ],
+    officeAgents: [
+      {
+        id: "orchestrator",
+        initials: "AG",
+        name: "Antigravity",
+        role: "Chief Architect & Orchestrator",
+        employment: "Coordinador & Descomposición",
+        status: "idle",
+        activity: "desk",
+        bubble: `Vinculado al workspace de ${proj.name}. Listo para orquestar suites.`,
+        idleBubble: `En guardia · Workspace ${proj.name} conectado`,
+        task: `Supervisando auditoría y suites E2E de ${proj.name}`,
+        mcp: "@playwright/mcp",
+        tone: "agent",
+        run: "#RUN-INIT-01",
+      },
+      {
+        id: "explorer",
+        initials: "EX",
+        name: "Explorer QA",
+        role: "Exploración de DOM y Recorridos",
+        employment: "Exploración de Flujos",
+        status: "idle",
+        activity: "desk",
+        bubble: `Explorando navegación de ${proj.name} en ${proj.url || "http://localhost:3000"}`,
+        idleBubble: "Esperando nueva orden de exploración",
+        task: `Mapeando endpoints y recorridos de ${proj.name}`,
+        mcp: "@playwright/mcp",
+        tone: "success",
+        run: "#RUN-INIT-01",
+      },
+      {
+        id: "telemetry",
+        initials: "TL",
+        name: "Telemetry Auditor",
+        role: "Telemetría de Red y Consola CDP",
+        employment: "Auditoría de Consola y Red",
+        status: "idle",
+        activity: "server",
+        bubble: `Monitoreando tráfico de red y consola de ${proj.name}`,
+        idleBubble: "Chrome CDP escuchando eventos de red",
+        task: `Supervisando consola y llamadas API de ${proj.name}`,
+        mcp: "@chromedevtools/chrome-devtools-mcp",
+        tone: "warning",
+        run: "#RUN-INIT-01",
+      },
+      {
+        id: "writer",
+        initials: "SW",
+        name: "Spec Writer",
+        role: "Síntesis de Código Playwright",
+        employment: "Generación de Tests E2E",
+        status: "idle",
+        activity: "desk",
+        bubble: `Generando especificaciones .spec.ts para ${proj.name}`,
+        idleBubble: "Listo para compilar nuevas suites",
+        task: `Sintetizando tests Playwright para ${proj.name}`,
+        mcp: "@playwright/mcp",
+        tone: "agent",
+        run: "#RUN-INIT-01",
+      },
+      {
+        id: "opencode",
+        initials: "OC",
+        name: "OpenCode (DeepSeek)",
+        role: "Refactorización Profunda y AST",
+        employment: "Motor de Refactorización",
+        status: "idle",
+        activity: "desk",
+        bubble: `Analizando AST de ${proj.name} con DeepSeek v4.1`,
+        idleBubble: "Modelos cargados en standby",
+        task: `Inspeccionando selectores y tipos de ${proj.name}`,
+        mcp: "@opencode/deepseek",
+        tone: "info",
+        run: "#RUN-INIT-01",
+      },
+    ],
+    liveRun: {
+      id: "run-init-01",
+      suite: "Baseline Workspace Discovery",
+      target: proj.url || "http://localhost:3000",
+      status: "Completed",
+      currentStep: 8,
+      totalSteps: 8,
+      elapsedTime: "12s",
+      steps: [
+        { index: "01", action: "page.goto", target: proj.url || "http://localhost:3000", status: "Passed", duration: "1.2s", description: `Carga inicial de ${proj.name}` },
+        { index: "02", action: "expect.title", target: proj.name, status: "Passed", duration: "0.8s", description: `Verificación de título y encabezado de ${proj.name}` },
+      ],
+      telemetryLogs: [
+        { time: "14:00:00", level: "info", message: `Workspace vinculado: ${proj.repoPath}`, source: "ORCHESTRATOR" },
+        { time: "14:00:02", level: "info", message: `Chrome CDP escuchando en ${proj.url || "http://localhost:3000"}`, source: "DEVTOOLS_CDP" },
+      ],
+    },
+    bugs: [],
+    specs: [
+      {
+        name: "workspace-discovery.spec.ts",
+        domain: "Baseline",
+        status: "Passed",
+        testsCount: 8,
+        lastRun: currentDate,
+        code: `import { test, expect } from '@playwright/test';\n\ntest.describe('${proj.name} - Baseline Discovery', () => {\n  test('debe cargar el punto de entrada', async ({ page }) => {\n    await page.goto('${proj.url || "http://localhost:3000"}');\n    await expect(page).toHaveTitle(/.+/);\n  });\n});`,
+      },
+    ],
+    suites: [
+      {
+        name: "Smoke & Sanity Suite",
+        description: `Pruebas de humo esenciales y verificación de arranque para ${proj.name}`,
+        tests: 4,
+        status: "Passed",
+        passRate: "100%",
+        duration: "5.4s",
+        lastRun: currentDate,
+        specFile: "workspace-discovery.spec.ts",
+      },
+      {
+        name: "End-to-End User Journeys",
+        description: `Flujos críticos de usuario y navegación interactiva en ${proj.name}`,
+        tests: 4,
+        status: "Passed",
+        passRate: "100%",
+        duration: "6.6s",
+        lastRun: currentDate,
+        specFile: "workspace-discovery.spec.ts",
+      },
+    ],
+  };
+}
+
 export function useTobiState() {
+  const [customProjects, setCustomProjects] = useState<ProjectOption[]>(() => {
+    try {
+      const saved = localStorage.getItem("tobitests_custom_projects");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const availableProjects: ProjectOption[] = [
+    ...DEFAULT_PROJECTS,
+    ...customProjects,
+  ];
+
   const [activeProjectId, setActiveProjectId] = useState<string>(() => {
     return localStorage.getItem("tobitests_active_project") || "tobitests";
   });
+
   const [state, setState] = useState<TobiState>(() => {
-    const saved = localStorage.getItem("tobitests_active_project");
+    const saved = localStorage.getItem("tobitests_active_project") || "tobitests";
+    
+    // Check if custom project state exists
+    if (saved.startsWith("custom-")) {
+      try {
+        const cached = localStorage.getItem(`tobitests_state_${saved}`);
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
+
     const raw = (saved === "vetconnect" ? vetData : tobiData) as unknown as TobiState;
     const idleAgents = (raw.officeAgents || []).map((a) => ({
       ...a,
@@ -197,16 +401,42 @@ export function useTobiState() {
       officeAgents: idleAgents,
       metrics: {
         ...raw.metrics,
-        openBugs: openBugsCount
-      }
+        openBugs: openBugsCount,
+      },
     };
   });
+
   const [connected, setConnected] = useState(false);
   const [antigravityLive, setAntigravityLive] = useState<AntigravityLive | null>(null);
 
   const switchProject = useCallback((projectId: string) => {
     setActiveProjectId(projectId);
     localStorage.setItem("tobitests_active_project", projectId);
+
+    if (projectId.startsWith("custom-")) {
+      try {
+        const cached = localStorage.getItem(`tobitests_state_${projectId}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setState(parsed);
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback: look up in custom projects list
+      try {
+        const savedList = localStorage.getItem("tobitests_custom_projects");
+        const list: ProjectOption[] = savedList ? JSON.parse(savedList) : [];
+        const match = list.find((p) => p.id === projectId);
+        if (match) {
+          const fresh = createCustomProjectInitialState(match);
+          setState(fresh);
+          localStorage.setItem(`tobitests_state_${projectId}`, JSON.stringify(fresh));
+          return;
+        }
+      } catch (e) {}
+    }
+
     const raw = (projectId === "vetconnect" ? vetData : tobiData) as unknown as TobiState;
     const idleAgents = (raw.officeAgents || []).map((a) => ({
       ...a,
@@ -219,10 +449,52 @@ export function useTobiState() {
       officeAgents: idleAgents,
       metrics: {
         ...raw.metrics,
-        openBugs: openBugsCount
-      }
+        openBugs: openBugsCount,
+      },
     });
   }, []);
+
+  const addProject = useCallback((params: { name: string; repoPath: string; url?: string; environment?: string }) => {
+    const slug = params.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "proyecto";
+    const id = `custom-${slug}-${Date.now().toString(36)}`;
+    const newProj: ProjectOption = {
+      id,
+      name: params.name,
+      repoPath: params.repoPath,
+      url: params.url || "http://localhost:3000",
+      environment: params.environment || "Local Workspace",
+      branch: "main",
+      isCustom: true,
+    };
+
+    const updated = [...customProjects, newProj];
+    setCustomProjects(updated);
+    try {
+      localStorage.setItem("tobitests_custom_projects", JSON.stringify(updated));
+    } catch (e) {}
+
+    const initialState = createCustomProjectInitialState(newProj);
+    try {
+      localStorage.setItem(`tobitests_state_${id}`, JSON.stringify(initialState));
+    } catch (e) {}
+
+    setActiveProjectId(id);
+    localStorage.setItem("tobitests_active_project", id);
+    setState(initialState);
+  }, [customProjects]);
+
+  const removeProject = useCallback((projectId: string) => {
+    const updated = customProjects.filter((p) => p.id !== projectId);
+    setCustomProjects(updated);
+    try {
+      localStorage.setItem("tobitests_custom_projects", JSON.stringify(updated));
+      localStorage.removeItem(`tobitests_state_${projectId}`);
+    } catch (e) {}
+
+    if (activeProjectId === projectId) {
+      switchProject("tobitests");
+    }
+  }, [customProjects, activeProjectId, switchProject]);
 
   useEffect(() => {
     let es: EventSource | null = null;
@@ -483,7 +755,9 @@ Entonces ${bug.entonces}
     connected,
     antigravityLive,
     activeProjectId,
-    availableProjects: AVAILABLE_PROJECTS,
+    availableProjects,
+    addProject,
+    removeProject,
     switchProject,
     updateState,
     toggleAgentStatus,

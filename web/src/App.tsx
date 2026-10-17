@@ -1,4 +1,4 @@
-import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useState, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { useTobiState, type BugItem } from "./hooks/useTobiState";
 import { OfficeView } from "./components/OfficeView";
 import { JourneyCanvas } from "./components/JourneyCanvas";
@@ -231,8 +231,8 @@ function SideStatusCard({ tobi }: { tobi: Tobi }) {
   );
 }
 
-function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi }: {
-  compact: boolean; onCompact: () => void; onHome: () => void; activeView: AppView; onNavigate: (v: AppView) => void; tobi: Tobi;
+function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi, onOpenAddProject }: {
+  compact: boolean; onCompact: () => void; onHome: () => void; activeView: AppView; onNavigate: (v: AppView) => void; tobi: Tobi; onOpenAddProject?: () => void;
 }) {
   const [projectsOpen, setProjectsOpen] = useState(false);
   const activeLabel = resolveActiveNavLabel(activeView);
@@ -270,37 +270,77 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi }: {
               {tobi.availableProjects.map((proj) => {
                 const isSelected = tobi.activeProjectId === proj.id;
                 return (
-                  <button
-                    key={proj.id}
-                    type="button"
-                    className={`button ${isSelected ? "button-primary" : "button-ghost"}`}
-                    style={{
-                      justifyContent: "flex-start",
-                      textAlign: "left",
-                      padding: "8px 10px",
-                      borderRadius: "var(--radius-md)",
-                      width: "100%",
-                      fontSize: 13
-                    }}
-                    onClick={() => {
-                      tobi.switchProject(proj.id);
-                      setProjectsOpen(false);
-                    }}
-                  >
-                    <span className="project-avatar" style={{ width: 22, height: 22, fontSize: 11, marginRight: 8 }}>
-                      {proj.name.charAt(0)}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {proj.name}
+                  <div key={proj.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <button
+                      type="button"
+                      className={`button ${isSelected ? "button-primary" : "button-ghost"}`}
+                      style={{
+                        justifyContent: "flex-start",
+                        textAlign: "left",
+                        padding: "8px 10px",
+                        borderRadius: "var(--radius-md)",
+                        flex: 1,
+                        minWidth: 0,
+                        fontSize: 13
+                      }}
+                      onClick={() => {
+                        tobi.switchProject(proj.id);
+                        setProjectsOpen(false);
+                      }}
+                    >
+                      <span className="project-avatar" style={{ width: 22, height: 22, fontSize: 11, marginRight: 8 }}>
+                        {proj.name.charAt(0)}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {proj.name}
+                        </div>
+                        <small className="t-muted" style={{ fontSize: 10 }}>{proj.environment}</small>
                       </div>
-                      <small className="t-muted" style={{ fontSize: 10 }}>{proj.environment}</small>
-                    </div>
-                    {isSelected && <Icon name="check" size="sm" />}
-                  </button>
+                      {isSelected && <Icon name="check" size="sm" />}
+                    </button>
+                    {proj.isCustom && (
+                      <button
+                        type="button"
+                        style={{ padding: "6px 8px", background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer", borderRadius: "4px" }}
+                        title="Eliminar proyecto de la lista"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          tobi.removeProject(proj.id);
+                        }}
+                      >
+                        <Icon name="x" size="sm" />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
+
+            {/* Botón Agregar Proyecto */}
+            <button
+              type="button"
+              className="button button-ghost"
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                padding: "8px 10px",
+                border: "1px dashed var(--border)",
+                borderRadius: "var(--radius-md)",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "var(--primary)",
+                marginBottom: 6,
+                gap: 6
+              }}
+              onClick={() => {
+                setProjectsOpen(false);
+                onOpenAddProject?.();
+              }}
+            >
+              <span>+ Agregar Proyecto</span>
+            </button>
+
             <dl style={{ margin: 0, paddingTop: 6, borderTop: "1px solid var(--border)" }}>
               <dt>Rama</dt><dd><code>{project.branch}</code></dd>
               <dt>Entorno</dt><dd>{project.environment}</dd>
@@ -327,7 +367,7 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi }: {
   );
 }
 
-function AppHeader({ title, onMenu, onNotifications, onLive, tobi }: { title: string; onMenu: () => void; onNotifications: () => void; onLive: () => void; tobi: Tobi }) {
+function AppHeader({ title, onMenu, onNotifications, onLive, tobi, onOpenAddProject }: { title: string; onMenu: () => void; onNotifications: () => void; onLive: () => void; tobi: Tobi; onOpenAddProject?: () => void; }) {
   const { project, liveRun } = tobi.state;
   const [headerProjOpen, setHeaderProjOpen] = useState(false);
 
@@ -363,7 +403,7 @@ function AppHeader({ title, onMenu, onNotifications, onLive, tobi }: { title: st
               top: "100%",
               left: 0,
               zIndex: 100,
-              minWidth: 240,
+              minWidth: 260,
               marginTop: 4,
               boxShadow: "var(--shadow-md)"
             }}
@@ -372,21 +412,58 @@ function AppHeader({ title, onMenu, onNotifications, onLive, tobi }: { title: st
               <span className="mono t-muted" style={{ fontSize: 10, textTransform: "uppercase" }}>Seleccionar Proyecto</span>
             </div>
             {tobi.availableProjects.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className={`button ${tobi.activeProjectId === p.id ? "button-primary" : "button-ghost"}`}
-                style={{ width: "100%", justifyContent: "flex-start", padding: "6px 8px", fontSize: 12, marginBottom: 4 }}
-                onClick={() => {
-                  tobi.switchProject(p.id);
-                  setHeaderProjOpen(false);
-                }}
-              >
-                <span className="project-avatar" style={{ width: 18, height: 18, fontSize: 10, marginRight: 6 }}>{p.name.charAt(0)}</span>
-                <span style={{ flex: 1, textAlign: "left" }}>{p.name}</span>
-                {tobi.activeProjectId === p.id && <Icon name="check" size="sm" />}
-              </button>
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                <button
+                  type="button"
+                  className={`button ${tobi.activeProjectId === p.id ? "button-primary" : "button-ghost"}`}
+                  style={{ flex: 1, justifyContent: "flex-start", padding: "6px 8px", fontSize: 12 }}
+                  onClick={() => {
+                    tobi.switchProject(p.id);
+                    setHeaderProjOpen(false);
+                  }}
+                >
+                  <span className="project-avatar" style={{ width: 18, height: 18, fontSize: 10, marginRight: 6 }}>{p.name.charAt(0)}</span>
+                  <span style={{ flex: 1, textAlign: "left" }}>{p.name}</span>
+                  {tobi.activeProjectId === p.id && <Icon name="check" size="sm" />}
+                </button>
+                {p.isCustom && (
+                  <button
+                    type="button"
+                    style={{ padding: "4px 6px", background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer" }}
+                    title="Eliminar proyecto"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      tobi.removeProject(p.id);
+                    }}
+                  >
+                    <Icon name="x" size="sm" />
+                  </button>
+                )}
+              </div>
             ))}
+            {/* Botón Agregar Proyecto en Header */}
+            <button
+              type="button"
+              className="button button-ghost"
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                padding: "6px 8px",
+                border: "1px dashed var(--border)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: 11.5,
+                fontWeight: 600,
+                color: "var(--primary)",
+                marginTop: 4,
+                gap: 4
+              }}
+              onClick={() => {
+                setHeaderProjOpen(false);
+                onOpenAddProject?.();
+              }}
+            >
+              <span>+ Agregar Proyecto</span>
+            </button>
           </div>
         )}
         <Icon name="chevron" size="sm" />
@@ -1292,12 +1369,271 @@ function NotificationPanel({ open, onClose, navigate, tobi }: { open: boolean; o
   </>;
 }
 
+function AddProjectModal({ open, onClose, tobi }: { open: boolean; onClose: () => void; tobi: Tobi }) {
+  const [folderName, setFolderName] = useState("");
+  const [repoPath, setRepoPath] = useState("");
+  const [projectUrl, setProjectUrl] = useState("http://localhost:5173");
+  const [env, setEnv] = useState("development");
+  const [isPicking, setIsPicking] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const handlePickDirectory = async () => {
+    setIsPicking(true);
+    try {
+      if ("showDirectoryPicker" in window) {
+        // Modern Chromium File System Access API
+        const dirHandle = await (window as any).showDirectoryPicker();
+        if (dirHandle && dirHandle.name) {
+          const cleanName = dirHandle.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+          setFolderName(cleanName);
+          setRepoPath(`C:/Projects/${dirHandle.name}`);
+        }
+      } else if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.warn("Folder picker error or dismissed:", err);
+      }
+    } finally {
+      setIsPicking(false);
+    }
+  };
+
+  const handleFileInputFallback = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const firstPath = files[0].webkitRelativePath;
+      const rootFolder = firstPath.split("/")[0] || "Mi Proyecto";
+      const cleanName = rootFolder.replace(/[-_]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+      setFolderName(cleanName);
+      setRepoPath(`C:/Projects/${rootFolder}`);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalName = folderName.trim() || "Nuevo Proyecto";
+    const id = "custom-" + finalName.toLowerCase().replace(/[^a-z0-9]/g, "-") + "-" + Date.now().toString().slice(-4);
+    tobi.addProject({
+      id,
+      name: finalName,
+      branch: "main",
+      environment: env,
+      repoPath: repoPath.trim() || `C:/Projects/${finalName.toLowerCase().replace(/\s+/g, "-")}`,
+      url: projectUrl.trim() || "http://localhost:5173",
+      isCustom: true
+    });
+    onClose();
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Agregar Proyecto Local"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.65)",
+        backdropFilter: "blur(4px)",
+        padding: 16
+      }}
+      onClick={onClose}
+    >
+      <div
+        className="panel"
+        style={{
+          width: "100%",
+          maxWidth: 520,
+          background: "var(--bg-elevated, var(--bg))",
+          borderRadius: "var(--radius-lg, 12px)",
+          boxShadow: "0 24px 48px -12px rgba(0,0,0,0.5), 0 0 0 1px var(--border)",
+          padding: 24,
+          position: "relative"
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <div>
+            <h2 className="heading-md" style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>📁</span> Vincular Proyecto Local
+            </h2>
+            <p className="t-muted" style={{ margin: "4px 0 0", fontSize: 13 }}>
+              Seleccioná la carpeta de tu código fuente para que TobiTests monte suites E2E y active sus agentes.
+            </p>
+          </div>
+          <Button variant="icon" label="Cerrar modal" onClick={onClose}>
+            <Icon name="x" size="sm" />
+          </Button>
+        </div>
+
+        {/* Hidden fallback input for webkitdirectory */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          // @ts-ignore
+          webkitdirectory="true"
+          directory="true"
+          multiple
+          onChange={handleFileInputFallback}
+        />
+
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* File Picker Action Box */}
+          <div
+            style={{
+              padding: 16,
+              background: "var(--bg-subtle, rgba(255,255,255,0.03))",
+              border: "1px dashed var(--border-focus, var(--primary))",
+              borderRadius: "var(--radius-md, 8px)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 10,
+              textAlign: "center"
+            }}
+          >
+            <div style={{ fontSize: 28 }}>📂</div>
+            <div>
+              <strong style={{ fontSize: 14, display: "block" }}>
+                {folderName ? `Carpeta seleccionada: "${folderName}"` : "Elegí el directorio raíz de tu proyecto"}
+              </strong>
+              <span className="t-muted" style={{ fontSize: 12 }}>
+                Usamos la API de carpetas del explorador para detectar rutas y nombres.
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handlePickDirectory}
+              disabled={isPicking}
+            >
+              <Icon name="search" size="sm" />
+              {isPicking ? "Abriendo selector..." : "Seleccionar Carpeta en tu PC..."}
+            </Button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600 }}>Nombre del Proyecto</label>
+            <input
+              type="text"
+              required
+              className="input"
+              placeholder="Ej: Mi Super App / E-Commerce"
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--border)",
+                background: "var(--bg)",
+                color: "var(--fg)",
+                fontSize: 13
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 600 }}>Ruta del Repositorio Local</label>
+            <input
+              type="text"
+              className="input mono"
+              placeholder="Ej: C:/Users/tu-usuario/Documents/mi-proyecto"
+              value={repoPath}
+              onChange={(e) => setRepoPath(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--border)",
+                background: "var(--bg)",
+                color: "var(--fg)",
+                fontSize: 12
+              }}
+            />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600 }}>URL de Desarrollo / Preview</label>
+              <input
+                type="text"
+                className="input mono"
+                placeholder="http://localhost:5173"
+                value={projectUrl}
+                onChange={(e) => setProjectUrl(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border)",
+                  background: "var(--bg)",
+                  color: "var(--fg)",
+                  fontSize: 12
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600 }}>Entorno</label>
+              <select
+                className="input"
+                value={env}
+                onChange={(e) => setEnv(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border)",
+                  background: "var(--bg)",
+                  color: "var(--fg)",
+                  fontSize: 12
+                }}
+              >
+                <option value="development">development (local)</option>
+                <option value="staging">staging (preview)</option>
+                <option value="production">production (smoke)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary">
+              <Icon name="check" size="sm" />
+              Vincular y Cargar Workspace
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate: (v: AppView) => void; onHome: () => void; tobi: Tobi }) {
   const [compact, setCompact] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [notifications, setNotifications] = useState(false);
   const [activeBugId, setActiveBugId] = useState("BUG-01");
   const [inspectedTest, setInspectedTest] = useState<TestCaseItem | null>(null);
+  const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
 
   const go = (v: AppView) => { navigate(v); setMobileNav(false); };
   const labels: Record<AppView, string> = {
@@ -1324,11 +1660,34 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
     <div className="app">
       <div className={mobileNav ? "mobile-overlay show" : "mobile-overlay"} onClick={() => setMobileNav(false)} />
       <div className={mobileNav ? "sidebar-mobile open" : "sidebar-mobile"}>
-        <Sidebar compact={false} activeView={view} onCompact={() => setMobileNav(false)} onHome={onHome} onNavigate={go} tobi={tobi} />
+        <Sidebar
+          compact={false}
+          activeView={view}
+          onCompact={() => setMobileNav(false)}
+          onHome={onHome}
+          onNavigate={go}
+          tobi={tobi}
+          onOpenAddProject={() => setIsAddProjectOpen(true)}
+        />
       </div>
-      <Sidebar compact={compact} activeView={view} onCompact={() => setCompact(!compact)} onHome={onHome} onNavigate={go} tobi={tobi} />
+      <Sidebar
+        compact={compact}
+        activeView={view}
+        onCompact={() => setCompact(!compact)}
+        onHome={onHome}
+        onNavigate={go}
+        tobi={tobi}
+        onOpenAddProject={() => setIsAddProjectOpen(true)}
+      />
       <div className="app-main">
-        <AppHeader title={labels[view]} onMenu={() => setMobileNav(true)} onNotifications={() => setNotifications(true)} onLive={() => go("live-run")} tobi={tobi} />
+        <AppHeader
+          title={labels[view]}
+          onMenu={() => setMobileNav(true)}
+          onNotifications={() => setNotifications(true)}
+          onLive={() => go("live-run")}
+          tobi={tobi}
+          onOpenAddProject={() => setIsAddProjectOpen(true)}
+        />
         <main className="workspace">{content}</main>
       </div>
       <NotificationPanel open={notifications} onClose={() => setNotifications(false)} navigate={go} tobi={tobi} />
@@ -1349,6 +1708,11 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
         onRunTest={(passedTest) => {
           tobi.rerunTest(passedTest.name);
         }}
+      />
+      <AddProjectModal
+        open={isAddProjectOpen}
+        onClose={() => setIsAddProjectOpen(false)}
+        tobi={tobi}
       />
     </div>
   );
