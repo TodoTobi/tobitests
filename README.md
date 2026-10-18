@@ -1,12 +1,18 @@
+<div align="center">
+
 # TobiTests 🚀
 ### Autonomous Multi-Agent E2E QA & Visual Office Telemetry Framework
+
+[English](README.md) • [Español](README.es.md) • [Português](README.pt.md) • [简体中文](README.zh.md)
 
 [![Playwright](https://img.shields.io/badge/Playwright-v1.64+-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Playwright_%2B_DevTools-blueviolet?logo=anthropic&logoColor=white)](https://modelcontextprotocol.io/)
 [![Chrome DevTools](https://img.shields.io/badge/Chrome_DevTools-CDP_Oracle-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/devtools)
-[![Co-Orchestration](https://img.shields.io/badge/Orchestration-Antigravity_%2B_OpenCode-10B981)](#dual-co-orchestration-antigravity--opencode)
+[![Co-Orchestration](https://img.shields.io/badge/Orchestration-Antigravity_%2B_OpenCode-10B981)](#bring-your-own-agent-byoa--dual-co-orchestration)
 [![CI Status](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/TodoTobi/tobitests/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+</div>
 
 > **"A 100% local, open-source autonomous QA & diagnostics studio. Combine White-Box codebase intelligence, Playwright MCP actuation, Chrome DevTools CDP telemetry, and a real-time 2.5D Agent Office—with zero cloud quotas."**
 
