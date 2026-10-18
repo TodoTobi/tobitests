@@ -17,6 +17,12 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
+  webServer: {
+    command: 'npm run dev --prefix web',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+    timeout: 60 * 1000,
+  },
   projects: [
     {
       name: 'chromium',

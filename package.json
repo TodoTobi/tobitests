@@ -13,7 +13,8 @@
     "test:headed": "playwright test --headed",
     "test:report": "playwright show-report",
     "dev:web": "npm run dev --prefix web",
-    "build:web": "npm run build --prefix web"
+    "build:web": "npm run build --prefix web",
+    "postinstall": "npm install --prefix web"
   },
   "keywords": [
     "testing",
