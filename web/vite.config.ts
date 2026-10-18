@@ -171,6 +171,58 @@ function getAntigravityLiveStatus() {
   }
 }
 
+function detectEnvironmentAgents(): string[] {
+  const detected: string[] = [];
+  const home = process.env.USERPROFILE || process.env.HOME || os.homedir();
+  const repoRoot = path.resolve(__dirname, '..');
+
+  // 1. Antigravity: ~/.gemini/antigravity or AGY environment
+  const agyBrain = path.join(home, '.gemini', 'antigravity');
+  if (fs.existsSync(agyBrain) || process.env.ANTIGRAVITY || process.env.AGY_VERSION) {
+    detected.push('antigravity');
+  }
+
+  // 2. OpenCode: opencode.json in repo or ~/.opencode
+  const opencodeJson = path.join(repoRoot, 'opencode.json');
+  const opencodeHome = path.join(home, '.opencode');
+  if (fs.existsSync(opencodeJson) || fs.existsSync(opencodeHome)) {
+    detected.push('opencode');
+  }
+
+  // 3. Claude Code: CLAUDE.md in repo or ~/.claude
+  const claudeMd = path.join(repoRoot, 'CLAUDE.md');
+  const claudeHome = path.join(home, '.claude');
+  if (fs.existsSync(claudeMd) || fs.existsSync(claudeHome)) {
+    detected.push('claude-code');
+  }
+
+  // 4. Cursor: .cursorrules or .cursor in repo or home
+  const cursorRules = path.join(repoRoot, '.cursorrules');
+  const cursorDir = path.join(repoRoot, '.cursor');
+  if (fs.existsSync(cursorRules) || fs.existsSync(cursorDir)) {
+    detected.push('cursor');
+  }
+
+  // 5. Codex: CODEX.md or .codex
+  const codexMd = path.join(repoRoot, 'CODEX.md');
+  const codexDir = path.join(repoRoot, '.codex');
+  if (fs.existsSync(codexMd) || fs.existsSync(codexDir)) {
+    detected.push('codex');
+  }
+
+  // 6. Windsurf: .windsurfrules or .codeium
+  const windsurfRules = path.join(repoRoot, '.windsurfrules');
+  const codeiumHome = path.join(home, '.codeium');
+  if (fs.existsSync(windsurfRules) || fs.existsSync(codeiumHome)) {
+    detected.push('windsurf');
+  }
+
+  // 7. Custom agent engine is always supported
+  detected.push('custom');
+
+  return detected;
+}
+
 function tobiTestsBridgePlugin(): Plugin {
   return {
     name: 'tobitests-bridge',
@@ -195,6 +247,7 @@ function tobiTestsBridgePlugin(): Plugin {
                 pipelineStepName: parsed.pipelineStepName,
                 activeProject: parsed.activeProject,
                 auditScope: parsed.auditScope,
+                orchestrationConfig: parsed.orchestrationConfig,
                 agentStates: parsed.agentStates,
               };
             }
@@ -202,16 +255,33 @@ function tobiTestsBridgePlugin(): Plugin {
         } catch (e) {}
 
         const defaultState = live?.isWorking ? 'exploring' : 'idle';
+        const detected = detectEnvironmentAgents();
+        let existingOrchestration = existingBlackboard.orchestrationConfig;
+        if (!existingOrchestration || typeof existingOrchestration !== 'object') {
+          existingOrchestration = {
+            mode: 'dual',
+            primaryAgent: existingBlackboard.activeOrchestrator || 'antigravity',
+            secondaryAgent: 'opencode',
+            detectedAgents: detected,
+          };
+        } else {
+          existingOrchestration = {
+            ...existingOrchestration,
+            detectedAgents: detected,
+          };
+        }
+
         return {
           ...(live || {}),
           conversationId: 'local-agent-session',
           blackboardState: existingBlackboard.blackboardState || defaultState,
-          activeOrchestrator: existingBlackboard.activeOrchestrator || 'antigravity',
+          activeOrchestrator: existingOrchestration.primaryAgent || existingBlackboard.activeOrchestrator || 'antigravity',
           handoffReady: existingBlackboard.handoffReady ?? false,
           currentPipelineStep: existingBlackboard.currentPipelineStep || 1,
           pipelineStepName: existingBlackboard.pipelineStepName || 'Bootstrap & Port/Stack Discovery',
           activeProject: existingBlackboard.activeProject || 'tobitests',
           auditScope: existingBlackboard.auditScope || 'fullstack',
+          orchestrationConfig: existingOrchestration,
           agentStates: existingBlackboard.agentStates || {
             orchestrator: live?.isWorking ? 'working' : 'idle',
             explorer: 'standby',
@@ -269,6 +339,41 @@ function tobiTestsBridgePlugin(): Plugin {
               });
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ ok: true, auditScope: nextScope }));
+            } catch (err) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: String(err) }));
+            }
+          });
+          return;
+        }
+
+        if (req.url === '/api/antigravity/orchestration' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const payload = JSON.parse(body || '{}');
+              const current = getMergedLivePayload() || {};
+              const detected = detectEnvironmentAgents();
+              const updatedConfig = {
+                mode: payload.mode || current.orchestrationConfig?.mode || 'dual',
+                primaryAgent: payload.primaryAgent || current.orchestrationConfig?.primaryAgent || 'antigravity',
+                secondaryAgent: payload.mode === 'single' ? null : (payload.secondaryAgent ?? current.orchestrationConfig?.secondaryAgent ?? 'opencode'),
+                detectedAgents: detected,
+              };
+              const updated = {
+                ...current,
+                activeOrchestrator: updatedConfig.primaryAgent,
+                orchestrationConfig: updatedConfig,
+              };
+              fs.writeFileSync(publicLivePath, JSON.stringify(updated, null, 2), 'utf8');
+              sseClients.forEach((client) => {
+                try {
+                  client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: updated })}\n\n`);
+                } catch (e) {}
+              });
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: true, orchestrationConfig: updatedConfig }));
             } catch (err) {
               res.statusCode = 400;
               res.end(JSON.stringify({ error: String(err) }));

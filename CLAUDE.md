@@ -23,6 +23,18 @@ When working within this repository or utilizing TobiTests protocols to audit an
   ```bash
   npm run dev:all
   ```
+- **Appoint Claude Code as Primary Lead Orchestrator:**
+  ```bash
+  python scripts/tobitests_cli.py --primary claude-code --secondary opencode
+  ```
+- **Run in Single-Agent Solo Mode (Claude Code owns Steps 1–8):**
+  ```bash
+  python scripts/tobitests_cli.py --primary claude-code --mode single
+  ```
+- **Invert Roles (Swap Primary & Secondary):**
+  ```bash
+  python scripts/tobitests_cli.py --swap-agents
+  ```
 
 ## Shared Blackboard Synchronization (`web/public/data/antigravity-live.json`)
 

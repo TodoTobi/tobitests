@@ -52,19 +52,22 @@ flowchart LR
 
 ---
 
-## 🤝 Dual Co-Orchestration (Antigravity + OpenCode) & Agent Matrix
+## 🤝 Bring Your Own Agent (BYOA) & Dual Co-Orchestration
 
-TobiTests coordinates two co-orchestrators and four specialized subagents on a single machine via a lock-free **Shared Blackboard** (`web/public/data/antigravity-live.json`):
+TobiTests is 100% agent-agnostic. While the default configuration pairs **Antigravity** (Analytical Brain) with **OpenCode** (Deterministic Runner), you can plug in any AI agent or IDE you use:
 
-* 🧠 **Antigravity (Analytical Brain & Telemetry Judge — Steps 1–4, 7):** Leads white-box repository discovery, orchestrates live MCP exploration, and judges traces under the 3 Oracles.
-* ⚡ **OpenCode (CLI Execution Arm & Spec Generator — Steps 5–6, 8):** Consumes the Normalized PRD & Test Matrix, synthesizes `.spec.ts` files, runs isolated Playwright suites with `.webm` capture, and performs AST selector self-healing.
+* **Supported Engines:** `antigravity`, `opencode`, `claude-code`, `cursor`, `codex`, `windsurf`, and `custom`.
+* **Dynamic Role Swapping:** Choose who is **Primary Lead** (Steps 1–4, 7) and who is **Secondary Runner** (Steps 5, 6, 8), or swap them in 1 click (`--swap-agents`).
+* **Solo Mode (Single-Agent Execution):** Running alone? Toggle **Solo Mode** (`--mode single`) and your chosen agent executes all 8 steps end-to-end without waiting for handoffs.
+* **Auto-Detection:** Automatically discovers installed CLI tools and workspace rules (`.cursorrules`, `CLAUDE.md`, `opencode.json`, `CODEX.md`, `.windsurfrules`).
 
-| Agent Role | Manifest | Primary Focus | Tooling / MCP |
-| :--- | :--- | :--- | :--- |
-| **Orchestrator** | [`.agents/orchestrator.md`](.agents/orchestrator.md) | White-box parsing, domain partitioning, blackboard handoffs | Filesystem, Code Search, Shared Blackboard |
-| **Explorer QA** | [`.agents/explorer-qa.md`](.agents/explorer-qa.md) | Live user journey simulation, negative testing, cross-view state checks | `@playwright/mcp` (`browser_navigate`, `browser_snapshot`, `browser_click`) |
-| **Telemetry Auditor** | [`.agents/telemetry-auditor.md`](.agents/telemetry-auditor.md) | Runtime exception capture, HTTP `>= 400` & timeout tracking, root-cause pinpointing | `@chromedevtools/chrome-devtools-mcp` + Playwright listeners |
-| **Spec Writer** | [`.agents/spec-writer.md`](.agents/spec-writer.md) | Translation of validated flows into deterministic Playwright code | Playwright Test API (`specs/*.spec.ts`) |
+| Agent Role | Default Engine | Supported Options | Primary Focus | Tooling / MCP |
+| :--- | :--- | :--- | :--- | :--- |
+| **Primary Lead** | **Antigravity** | `antigravity`, `claude-code`, `cursor`, `opencode`, `codex`, `windsurf`, `custom` | White-box parsing, PRD/Matrix synthesis, 3-Oracle triage | Filesystem, Code Search, Shared Blackboard |
+| **Secondary Runner** | **OpenCode** | `opencode`, `claude-code`, `antigravity`, `cursor`, `codex`, `windsurf`, `custom` | Spec synthesis, Playwright CLI execution, AST self-healing | `@opencode/deepseek`, `npx playwright test` |
+| **Explorer QA** | Specialized | Subagent | Live user journey simulation, negative testing, DOM checks | `@playwright/mcp` (`browser_navigate`, `browser_snapshot`) |
+| **Telemetry Auditor** | Specialized | Subagent | Runtime exception capture, HTTP `>= 400` & timeout tracking | `@chromedevtools/chrome-devtools-mcp` + CDP listeners |
+| **Spec Writer** | Specialized | Subagent | Translation of validated flows into deterministic `.spec.ts` | Playwright Test API (`specs/*.spec.ts`) |
 
 ---
 

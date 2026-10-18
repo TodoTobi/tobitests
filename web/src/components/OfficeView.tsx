@@ -428,6 +428,97 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
           </div>
         </div>
 
+        {/* --- Dynamic Agent Roster & Orchestration Control Bar --- */}
+        <div className="iso-roster-bar">
+          {/* Mode Switcher */}
+          <div className="iso-roster-section">
+            <span className="iso-roster-label">Orquestación:</span>
+            <button
+              type="button"
+              className={`iso-roster-btn ${tobi.orchestrationConfig?.mode === "dual" ? "active" : ""}`}
+              onClick={() => tobi.toggleSecondaryAgent(tobi.orchestrationConfig?.mode !== "dual")}
+              title="Alternar entre Co-Orquestación Dual y Modo Solo"
+            >
+              {tobi.orchestrationConfig?.mode === "dual" ? (
+                <>
+                  <span style={{ color: "#10b981" }}>●</span> <strong>Dual Engine</strong> (Lead + Runner)
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "#f59e0b" }}>●</span> <strong>Solo Mode</strong> (Single Agent 1-8)
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Primary Agent */}
+          <div className="iso-roster-section">
+            <span className="iso-roster-label">
+              {tobi.orchestrationConfig?.mode === "single" ? "Agente Solo (1-8):" : "Primario (1-4, 7):"}
+            </span>
+            <select
+              className="iso-roster-select"
+              value={tobi.orchestrationConfig?.primaryAgent || "antigravity"}
+              onChange={(e) => tobi.setPrimaryAgent(e.target.value as any)}
+            >
+              {Object.values(tobi.SUPPORTED_AGENT_ENGINES || {}).map((eng) => {
+                const isDetected = tobi.orchestrationConfig?.detectedAgents?.includes(eng.id);
+                return (
+                  <option key={eng.id} value={eng.id}>
+                    [{eng.badge}] {eng.name} {isDetected ? "✓ Detectado" : ""}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Swap Button (only active in dual mode) */}
+          <button
+            type="button"
+            className="iso-roster-btn"
+            disabled={tobi.orchestrationConfig?.mode === "single" || !tobi.orchestrationConfig?.secondaryAgent}
+            onClick={tobi.swapAgentRoles}
+            title="Invertir roles: convertir Primario en Secundario y viceversa"
+          >
+            ⇄ Invertir Roles
+          </button>
+
+          {/* Secondary Agent (if dual mode) */}
+          {tobi.orchestrationConfig?.mode === "dual" && (
+            <div className="iso-roster-section">
+              <span className="iso-roster-label">Secundario (5, 6, 8):</span>
+              <select
+                className="iso-roster-select"
+                value={tobi.orchestrationConfig?.secondaryAgent || "opencode"}
+                onChange={(e) => tobi.setSecondaryAgent(e.target.value as any)}
+              >
+                {Object.values(tobi.SUPPORTED_AGENT_ENGINES || {}).map((eng) => {
+                  const isDetected = tobi.orchestrationConfig?.detectedAgents?.includes(eng.id);
+                  return (
+                    <option key={eng.id} value={eng.id}>
+                      [{eng.badge}] {eng.name} {isDetected ? "✓ Detectado" : ""}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
+          {/* Detected Agents Quick Pills */}
+          <div className="iso-roster-section" style={{ marginLeft: "auto" }}>
+            <span className="iso-roster-label" style={{ fontSize: "10px" }}>Entorno:</span>
+            {(tobi.orchestrationConfig?.detectedAgents || []).map((agentId) => {
+              const eng = tobi.SUPPORTED_AGENT_ENGINES?.[agentId];
+              if (!eng) return null;
+              return (
+                <span key={agentId} className="iso-roster-pill" title={`${eng.name} detectado en este equipo`}>
+                  <strong style={{ color: eng.color }}>{eng.badge}</strong> {eng.name}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="iso-layout">
           <div className="iso-stage">
             <div

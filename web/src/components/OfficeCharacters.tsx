@@ -5,14 +5,25 @@ interface AgentFigureProps {
   status: "working" | "idle" | string;
   activity?: string;
   size?: number;
+  engineId?: string;
 }
 
-export const AgentFigure: FC<AgentFigureProps> = ({ id, status, size = 68 }) => {
+export const ENGINE_THEMES: Record<string, { body: [string, string, string]; shadow: [string, string]; badge: string }> = {
+  antigravity: { body: ["#22d3ee", "#06b6d4", "#0891b2"], shadow: ["#0891b2", "#0e7490"], badge: "AG" },
+  opencode: { body: ["#60a5fa", "#3b82f6", "#1d4ed8"], shadow: ["#1d4ed8", "#1e3a8a"], badge: "OC" },
+  "claude-code": { body: ["#fb923c", "#ea580c", "#c2410c"], shadow: ["#c2410c", "#9a3412"], badge: "CC" },
+  cursor: { body: ["#c084fc", "#9333ea", "#7e22ce"], shadow: ["#7e22ce", "#6b21a8"], badge: "CR" },
+  codex: { body: ["#34d399", "#059669", "#047857"], shadow: ["#047857", "#065f46"], badge: "CX" },
+  windsurf: { body: ["#2dd4bf", "#0891b2", "#0e7490"], shadow: ["#0e7490", "#155e75"], badge: "WS" },
+  custom: { body: ["#f472b6", "#db2777", "#be185d"], shadow: ["#be185d", "#9d174d"], badge: "AI" },
+};
+
+export const AgentFigure: FC<AgentFigureProps> = ({ id, status, activity, size = 68, engineId }) => {
   const isWorking = status === "working";
 
   switch (id) {
-    case "orchestrator":
-      // Antigravity — Captain Among Us Commander with Executive Command Desk
+    case "orchestrator": {
+      const orchTheme = (engineId && ENGINE_THEMES[engineId]) || ENGINE_THEMES.antigravity;
       return (
         <svg
           width={size}
@@ -24,13 +35,13 @@ export const AgentFigure: FC<AgentFigureProps> = ({ id, status, size = 68 }) => 
         >
           <defs>
             <linearGradient id="auCyanBody" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#22d3ee" />
-              <stop offset="60%" stopColor="#06b6d4" />
-              <stop offset="100%" stopColor="#0891b2" />
+              <stop offset="0%" stopColor={orchTheme.body[0]} />
+              <stop offset="60%" stopColor={orchTheme.body[1]} />
+              <stop offset="100%" stopColor={orchTheme.body[2]} />
             </linearGradient>
             <linearGradient id="auCyanShadow" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0891b2" />
-              <stop offset="100%" stopColor="#0e7490" />
+              <stop offset="0%" stopColor={orchTheme.shadow[0]} />
+              <stop offset="100%" stopColor={orchTheme.shadow[1]} />
             </linearGradient>
             <linearGradient id="auVisorGrad" x1="0.2" y1="0" x2="0.8" y2="1">
               <stop offset="0%" stopColor="#e0f2fe" />
@@ -163,6 +174,7 @@ export const AgentFigure: FC<AgentFigureProps> = ({ id, status, size = 68 }) => 
           )}
         </svg>
       );
+    }
 
     case "explorer":
       // Explorer QA — Lime Green Crewmate with Plant Sprout 🌱 & QA Scanner Tablet
@@ -498,8 +510,9 @@ export const AgentFigure: FC<AgentFigureProps> = ({ id, status, size = 68 }) => 
         </svg>
       );
 
-    case "opencode":
-      // OpenCode (DeepSeek) — Cobalt Blue Crewmate with Cybernetic Headset & AST HUD
+    case "opencode": {
+      const ocTheme = (engineId && ENGINE_THEMES[engineId]) || ENGINE_THEMES.opencode;
+      const isOffline = activity === "lounge" || status === "offline";
       return (
         <svg
           width={size}
@@ -507,17 +520,18 @@ export const AgentFigure: FC<AgentFigureProps> = ({ id, status, size = 68 }) => 
           viewBox="0 0 80 92"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className={`agent-vector-svg among-us-opencode ${isWorking ? "anim-working" : "anim-resting"}`}
+          className={`agent-vector-svg among-us-opencode ${isWorking ? "anim-working" : "anim-resting"} ${isOffline ? "is-offline" : ""}`}
+          style={isOffline ? { opacity: 0.72, filter: "grayscale(35%)" } : undefined}
         >
           <defs>
             <linearGradient id="auBlueBody" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="60%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#1d4ed8" />
+              <stop offset="0%" stopColor={isOffline ? "#94a3b8" : ocTheme.body[0]} />
+              <stop offset="60%" stopColor={isOffline ? "#64748b" : ocTheme.body[1]} />
+              <stop offset="100%" stopColor={isOffline ? "#475569" : ocTheme.body[2]} />
             </linearGradient>
             <linearGradient id="auBlueShadow" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#1d4ed8" />
-              <stop offset="100%" stopColor="#1e3a8a" />
+              <stop offset="0%" stopColor={isOffline ? "#475569" : ocTheme.shadow[0]} />
+              <stop offset="100%" stopColor={isOffline ? "#334155" : ocTheme.shadow[1]} />
             </linearGradient>
             <linearGradient id="auVisorBlue" x1="0.2" y1="0" x2="0.8" y2="1">
               <stop offset="0%" stopColor="#e0f2fe" />
@@ -604,6 +618,7 @@ export const AgentFigure: FC<AgentFigureProps> = ({ id, status, size = 68 }) => 
           )}
         </svg>
       );
+    }
 
     case "security":
     default:

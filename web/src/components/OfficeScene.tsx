@@ -679,6 +679,14 @@ export function OfficeScene({
                 <AgentFigure
                   id={agent.id}
                   status={isAntigravity ? (isWorking ? "working" : "idle") : (pose.action === "work" ? "working" : "idle")}
+                  activity={agent.activity || pose.action}
+                  engineId={
+                    agent.id === "orchestrator"
+                      ? (antigravityLive?.orchestrationConfig?.primaryAgent || "antigravity")
+                      : agent.id === "opencode"
+                      ? (antigravityLive?.orchestrationConfig?.secondaryAgent || "opencode")
+                      : undefined
+                  }
                   size={58}
                 />
               </span>

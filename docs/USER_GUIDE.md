@@ -37,6 +37,42 @@ python scripts/tobitests_cli.py --project my-saas --url http://localhost:3000 --
 
 ---
 
+## 🤖 Bring Your Own Agent (BYOA) & Dynamic Orchestrator Roster
+
+TobiTests is not locked to a single AI tool. It features a complete **"Bring Your Own Agent" (BYOA)** architecture that lets you choose and combine any agent engines you prefer:
+
+### 1. Supported Agent Catalog (`SUPPORTED_AGENT_ENGINES`)
+* **Antigravity (`antigravity`):** Deep analytical brain, live Playwright/CDP MCP actuator, and 3-oracle judge.
+* **OpenCode (`opencode`):** Fast CLI deterministic code synthesizer, Playwright test runner, and AST self-healer.
+* **Claude Code (`claude-code`):** High-speed terminal agent from Anthropic with native tool-calling and subagent support.
+* **Cursor (`cursor`):** Agentic IDE with Composer, deep codebase indexing, and multi-file editing.
+* **Codex (`codex`):** OpenAI Codex / CLI automation agent for spec generation and execution.
+* **Windsurf (`windsurf`):** Agentic IDE with Cascade multi-step flows and local MCP servers.
+* **Custom Agent (`custom`):** Any custom LLM agent or CI runner connected to `antigravity-live.json`.
+
+### 2. Orchestration Modes: Dual Engine vs. Solo Mode
+* **Dual Engine Mode (`dual` — Default):** Divides the 8-step pipeline between a **Primary Lead** (Steps 1–4, 7) and a **Secondary Runner** (Steps 5, 6, 8) with lock-free handoffs through `antigravity-live.json`.
+* **Solo Mode (`single`):** Perfect if you only have one agent installed (or want a streamlined run). The Primary Agent executes **all 8 steps end-to-end** without waiting for peer handoffs. The secondary agent enters a standby state (`OFFLINE / STANDBY`) in the office lounge.
+
+### 3. Dynamic Role Switching & Swapping
+* **From the Web UI ("La Oficina" Bar):**
+  - Use the dropdowns in the top bar of "La Oficina" to change the Primary Lead or Secondary Runner on the fly.
+  - Click **`⇄ Invert Roles`** to swap Primary and Secondary in 1 click (e.g. promote OpenCode to Primary and Antigravity to Secondary).
+  - Click the **`Dual Engine` / `Solo Mode`** toggle pill to activate or deactivate the secondary agent in real time.
+* **From the CLI (`scripts/tobitests_cli.py`):**
+  ```bash
+  # Appoint Claude Code as Primary Lead with OpenCode as Runner
+  python scripts/tobitests_cli.py --primary claude-code --secondary opencode
+
+  # Appoint Cursor as Primary Lead in Solo Mode (executes Steps 1–8)
+  python scripts/tobitests_cli.py --primary cursor --mode single
+
+  # Invert roles between Primary and Secondary
+  python scripts/tobitests_cli.py --swap-agents
+  ```
+
+---
+
 ## 🌐 Workflow A: Auditing a Frontend or Full-Stack Web App from Scratch
 
 Use this workflow when auditing a React, Next.js, Vue, Nuxt, Angular, or Svelte web application running locally or in a staging environment.

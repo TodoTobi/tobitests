@@ -903,6 +903,41 @@ def generate_workspace_artifacts(
     return prd_path, matrix_path, state_path
 
 
+def detect_environment_agents(repo_root: Path) -> List[str]:
+    import shutil
+    detected: List[str] = []
+    home = Path(os.environ.get("USERPROFILE") or os.environ.get("HOME") or Path.home())
+
+    # 1. Antigravity: ~/.gemini/antigravity or AGY env
+    agy_dir = home / ".gemini" / "antigravity"
+    if agy_dir.exists() or os.environ.get("ANTIGRAVITY") or os.environ.get("AGY_VERSION"):
+        detected.append("antigravity")
+
+    # 2. OpenCode: opencode.json in repo or ~/.opencode
+    if (repo_root / "opencode.json").exists() or (home / ".opencode").exists() or shutil.which("opencode"):
+        detected.append("opencode")
+
+    # 3. Claude Code: CLAUDE.md in repo or ~/.claude
+    if (repo_root / "CLAUDE.md").exists() or (home / ".claude").exists() or shutil.which("claude"):
+        detected.append("claude-code")
+
+    # 4. Cursor: .cursorrules or .cursor in repo or home
+    if (repo_root / ".cursorrules").exists() or (repo_root / ".cursor").exists() or shutil.which("cursor"):
+        detected.append("cursor")
+
+    # 5. Codex: CODEX.md or .codex
+    if (repo_root / "CODEX.md").exists() or (repo_root / ".codex").exists() or shutil.which("codex"):
+        detected.append("codex")
+
+    # 6. Windsurf: .windsurfrules or .codeium
+    if (repo_root / ".windsurfrules").exists() or (home / ".codeium").exists() or shutil.which("windsurf"):
+        detected.append("windsurf")
+
+    # 7. Custom agent engine
+    detected.append("custom")
+    return detected
+
+
 def update_blackboard(
     repo_root: Path,
     status: str,
@@ -910,6 +945,10 @@ def update_blackboard(
     step: int,
     project_slug: Optional[str] = None,
     audit_scope: Optional[str] = None,
+    primary_agent: Optional[str] = None,
+    secondary_agent: Optional[str] = None,
+    mode: Optional[str] = None,
+    swap_agents: bool = False,
 ) -> Path:
     live_path = repo_root / "web" / "public" / "data" / "antigravity-live.json"
     existing: Dict[str, Any] = {}
@@ -918,6 +957,54 @@ def update_blackboard(
             existing = json.loads(live_path.read_text(encoding="utf-8"))
         except Exception:
             existing = {}
+
+    detected_agents = detect_environment_agents(repo_root)
+    orch_config = existing.get("orchestrationConfig", {}) or {}
+    curr_mode = orch_config.get("mode", "dual")
+    curr_primary = orch_config.get("primaryAgent", existing.get("activeOrchestrator", "antigravity"))
+    curr_secondary = orch_config.get("secondaryAgent", "opencode")
+
+    if swap_agents:
+        if curr_secondary:
+            curr_primary, curr_secondary = curr_secondary, curr_primary
+
+    if mode:
+        curr_mode = mode
+        if mode == "single":
+            curr_secondary = None
+        elif mode == "dual" and not curr_secondary:
+            curr_secondary = "opencode" if curr_primary != "opencode" else "antigravity"
+
+    if primary_agent:
+        curr_primary = primary_agent
+        if curr_secondary == primary_agent:
+            curr_secondary = None if curr_mode == "single" else ("opencode" if primary_agent != "opencode" else "antigravity")
+
+    if secondary_agent is not None:
+        if secondary_agent.lower() in ("none", "null", "false", "off"):
+            curr_secondary = None
+            curr_mode = "single"
+        else:
+            curr_secondary = secondary_agent
+            curr_mode = "dual"
+
+    next_orch = {
+        "mode": curr_mode,
+        "primaryAgent": curr_primary,
+        "secondaryAgent": curr_secondary,
+        "detectedAgents": detected_agents,
+    }
+
+    # Resolve active orchestrator based on mode and step
+    resolved_orchestrator = orchestrator
+    if orchestrator == "antigravity":
+        if curr_mode == "single":
+            resolved_orchestrator = curr_primary
+        else:
+            if step in (5, 6, 8) and status == "writing_specs":
+                resolved_orchestrator = curr_secondary or curr_primary
+            else:
+                resolved_orchestrator = curr_primary
 
     meta = BLACKBOARD_STATE_META.get(status, BLACKBOARD_STATE_META["idle"])
     step_clamped = max(1, min(8, step))
@@ -934,7 +1021,7 @@ def update_blackboard(
             "step": next_step_idx,
             "type": "BLACKBOARD_SYNC",
             "time": now_iso,
-            "action": f"[{orchestrator.upper()}] Step {step_clamped}/8 ({step_name}) · scope={resolved_scope} · state={status}",
+            "action": f"[{resolved_orchestrator.upper()}] Step {step_clamped}/8 ({step_name}) · scope={resolved_scope} · state={status} · mode={curr_mode}",
             "icon": meta["icon"],
         },
     )
@@ -945,28 +1032,34 @@ def update_blackboard(
         agent_states["explorer"] = "idle"
         agent_states["telemetry"] = "working"
 
+    if curr_mode == "single":
+        agent_states["opencode"] = "idle"
+        if status in ("writing_specs", "exploring", "auditing_telemetry", "standup_meeting"):
+            agent_states["orchestrator"] = "working"
+
     payload: Dict[str, Any] = {
         "conversationId": existing.get("conversationId", "local-agent-session"),
         "stepIndex": next_step_idx,
         "type": "BLACKBOARD_SYNC",
-        "source": orchestrator.upper(),
+        "source": resolved_orchestrator.upper(),
         "secondsAgo": 1,
         "isWorking": meta["isWorking"],
         "action": meta["action"],
-        "detail": f"Proyecto: {active_proj} ({resolved_scope.upper()}) · Paso {step_clamped}/8: {step_name}",
+        "detail": f"Proyecto: {active_proj} ({resolved_scope.upper()}) · Paso {step_clamped}/8: {step_name} [{curr_mode.upper()} MODE]",
         "icon": meta["icon"],
         "timeLabel": meta["timeLabel"],
         "thoughtSnippet": (
-            f"Co-Orchestration Blackboard [{orchestrator.upper()}] executing Step {step_clamped} "
-            f"({step_name}) in state '{status}' (auditScope='{resolved_scope}') for project '{active_proj}'."
+            f"Co-Orchestration Blackboard [{resolved_orchestrator.upper()}] executing Step {step_clamped} "
+            f"({step_name}) in state '{status}' (mode='{curr_mode}', primary='{curr_primary}') for project '{active_proj}'."
         ),
         "blackboardState": status,
-        "activeOrchestrator": orchestrator,
-        "handoffReady": status in ("idle", "writing_specs", "auditing_telemetry"),
+        "activeOrchestrator": resolved_orchestrator,
+        "handoffReady": status in ("idle", "writing_specs", "auditing_telemetry") and curr_mode != "single",
         "currentPipelineStep": step_clamped,
         "pipelineStepName": step_name,
         "activeProject": active_proj,
         "auditScope": resolved_scope,
+        "orchestrationConfig": next_orch,
         "agentStates": agent_states,
         "history": history,
     }
@@ -1016,9 +1109,35 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--orchestrator",
         type=str,
-        choices=["antigravity", "opencode"],
+        choices=["antigravity", "opencode", "claude-code", "cursor", "codex", "windsurf", "custom"],
         default="antigravity",
         help="Active co-orchestrator engine owning the current pipeline phase",
+    )
+    parser.add_argument(
+        "--primary",
+        type=str,
+        choices=["antigravity", "opencode", "claude-code", "cursor", "codex", "windsurf", "custom"],
+        default=None,
+        help="Set the Primary Lead Orchestrator agent engine (Steps 1-4, 7)",
+    )
+    parser.add_argument(
+        "--secondary",
+        type=str,
+        choices=["antigravity", "opencode", "claude-code", "cursor", "codex", "windsurf", "custom", "none"],
+        default=None,
+        help="Set the Secondary Runner agent engine (Steps 5, 6, 8), or 'none' for solo mode",
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["dual", "single"],
+        default=None,
+        help="Orchestration mode: 'dual' (Co-orchestration) or 'single' (Solo agent)",
+    )
+    parser.add_argument(
+        "--swap-agents",
+        action="store_true",
+        help="Invert / swap the Primary and Secondary agent roles",
     )
     parser.add_argument(
         "--step",
@@ -1071,6 +1190,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         step=args.step,
         project_slug=project_slug,
         audit_scope=args.scope,
+        primary_agent=args.primary,
+        secondary_agent=args.secondary,
+        mode=args.mode,
+        swap_agents=args.swap_agents,
     )
     print(
         f"[TobiTests CLI] Shared Blackboard synchronized: {live_path.relative_to(repo_root)} "

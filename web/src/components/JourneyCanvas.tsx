@@ -695,7 +695,12 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
     return testsList.filter(matchesActiveFilters);
   }, [testsList, filterFailureOnly, selectedNodeId, searchQuery]);
 
-  const activeOrchestratorLabel = (liveTelemetry?.activeOrchestrator || "antigravity").toUpperCase();
+  const primaryId = liveTelemetry?.orchestrationConfig?.primaryAgent || tobi.orchestrationConfig?.primaryAgent || liveTelemetry?.activeOrchestrator || "antigravity";
+  const primaryName = tobi.SUPPORTED_AGENT_ENGINES?.[primaryId]?.name || primaryId.toUpperCase();
+  const activeMode = liveTelemetry?.orchestrationConfig?.mode || tobi.orchestrationConfig?.mode || "dual";
+  const activeOrchestratorLabel = activeMode === "single"
+    ? `${primaryName} [SOLO]`
+    : `${(liveTelemetry?.activeOrchestrator || primaryId).toUpperCase()} [DUAL]`;
   const activeStepNumber = liveTelemetry?.currentPipelineStep || 8;
   const activeBlackboardState = liveTelemetry?.blackboardState || "idle";
 

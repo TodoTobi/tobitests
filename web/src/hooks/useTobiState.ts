@@ -1,8 +1,115 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import tobiData from '../data/tobi-state.json';
 import vetData from '../data/vetconnect-state.json';
 
 export type AuditScope = 'frontend' | 'backend' | 'fullstack';
+
+export type AgentEngineId =
+  | 'antigravity'
+  | 'opencode'
+  | 'claude-code'
+  | 'cursor'
+  | 'codex'
+  | 'windsurf'
+  | 'custom';
+
+export interface AgentEngineConfig {
+  id: AgentEngineId;
+  name: string;
+  type: 'ide' | 'cli' | 'hybrid';
+  badge: string;
+  color: string;
+  accent: string;
+  description: string;
+  detected?: boolean;
+}
+
+export const SUPPORTED_AGENT_ENGINES: Record<AgentEngineId, AgentEngineConfig> = {
+  antigravity: {
+    id: 'antigravity',
+    name: 'Antigravity',
+    type: 'ide',
+    badge: 'AGY',
+    color: '#8B5CF6',
+    accent: '#06B6D4',
+    description: 'Agentic IDE with native @playwright/mcp & Chrome DevTools MCP orchestration',
+    detected: true,
+  },
+  opencode: {
+    id: 'opencode',
+    name: 'OpenCode',
+    type: 'cli',
+    badge: 'OC',
+    color: '#10B981',
+    accent: '#34D399',
+    description: 'CLI Co-Orchestrator for Playwright .spec.ts synthesis & selector self-healing',
+    detected: true,
+  },
+  'claude-code': {
+    id: 'claude-code',
+    name: 'Claude Code',
+    type: 'cli',
+    badge: 'CC',
+    color: '#D97706',
+    accent: '#F59E0B',
+    description: 'Anthropic terminal agent with native MCP client & CLAUDE.md protocol',
+    detected: true,
+  },
+  cursor: {
+    id: 'cursor',
+    name: 'Cursor',
+    type: 'ide',
+    badge: 'CUR',
+    color: '#3B82F6',
+    accent: '#60A5FA',
+    description: 'AI Code Editor with multi-file Composer, .cursorrules & MCP integration',
+    detected: true,
+  },
+  codex: {
+    id: 'codex',
+    name: 'Codex CLI',
+    type: 'cli',
+    badge: 'CDX',
+    color: '#94A3B8',
+    accent: '#CBD5E1',
+    description: 'OpenAI terminal agent for autonomous test execution and code triage',
+    detected: false,
+  },
+  windsurf: {
+    id: 'windsurf',
+    name: 'Windsurf',
+    type: 'ide',
+    badge: 'WS',
+    color: '#06B6D4',
+    accent: '#22D3EE',
+    description: 'Agentic IDE with Cascade multi-step flows and local MCP servers',
+    detected: false,
+  },
+  custom: {
+    id: 'custom',
+    name: 'Custom Agent',
+    type: 'cli',
+    badge: 'AI',
+    color: '#EC4899',
+    accent: '#F472B6',
+    description: 'Any custom LLM agent or CI runner connected to antigravity-live.json',
+    detected: false,
+  },
+};
+
+export interface OrchestrationConfig {
+  mode: 'dual' | 'single';
+  primaryAgent: AgentEngineId;
+  secondaryAgent: AgentEngineId | null;
+  detectedAgents: AgentEngineId[];
+}
+
+export const DEFAULT_ORCHESTRATION_CONFIG: OrchestrationConfig = {
+  mode: 'dual',
+  primaryAgent: 'antigravity',
+  secondaryAgent: 'opencode',
+  detectedAgents: ['antigravity', 'opencode', 'claude-code', 'cursor'],
+};
 
 export interface AntigravityLive {
   conversationId: string;
@@ -17,12 +124,13 @@ export interface AntigravityLive {
   timeLabel: string;
   thoughtSnippet?: string | null;
   blackboardState?: "idle" | "exploring" | "writing_specs" | "auditing_telemetry" | "standup_meeting" | string;
-  activeOrchestrator?: "antigravity" | "opencode" | string;
+  activeOrchestrator?: AgentEngineId | string;
   handoffReady?: boolean;
   currentPipelineStep?: number;
   pipelineStepName?: string;
   activeProject?: string;
   auditScope?: AuditScope;
+  orchestrationConfig?: OrchestrationConfig;
   agentStates?: Record<string, "working" | "idle" | string>;
   history?: Array<{
     step: number;
@@ -243,6 +351,28 @@ function saveScopeForProject(projectId: string, scope: AuditScope) {
     const current = getSavedScopeMap();
     current[projectId] = scope;
     localStorage.setItem("tobitests_audit_scopes_v1", JSON.stringify(current));
+  } catch (e) {}
+}
+
+function getSavedOrchestrationConfig(): OrchestrationConfig {
+  try {
+    const raw = localStorage.getItem("tobitests_orchestration_v1");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.primaryAgent) {
+        return {
+          ...DEFAULT_ORCHESTRATION_CONFIG,
+          ...parsed,
+        };
+      }
+    }
+  } catch (e) {}
+  return DEFAULT_ORCHESTRATION_CONFIG;
+}
+
+function saveOrchestrationConfig(config: OrchestrationConfig) {
+  try {
+    localStorage.setItem("tobitests_orchestration_v1", JSON.stringify(config));
   } catch (e) {}
 }
 
@@ -662,6 +792,110 @@ export function useTobiState() {
     } catch (e) {}
   }, [activeProjectId]);
 
+  const [orchestrationConfig, setOrchestrationConfig] = useState<OrchestrationConfig>(() => getSavedOrchestrationConfig());
+
+  // Keep local config in sync if server broadcasts detected agents or updated orchestration config
+  useEffect(() => {
+    if (antigravityLive?.orchestrationConfig) {
+      const liveCfg = antigravityLive.orchestrationConfig;
+      setOrchestrationConfig((prev) => {
+        if (
+          liveCfg.mode === prev.mode &&
+          liveCfg.primaryAgent === prev.primaryAgent &&
+          liveCfg.secondaryAgent === prev.secondaryAgent &&
+          JSON.stringify(liveCfg.detectedAgents || []) === JSON.stringify(prev.detectedAgents || [])
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          ...liveCfg,
+          detectedAgents: liveCfg.detectedAgents && liveCfg.detectedAgents.length > 0
+            ? liveCfg.detectedAgents
+            : prev.detectedAgents,
+        };
+      });
+    }
+  }, [antigravityLive?.orchestrationConfig]);
+
+  const saveOrchestration = useCallback((newConfig: OrchestrationConfig) => {
+    setOrchestrationConfig(newConfig);
+    saveOrchestrationConfig(newConfig);
+    try {
+      fetch("/api/antigravity/orchestration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newConfig),
+      }).catch(() => {});
+    } catch (e) {}
+  }, []);
+
+  const setPrimaryAgent = useCallback((agentId: AgentEngineId) => {
+    setOrchestrationConfig((prev) => {
+      let nextSecondary = prev.secondaryAgent;
+      if (nextSecondary === agentId) {
+        nextSecondary = prev.primaryAgent !== agentId ? prev.primaryAgent : null;
+      }
+      const updated: OrchestrationConfig = {
+        ...prev,
+        primaryAgent: agentId,
+        secondaryAgent: nextSecondary,
+      };
+      saveOrchestration(updated);
+      return updated;
+    });
+  }, [saveOrchestration]);
+
+  const setSecondaryAgent = useCallback((agentId: AgentEngineId | null) => {
+    setOrchestrationConfig((prev) => {
+      let nextPrimary = prev.primaryAgent;
+      if (agentId && nextPrimary === agentId) {
+        nextPrimary = prev.secondaryAgent || "antigravity";
+      }
+      const updated: OrchestrationConfig = {
+        ...prev,
+        primaryAgent: nextPrimary,
+        secondaryAgent: agentId,
+        mode: agentId === null ? "single" : prev.mode,
+      };
+      saveOrchestration(updated);
+      return updated;
+    });
+  }, [saveOrchestration]);
+
+  const swapAgentRoles = useCallback(() => {
+    setOrchestrationConfig((prev) => {
+      if (!prev.secondaryAgent) {
+        return prev;
+      }
+      const updated: OrchestrationConfig = {
+        ...prev,
+        primaryAgent: prev.secondaryAgent,
+        secondaryAgent: prev.primaryAgent,
+      };
+      saveOrchestration(updated);
+      return updated;
+    });
+  }, [saveOrchestration]);
+
+  const toggleSecondaryAgent = useCallback((enabled?: boolean) => {
+    setOrchestrationConfig((prev) => {
+      const isNowSingle = enabled !== undefined ? !enabled : prev.mode === "dual";
+      const nextMode: "dual" | "single" = isNowSingle ? "single" : "dual";
+      let nextSecondary = prev.secondaryAgent;
+      if (nextMode === "dual" && !nextSecondary) {
+        nextSecondary = prev.primaryAgent === "opencode" ? "antigravity" : "opencode";
+      }
+      const updated: OrchestrationConfig = {
+        ...prev,
+        mode: nextMode,
+        secondaryAgent: nextMode === "single" ? null : nextSecondary,
+      };
+      saveOrchestration(updated);
+      return updated;
+    });
+  }, [saveOrchestration]);
+
   const switchProject = useCallback((projectId: string) => {
     setActiveProjectId(projectId);
     localStorage.setItem("tobitests_active_project", projectId);
@@ -1077,8 +1311,58 @@ Entonces ${bug.entonces}
     } catch (e) {}
   }, [activeProjectId, auditScope, setAllAgentsMode]);
 
+  const displayOfficeAgents: OfficeAgent[] = useMemo(() => {
+    const primaryEngine = SUPPORTED_AGENT_ENGINES[orchestrationConfig.primaryAgent] || SUPPORTED_AGENT_ENGINES.antigravity;
+    const secondaryId = orchestrationConfig.secondaryAgent;
+    const secondaryEngine = secondaryId ? (SUPPORTED_AGENT_ENGINES[secondaryId] || SUPPORTED_AGENT_ENGINES.opencode) : null;
+    const isSolo = orchestrationConfig.mode === "single" || !secondaryEngine;
+
+    return (state.officeAgents || []).map((agent) => {
+      if (agent.id === "orchestrator") {
+        return {
+          ...agent,
+          name: `${primaryEngine.name} [PRIMARY LEAD]`,
+          initials: primaryEngine.badge,
+          role: isSolo
+            ? `Orquestador Autónomo Solo · Pipeline Completo (Pasos 1-8)`
+            : `Orquestador Principal & White-Box Brain (Pasos 1-4, 7)`,
+          employment: isSolo ? `Lead Solo Agent (${primaryEngine.name})` : `Lead Orchestrator (${primaryEngine.name})`,
+          mcp: primaryEngine.id === "antigravity" ? "@playwright/mcp" : `@${primaryEngine.id}/agent`,
+        };
+      }
+      if (agent.id === "opencode") {
+        if (isSolo) {
+          return {
+            ...agent,
+            name: secondaryEngine ? `${secondaryEngine.name} [STANDBY / OFFLINE]` : "Execution Arm [OFFLINE]",
+            initials: secondaryEngine ? secondaryEngine.badge : "OFF",
+            role: "Agente Secundario en Standby (Modo Solo Activo)",
+            employment: "Standby Lounge",
+            status: "idle",
+            activity: "lounge",
+            bubble: `En sala de descanso. Modo Solo activo: ${primaryEngine.name} ejecuta los 8 pasos autónomamente.`,
+            idleBubble: "Modo Solo activo: en espera de reactivación dual",
+            tone: "neutral" as const,
+          };
+        }
+        return {
+          ...agent,
+          name: `${secondaryEngine!.name} [SECONDARY RUNNER]`,
+          initials: secondaryEngine!.badge,
+          role: "Sintetizador de Specs, Runner CLI & Self-Healing (Pasos 5, 6, 8)",
+          employment: `Execution Arm (${secondaryEngine!.name})`,
+          mcp: secondaryEngine!.id === "opencode" ? "@opencode/deepseek" : `@${secondaryEngine!.id}/runner`,
+        };
+      }
+      return agent;
+    });
+  }, [state.officeAgents, orchestrationConfig]);
+
   return {
-    state,
+    state: {
+      ...state,
+      officeAgents: displayOfficeAgents,
+    },
     connected,
     antigravityLive,
     activeProjectId,
@@ -1095,6 +1379,12 @@ Entonces ${bug.entonces}
     copyBddToClipboard,
     downloadMasterBugReport,
     rerunTest,
+    orchestrationConfig,
+    setPrimaryAgent,
+    setSecondaryAgent,
+    swapAgentRoles,
+    toggleSecondaryAgent,
+    SUPPORTED_AGENT_ENGINES,
   };
 }
 

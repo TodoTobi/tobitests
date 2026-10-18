@@ -4,14 +4,19 @@ This document defines the agent topology, dual co-orchestration architecture, sh
 
 ---
 
-## 🤝 Dual Co-Orchestration Architecture (Antigravity + OpenCode)
+## 🤝 Agnostic Agent Architecture & Dual Co-Orchestration Protocol
 
-TobiTests operates on a single local machine through a cooperative **Dual Co-Orchestration Protocol** uniting two specialized engines that share state through a lock-free local blackboard (`web/public/data/antigravity-live.json`):
+TobiTests features a **"Bring Your Own Agent" (BYOA)** architecture that operates seamlessly on a single local machine. While the default setup pairs **Antigravity** (as the Analytical Brain) with **OpenCode** (as the Deterministic Runner), the engine is **100% agent-agnostic**:
 
-| Orchestrator Engine | Primary Role | Pipeline Steps Owned | Core Responsibilities |
+* **Supported Agent Engines:** `antigravity`, `opencode`, `claude-code`, `cursor`, `codex`, `windsurf`, and `custom` (any custom LLM agent or CI runner).
+* **Dynamic Role Swapping:** Any agent can be appointed **Primary Lead** (Steps 1–4, 7) or **Secondary Runner** (Steps 5, 6, 8), and roles can be inverted in real time via the UI or CLI (`--swap-agents`).
+* **Solo Mode (Single-Agent Autonomous Execution):** When running in `single` mode (`--mode single` or toggling the UI switch), the primary agent executes all 8 pipeline steps end-to-end without waiting for peer handoffs. The secondary agent enters a standby state (`OFFLINE / STANDBY`) in the office lounge.
+* **Automatic Environment Detection:** TobiTests inspects your system PATH, home directory, and repository files (`.cursorrules`, `CLAUDE.md`, `opencode.json`, `CODEX.md`, `.windsurfrules`) to detect which agents are installed and marks them with `[✓ DETECTED]` in the UI and CLI.
+
+| Pipeline Role | Default Agent | Supported Engines | Responsibilities across 8-Step Pipeline |
 | :--- | :--- | :--- | :--- |
-| **Antigravity** *(Analytical Brain & Telemetry Judge)* | White-Box Architect, Live MCP Actuator & 3-Oracle Judge | **Steps 1, 2, 3, 4, 7** | Leads repository introspection and route/schema extraction (Steps 1–3), builds the Normalized PRD and Test Matrix (Step 4), dispatches **Explorer QA** via `@playwright/mcp` and **Telemetry Auditor** via `@chromedevtools/chrome-devtools-mcp`, and evaluates traces under the **3 Oracles** to classify bugs (`P0`–`P3`) in Step 7. |
-| **OpenCode** *(CLI Execution Arm & Spec Generator)* | Deterministic Code Synthesizer, Native Runner & Self-Healer | **Steps 5, 6, 8** | Consumes the Normalized PRD (`prd-ground-truth.json`) and Test Matrix (`test-matrix.json`) from `workspaces/<project>/`, drives **Spec Writer** to synthesize `.spec.ts` suites (Step 5), executes isolated Playwright runs with `.webm` video and trace capture (Step 6), and performs AST/locator **Selector Self-Healing** (Step 8). |
+| **Primary Lead Orchestrator** *(Analytical Brain)* | **Antigravity** | `antigravity`, `claude-code`, `cursor`, `opencode`, `codex`, `windsurf`, `custom` | Leads repository introspection & route/schema extraction (Steps 1–2), builds Normalized PRD (`prd-ground-truth.json`) and Test Matrix (Steps 3–4), dispatches **Explorer QA** & **Telemetry Auditor**, and evaluates traces under the **3 Oracles** (`P0`–`P3`) in Step 7. *(In Solo Mode, also executes Steps 5, 6, 8).* |
+| **Secondary Execution Arm** *(Spec Runner)* | **OpenCode** | `opencode`, `claude-code`, `antigravity`, `cursor`, `codex`, `windsurf`, `custom` | Consumes the PRD & Test Matrix, drives **Spec Writer** to compile `.spec.ts` suites (Step 5), executes Playwright with `.webm` video & screenshot capture (Step 6), and performs **Selector Self-Healing** (Step 8). *(In Solo Mode, placed in standby).* |
 
 ---
 
@@ -19,11 +24,11 @@ TobiTests operates on a single local machine through a cooperative **Dual Co-Orc
 
 | Agent Role | ID in Office | Primary Focus | Tooling / MCP | Deliverables |
 | :--- | :--- | :--- | :--- | :--- |
-| **Orchestrator (Antigravity)** | `orchestrator` | Repository parsing, domain decomposition, 3-Oracle triage & handoff coordination | Filesystem, Code Search, Git, Shared Blackboard | Normalized PRD (`prd-ground-truth.json`), Test Matrix, Task Delegation |
+| **Lead Orchestrator** | `orchestrator` | Repository parsing, domain decomposition, 3-Oracle triage & handoff coordination | Filesystem, Code Search, Git, Shared Blackboard | Normalized PRD (`prd-ground-truth.json`), Test Matrix, Task Delegation |
 | **Explorer QA** | `explorer` | User journey execution, negative/boundary testing, cross-view state verification | `@playwright/mcp` | Action logs, DOM accessibility snapshots, Layer 2 & 3 divergence findings |
 | **Telemetry Auditor** | `telemetry` | Console exception monitoring, network (`>= 400`) & timeout tracking, White-Box root cause | `@chromedevtools/chrome-devtools-mcp` | Layer 1 CDP telemetry reports, P0–P3 bug cards with `root_cause_file` & `root_cause_line` |
 | **Spec Writer** | `writer` | Synthesis of validated journeys and bug reproductions into deterministic test code | Filesystem, Playwright Test API | Permanent `specs/<domain>.spec.ts` files, semantic locator fixtures |
-| **OpenCode (DeepSeek / CLI)** | `opencode` | Batch spec compilation, CLI test runner execution, AST refactoring & selector self-healing | `@opencode/deepseek`, `npx playwright test`, `scripts/tobitests_cli.py` | Executed run artifacts (`.webm`, `.png`), self-healed locators, updated `<project>-state.json` |
+| **Execution Arm / Runner** | `opencode` | Batch spec compilation, CLI test runner execution, AST refactoring & selector self-healing | `@opencode/deepseek`, `npx playwright test`, `scripts/tobitests_cli.py` | Executed run artifacts (`.webm`, `.png`), self-healed locators, updated `<project>-state.json` |
 
 ---
 
@@ -39,8 +44,8 @@ To prevent resource contention (such as simultaneous browser port binding or con
 * `standup_meeting`: Co-orchestration sync in "La Oficina" where all 5 agents gather around the central command table to review P0–P3 bug verdicts and finalize selector self-healing (Step 8).
 
 ### 2. Handoff Lock Contract
-* `activeOrchestrator`: `"antigravity" | "opencode"` — Indicates which orchestrator currently owns execution authority.
-* `handoffReady`: `boolean` — Set to `true` when the active orchestrator completes its assigned pipeline phase and yields control to its peer.
+* `activeOrchestrator`: `"antigravity" | "opencode" | "claude-code" | "cursor" | "codex" | "windsurf" | "custom"` — Indicates which orchestrator currently owns execution authority.
+* `handoffReady`: `boolean` — Set to `true` when the active orchestrator completes its assigned pipeline phase and yields control to its peer (always `false` in Solo Mode).
 * `currentPipelineStep`: `1 | 2 | 3 | 4 | 5 | 6 | 7 | 8` — Tracks progress across the **8-Step Local Autonomous QA Pipeline**.
 
 ---
@@ -61,6 +66,7 @@ All project-specific artifacts live under `workspaces/<project-slug>/`, keeping 
 | Script / Command | Role in Pipeline | Usage Example |
 | :--- | :--- | :--- |
 | `npm run audit:init` (`scripts/tobitests_cli.py`) | **Steps 1–4**: White-box codebase discovery, route extraction, `prd-ground-truth.json` & `test-matrix.json` generation, and `projects.json` registration | `npm run audit:init -- --project my-app --repo ../my-app --url http://localhost:3000` |
+| `scripts/tobitests_cli.py` *(Agent Orchestration)* | **BYOA Controls**: Configure Primary Lead (`--primary`), Secondary Runner (`--secondary`), Solo Mode (`--mode single`), or Swap Roles (`--swap-agents`) | `python scripts/tobitests_cli.py --primary claude-code --secondary opencode --swap-agents` |
 | `npm run audit:run` (`scripts/ingest_playwright_results.py`) | **Steps 6–7**: Executes Playwright (`test-results/report.json`) and automatically updates `web/public/data/<project>-state.json` & `antigravity-live.json` | `npm run audit:run -- --project tobitests --run-playwright` |
 | `scripts/run_deep_audit.py` | **Steps 4–7**: Deep multi-oracle audit runner and evidence synthesizer | `python scripts/run_deep_audit.py --project vetconnect --url http://localhost:5173` |
 | `npm run dev:all` (`scripts/sync_specs.py --watch`) | **Live UI & Spec Watcher**: Runs the Vite React dashboard concurrently with real-time `.spec.ts` synchronization | `npm run dev:all` |
