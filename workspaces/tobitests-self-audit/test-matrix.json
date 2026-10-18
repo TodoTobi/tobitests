@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "1.0.0",
+  "pipelineStep": 4,
+  "orchestrator": "antigravity",
+  "handoffTarget": "opencode",
+  "project": "TobiTests",
+  "totalSuites": 5,
+  "totalTests": 84,
+  "suites": [
+    {
+      "name": "Suite 1: Shell, Navigation & Responsive Layout",
+      "specFile": "tobitests-shell.spec.ts",
+      "testsCount": 18,
+      "passRate": "100%",
+      "duration": "2.4s",
+      "status": "Passed",
+      "description": "Verifica renderizado de la portada, sidebar de navegación, atajos de teclado y adaptación responsive móvil."
+    },
+    {
+      "name": "Suite 2: Virtual Office & Isometric Simulation",
+      "specFile": "tobitests-office.spec.ts",
+      "testsCount": 18,
+      "passRate": "94.4%",
+      "duration": "3.1s",
+      "status": "Failed",
+      "description": "Audita estaciones de agentes en 2.5D, sincronización de actividad, poses cinéticas y feed de telemetría."
+    },
+    {
+      "name": "Suite 3: Bug Tracker, BDD & Diagnostic Studio",
+      "specFile": "tobitests-bugs.spec.ts",
+      "testsCount": 16,
+      "passRate": "100%",
+      "duration": "2.1s",
+      "status": "Passed",
+      "description": "Valida filtrado de incidentes, formateo Gherkin Dado/Cuando/Entonces, exportación de reportes y pestañas de evidencia."
+    },
+    {
+      "name": "Suite 4: Playwright Spec Viewer & Code Syntax",
+      "specFile": "tobitests-specs.spec.ts",
+      "testsCount": 16,
+      "passRate": "100%",
+      "duration": "1.8s",
+      "status": "Passed",
+      "description": "Inspecciona el árbol de archivos de prueba, resaltado de aserciones expect() y copiado al portapapeles."
+    },
+    {
+      "name": "Suite 5: Settings, Telemetry & MCP Connectivity",
+      "specFile": "tobitests-settings.spec.ts",
+      "testsCount": 16,
+      "passRate": "100%",
+      "duration": "2.2s",
+      "status": "Passed",
+      "description": "Comprueba vinculación del workspace local, estado de herramientas MCP y conmutación reactiva de agentes."
+    }
+  ],
+  "bugs": [
+    {
+      "id": "BUG-01",
+      "title": "Divergencia de estado en filtros de telemetría al alternar agentes en La Oficina",
+      "severity": "Alta",
+      "status": "Resolved",
+      "section": "La Oficina / Telemetría",
+      "runId": "#RUN-SELF-01",
+      "agent": "Telemetry Auditor",
+      "assignee": "Equipo Frontend",
+      "date": "16/10/2026",
+      "scenario": "Al alternar entre mesas de agentes en La Oficina, el filtro de telemetría conserva logs del agente previo",
+      "dadoQue": "el operador está en la vista de La Oficina con la simulación en marcha",
+      "cuando": "hace clic en un agente pausado y luego filtra por 'warn'",
+      "entonces": "la consola muestra eventos mezclados del agente anterior sin limpiar el búfer reactivo",
+      "screenshot": "/evidence/bugs/tobi-bug-01-detail.png",
+      "videoUrl": "/evidence/videos/tobitests-bug-01-replay.webm",
+      "doctorVideoUrl": "/evidence/videos/tobitests-self-audit.webm",
+      "resolution": "Resuelto con éxito en rama bugfix/cerco-bug-01-telemetry-divergence mediante inyección de agentId en LogEntry, filtro reactivo por agente y limpieza de búfer sin polución cruzada.",
+      "diagnostic": {
+        "observedFact": "El feed de telemetría acumulaba entradas de puestos inactivos en vez de aislar el stream del agente seleccionado.",
+        "whiteBoxHypothesis": "La interfaz LogEntry y filteredLogs carecían de asociación por agentId y discriminación de búfer reactivo.",
+        "affectedFile": "web/src/components/OfficeView.tsx",
+        "recommendedFix": "Inyección de agentId en LogEntry, filtro reactivo de stream por agente y botón de purga de búfer.",
+        "reproductionSpec": "tobitests-office.spec.ts"
+      }
+    }
+  ]
+}

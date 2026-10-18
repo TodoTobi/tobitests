@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "pipelineStep": 3,
+  "orchestrator": "antigravity",
+  "project": {
+    "name": "TobiTests",
+    "repoPath": ".",
+    "url": "http://localhost:5173",
+    "backendUrl": "ws://localhost:9222 (Playwright CDP)",
+    "branch": "main",
+    "environment": "Dogfooding Local",
+    "lastAudit": "Activo ahora"
+  },
+  "metrics": {
+    "passRate": "100%",
+    "totalRuns": 14,
+    "failedTests": 0,
+    "openBugs": 0,
+    "avgDuration": "0.7s",
+    "activeRun": "#RUN-SELF-01",
+    "totalTests": 84
+  },
+  "oraclesContract": {
+    "layer1Implicit": "Chrome DevTools MCP & Playwright runtime listeners (pageerror, console.error, HTTP >= 400, >3000ms timeouts)",
+    "layer2StateDivergence": "Playwright MCP cross-view and cross-role DOM state machine comparison against source code",
+    "layer3VisualAndA11y": "DOM Snapshot & computed style verification (pointer-events, scrollWidth overflow, Escape modal close, WCAG contrast)"
+  }
+}

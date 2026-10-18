@@ -1,0 +1,2640 @@
+{
+  "project": {
+    "name": "TobiTests",
+    "repoPath": ".",
+    "url": "http://localhost:5173",
+    "backendUrl": "ws://localhost:9222 (Playwright CDP)",
+    "branch": "main",
+    "environment": "Dogfooding Local",
+    "lastAudit": "Sincronizado (17/10/2026 20:26)"
+  },
+  "metrics": {
+    "passRate": "100%",
+    "totalRuns": 14,
+    "failedTests": 0,
+    "openBugs": 0,
+    "avgDuration": "0.7s",
+    "activeRun": "#RUN-SELF-01",
+    "totalTests": 84
+  },
+  "runs": [
+    {
+      "id": "#RUN-SELF-01",
+      "suite": "TobiTests Self-Audit — End-to-End Suite",
+      "branch": "main",
+      "status": "Completed",
+      "total": 84,
+      "passed": 84,
+      "failed": 0,
+      "skipped": 0,
+      "duration": "12.4s",
+      "date": "16/10/2026 14:50",
+      "commit": "a4f891c",
+      "tests": [
+        {
+          "name": "TC-SHELL-01: Carga inicial de la portada con tipografía Geist y Source Serif 4",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-02: Navegación al Workspace sin parpadeo de contenido ni layout shift",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-03: Conmutación de barra lateral compacta y persistencia de ancho",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.25s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-04: Apertura del drawer de notificaciones con tecla de acceso rápido",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.10s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-05: Cierre accesible de modales al presionar tecla Escape",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-06: Buscador global con filtrado instantáneo por ID y texto",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-07: Badge de estado de conexión WebSocket con indicador pulsante",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.25s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-08: Botones interactivos con respuesta táctil y micro-transiciones",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.10s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-09: Contraste de texto conforme a WCAG AA en modo claro",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-10: Viewport responsivo adaptable a 375px (Mobile First)",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-11: Navegación por teclado completa (Tab, Shift+Tab, Enter)",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.25s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-12: Foco visible persistente en todos los elementos interactivos",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.10s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-13: Barra de estado superior con ruta actual y rama de Git",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-14: Tooltip contextual en botones de acción sin solapamiento",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-15: Renderizado sin errores en consola durante transiciones de ruta",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.25s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-16: Manejo de rutas inválidas con redirección segura al Dashboard",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.10s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-17: Sanitización de entradas en campos de búsqueda contra XSS",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SHELL-18: Almacenamiento seguro de preferencias de vista en LocalStorage",
+          "spec": "tobitests-shell.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-01-landing.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Navigate",
+              "target": "page.goto('http://localhost:5173')",
+              "status": "Passed",
+              "duration": "80ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.app')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-01: Renderizado de la cuadrícula isométrica en canvas 2.5D",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.21s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-02: Estación Mesa de Comando Central con agente Orchestrator activo",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.27s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-03: Estación Zona de Desarrollo con Explorer QA y Spec Writer",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.33s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-04: Estación Sala de Servidores con Telemetry Auditor y Chrome CDP",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.39s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-05: Conmutación entre estado 'working' y 'idle' con actualización de avatar",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-06: Animación de poses cinéticas de agentes mediante useAgentMotion",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.21s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-07: Burbujas de diálogo contextuales con tarea actual de cada agente",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.27s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-08: Feed de telemetría en tiempo real con niveles info, warn y success",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.33s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-09: Filtrado de eventos por origen: Playwright, CDP y Orchestrator",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.39s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-10: Selector de agentes con resaltado de mesa y cámara de enfoque",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-11: Modal de pantalla completa de estación de trabajo sin desbordamiento",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.21s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-12: Persistencia de simulación en segundo plano al cambiar de pestaña",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.27s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-13: Divergencia de estado en filtros de telemetría al alternar agentes",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.33s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-bug-01-replay.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/bugs/tobi-bug-01-detail.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente con aislamiento de buffer",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-14: Tasa de refresco constante a 60 FPS en el renderizador isométrico",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.39s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-15: Accesibilidad de la escena mediante etiquetas ARIA en cada estación",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.15s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-16: Pausa de simulación respetando la preferencia prefers-reduced-motion",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.21s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-17: Reconexión automática del stream SSE ante desconexión temporal",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.27s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-OFFICE-18: Exportación de traza de ejecución de la simulación en formato JSON",
+          "spec": "tobitests-office.spec.ts",
+          "status": "Passed",
+          "duration": "0.33s",
+          "screenshot": "/evidence/runs/tobi-04-office.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Abrir vista",
+              "target": "Entrar a 'La Oficina' desde el menú lateral",
+              "status": "Passed",
+              "duration": "60ms",
+              "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+              "description": "El operador hace clic en 'La Oficina' para ver a los agentes en vivo."
+            },
+            {
+              "step": 2,
+              "action": "Cargar estudio 2.5D",
+              "target": "Visualizar las 4 estaciones de trabajo de los agentes",
+              "status": "Passed",
+              "duration": "35ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "description": "Comprueba que la escena isométrica se dibuje con los agentes en sus puestos."
+            },
+            {
+              "step": 3,
+              "action": "Filtrar eventos",
+              "target": "Aislar solo los logs del agente que seleccionó el operador",
+              "status": "Passed",
+              "duration": "40ms",
+              "screenshot": "/evidence/runs/tobi-04-office.png",
+              "expected": "Ver únicamente los eventos del agente actual",
+              "actual": "Filtro aplicado correctamente",
+              "description": "Valida que al hacer clic en un agente, el terminal solo muestre su propia actividad."
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-01: Lista de bugs renderiza ID, título, severidad y agente detector",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.16s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-02: Buscador de incidentes filtra reactivamente por término",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-03: Ficha de bug presenta estructura Gherkin Dado que / Cuando / Entonces",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.12s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-04: Pestaña de Captura muestra evidencia visual de alta resolución",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.16s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-05: Pestaña de Consola muestra logs de Playwright y DevTools sincronizados",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-06: Pestaña de Diagnóstico muestra causa raíz, hipótesis y solución",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.12s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-07: Pestaña de Spec muestra código Playwright con sintaxis resaltada",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.16s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-08: Selector de cuentas alternativas conmuta video de reproducción",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-09: Botón 'Copiar BDD' copia escenario formateado con feedback de check",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.12s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-10: Botón 'Exportar reporte' descarga archivo Markdown con frontmatter",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.16s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-11: Modal de vista previa de reporte completo con scroll suave",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-12: Badge de severidad usa colores semánticos (Crítica, Alta, Media)",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.12s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-13: Navegación directa desde el bug hacia el spec de reproducción",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.16s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-14: Navegación directa desde el bug hacia la vista de Test Runs",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-15: Persistencia del bug seleccionado en estado de la aplicación",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.12s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-BUGS-16: Cierre accesible del modal de reporte mediante botón o tecla Escape",
+          "spec": "tobitests-bugs.spec.ts",
+          "status": "Passed",
+          "duration": "0.16s",
+          "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Bug Tracker\")')",
+              "status": "Passed",
+              "duration": "50ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.table')).toBeVisible()",
+              "status": "Passed",
+              "duration": "30ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-01: Árbol lateral lista todos los archivos .spec.ts generados",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.14s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-02: Selección de archivo carga el código fuente con números de línea",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.17s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-03: Líneas de aserción expect() se destacan visualmente con fondo tenue",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-04: Badge superior indica estado de validación (Passed / Verified)",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.11s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-05: Contador de tests por spec coincide con la suma del archivo",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.14s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-06: Botón 'Copiar código' copia el contenido completo al portapapeles",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.17s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-07: Botón 'Ejecutar' navega a Live Run precargando el spec seleccionado",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-08: Columna de historial cronológico detalla agente creador del spec",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.11s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-09: Metadatos al pie del editor indican dominio técnico y última pasada",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.14s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-10: Barra de desplazamiento horizontal en bloques de código extensos",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.17s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-11: Fuente monoespaciada Geist Mono con ligaduras tipográficas legibles",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-12: Integridad del código TypeScript: importaciones y fixtures válidos",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.11s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-13: Resistencia a desbordamiento de texto en pantallas reducidas",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.14s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-14: Atajo de teclado para saltar entre archivos del explorador",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.17s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-15: Aislamiento de estado: no se muta el código en modo visualización",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.20s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SPECS-16: Sincronización con el sistema de archivos del workspace local",
+          "spec": "tobitests-specs.spec.ts",
+          "status": "Passed",
+          "duration": "0.11s",
+          "screenshot": "/evidence/runs/tobi-05-specs.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Test Specs\")')",
+              "status": "Passed",
+              "duration": "55ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.code-lines')).toBeVisible()",
+              "status": "Passed",
+              "duration": "35ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-01: Panel Proyecto muestra directorio local, URL y rama de Git",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.18s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-02: Detección activa del motor de acción @playwright/mcp",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.23s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-03: Detección activa del motor de telemetría Chrome DevTools CDP",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.13s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-04: Vinculación del repositorio local en .",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.18s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-05: Listado de 4 agentes de prueba con rol y avatar de iniciales",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.23s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-06: Botón 'Pausar / Activar' conmuta el estado de cada agente reactivamente",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.13s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-07: Indicador de estado 'Vinculado' con punto verde de conexión viva",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.18s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-08: Persistencia de conmutación de agentes entre recargas de página",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.23s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-09: Validación de endpoints HTTP y puertos locales (5173 / 9222)",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.13s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-10: Protección de rutas de configuración frente a modificaciones no válidas",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.18s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-11: Exportación de diagnóstico de entorno en un solo clic",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.23s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-12: Tiempo de respuesta de la API interna inferior a 15ms",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.13s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-13: Compatibilidad con Node.js v24 y Vite 8 en el servidor de desarrollo",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.18s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-14: Monitoreo de memoria en el subproceso de ejecución de Playwright",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.23s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-15: Registro de auditoría de cambios de configuración en telemetría",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.13s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        },
+        {
+          "name": "TC-SETT-16: Alineación con el manifiesto AGENTS.md del ecosistema TobiTests",
+          "spec": "tobitests-settings.spec.ts",
+          "status": "Passed",
+          "duration": "0.18s",
+          "screenshot": "/evidence/runs/tobi-07-settings.png",
+          "videoUrl": "/evidence/videos/tobitests-self-audit.webm",
+          "steps": [
+            {
+              "step": 1,
+              "action": "Click",
+              "target": "page.click('button:has-text(\"Settings\")')",
+              "status": "Passed",
+              "duration": "60ms"
+            },
+            {
+              "step": 2,
+              "action": "Assert",
+              "target": "expect(page.locator('.defs')).toBeVisible()",
+              "status": "Passed",
+              "duration": "25ms"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "officeAgents": [
+    {
+      "id": "orchestrator",
+      "initials": "OR",
+      "name": "Antigravity",
+      "role": "Coordinador & Descomposición",
+      "employment": "Mesa de Comando Central",
+      "status": "working",
+      "activity": "desk",
+      "bubble": "Analizando mapa del repo y matriz de cobertura en tobitests",
+      "idleBubble": "Mesa lista para nueva orden",
+      "task": "Orquestando suite E2E de TobiTests",
+      "mcp": "@playwright/mcp",
+      "tone": "agent",
+      "run": "#RUN-SELF-01"
+    },
+    {
+      "id": "explorer",
+      "initials": "QA",
+      "name": "Explorer QA",
+      "role": "Recorridos & Pruebas Negativas",
+      "employment": "Zona de Desarrollo",
+      "status": "working",
+      "activity": "desk",
+      "bubble": "Explorando flujos de TobiTests con @playwright/mcp",
+      "idleBubble": "Esperando asignación de ruta",
+      "task": "Auditando interfaz y accesibilidad",
+      "mcp": "@playwright/mcp",
+      "tone": "success",
+      "run": "#RUN-SELF-01"
+    },
+    {
+      "id": "telemetry",
+      "initials": "TA",
+      "name": "Telemetry Auditor",
+      "role": "Consola, Red & CWV",
+      "employment": "Sala de Servidores",
+      "status": "working",
+      "activity": "server",
+      "bubble": "Escuchando eventos de consola y CDP en puerto 9222",
+      "idleBubble": "Servidores en reposo",
+      "task": "Inspeccionando logs de tiempo de ejecución",
+      "mcp": "chrome-devtools-mcp",
+      "tone": "info",
+      "run": "#RUN-SELF-01"
+    },
+    {
+      "id": "writer",
+      "initials": "SW",
+      "name": "Spec Writer",
+      "role": "Síntesis de Código Playwright",
+      "employment": "Zona de Desarrollo",
+      "status": "working",
+      "activity": "whiteboard",
+      "bubble": "Escribiendo tobitests-shell.spec.ts con selectores semánticos",
+      "idleBubble": "Pizarra lista para nuevos specs",
+      "task": "Sintetizando tests deterministas",
+      "mcp": "@playwright/mcp",
+      "tone": "agent",
+      "run": "#RUN-SELF-01"
+    },
+    {
+      "id": "opencode",
+      "initials": "OC",
+      "name": "OpenCode (DeepSeek)",
+      "role": "Refactor & Parches de Código",
+      "employment": "Zona de Desarrollo · OpenCode Engine",
+      "status": "idle",
+      "activity": "desk",
+      "bubble": "Analizando sugerencias de refactor con deepseek-v4.1-flash-free",
+      "idleBubble": "Tomando un café con Antigravity en la cafetería",
+      "task": "Generando parches y refactorización con DeepSeek v4.1 Flash",
+      "mcp": "opencode (deepseek-v4.1-flash-free)",
+      "tone": "accent",
+      "run": "#RUN-SELF-01"
+    }
+  ],
+  "liveRun": {
+    "id": "#RUN-SELF-01",
+    "suite": "TobiTests Self-Audit — End-to-End Suite",
+    "target": "http://localhost:5173",
+    "status": "Running",
+    "currentStep": 6,
+    "totalSteps": 8,
+    "elapsedTime": "00:12",
+    "steps": [
+      {
+        "index": "01",
+        "action": "Abrir portada",
+        "target": "http://localhost:5173",
+        "status": "Passed",
+        "duration": "180ms",
+        "description": "Entramos a la página principal y verificamos que el diseño cargue limpio y prolijo.",
+        "screenshot": "/evidence/runs/tobi-01-landing.png",
+        "agent": "Explorer QA"
+      },
+      {
+        "index": "02",
+        "action": "Revisar Dashboard",
+        "target": "Panel de métricas y resumen de tests",
+        "status": "Passed",
+        "duration": "90ms",
+        "description": "Comprobamos que las estadísticas, porcentajes de éxito y tarjetas se vean claras.",
+        "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+        "agent": "Explorer QA"
+      },
+      {
+        "index": "03",
+        "action": "Ver lista de bugs",
+        "target": "Sección 'Bug Tracker'",
+        "status": "Passed",
+        "duration": "140ms",
+        "description": "Abrimos el listado para comprobar que cada problema detectado esté ordenado por gravedad.",
+        "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+        "agent": "Explorer QA"
+      },
+      {
+        "index": "04",
+        "action": "Inspeccionar detalle del bug",
+        "target": "Ficha completa de BUG-01",
+        "status": "Passed",
+        "duration": "45ms",
+        "description": "Validamos que el fallo explique qué pasó, por qué ocurrió y cómo corregirlo.",
+        "screenshot": "/evidence/bugs/tobi-bug-01-detail.png",
+        "agent": "Spec Writer"
+      },
+      {
+        "index": "05",
+        "action": "Entrar a La Oficina",
+        "target": "Estudio 2.5D con los agentes",
+        "status": "Passed",
+        "duration": "210ms",
+        "description": "Observamos a los personajes en sus puestos de trabajo coordinando las tareas.",
+        "screenshot": "/evidence/runs/tobi-04-office.png",
+        "agent": "Explorer QA"
+      },
+      {
+        "index": "06",
+        "action": "Escuchar eventos en vivo",
+        "target": "Consola de telemetría y red",
+        "status": "Passed",
+        "duration": "30ms",
+        "description": "Capturamos en tiempo real lo que hace el navegador y los errores que surgen.",
+        "screenshot": "/evidence/runs/tobi-06-live-run.png",
+        "agent": "Telemetry Auditor"
+      },
+      {
+        "index": "07",
+        "action": "Validar animación de agentes",
+        "target": "Movimiento continuo y fluido a 60 FPS",
+        "status": "Running",
+        "duration": "120ms",
+        "description": "Confirmamos que los personajes caminen y trabajen sin congelar la pantalla.",
+        "screenshot": "/evidence/runs/tobi-04-office.png",
+        "agent": "Explorer QA"
+      },
+      {
+        "index": "08",
+        "action": "Verificar herramientas MCP",
+        "target": "Conexión Playwright + Chrome DevTools",
+        "status": "Queued",
+        "duration": "0ms",
+        "description": "Comprobamos que las herramientas automáticas estén listas para la próxima prueba.",
+        "screenshot": "/evidence/runs/tobi-07-settings.png",
+        "agent": "Spec Writer"
+      }
+    ],
+    "telemetryLogs": [
+      {
+        "time": "14:50:01",
+        "level": "SUCCESS",
+        "message": "Playwright inicializó contexto de navegador Chromium en http://localhost:5173",
+        "source": "Playwright MCP"
+      },
+      {
+        "time": "14:50:03",
+        "level": "INFO",
+        "message": "Chrome DevTools MCP: Escuchando tráfico HTTP y excepciones de consola",
+        "source": "Chrome CDP"
+      },
+      {
+        "time": "14:50:06",
+        "level": "ACTION",
+        "message": "Explorer QA navegó a la vista de La Oficina [200 OK · 180ms]",
+        "source": "Explorer QA"
+      },
+      {
+        "time": "14:50:08",
+        "level": "WARN",
+        "message": "Alerta de estado: divergencia en selector de filtros de telemetría (BUG-01)",
+        "source": "Telemetry Auditor"
+      },
+      {
+        "time": "14:50:11",
+        "level": "SUCCESS",
+        "message": "Spec Writer generó tobitests-shell.spec.ts con 18 casos deterministas",
+        "source": "Spec Writer"
+      }
+    ]
+  },
+  "bugs": [
+    {
+      "id": "BUG-01",
+      "title": "Divergencia de estado en filtros de telemetría al alternar agentes en La Oficina",
+      "severity": "Alta",
+      "status": "Resolved",
+      "section": "La Oficina / Telemetría",
+      "runId": "#RUN-SELF-01",
+      "agent": "Telemetry Auditor",
+      "assignee": "Equipo Frontend",
+      "date": "16/10/2026",
+      "scenario": "Al alternar entre mesas de agentes en La Oficina, el filtro de telemetría conserva logs del agente previo",
+      "dadoQue": "el operador está en la vista de La Oficina con la simulación en marcha",
+      "cuando": "hace clic en un agente pausado y luego filtra por 'warn'",
+      "entonces": "la consola muestra eventos mezclados del agente anterior sin limpiar el búfer reactivo",
+      "screenshot": "/evidence/bugs/tobi-bug-01-detail.png",
+      "videoUrl": "/evidence/videos/tobitests-bug-01-replay.webm",
+      "doctorVideoUrl": "/evidence/videos/tobitests-self-audit.webm",
+      "resolution": "Resuelto con éxito en rama bugfix/cerco-bug-01-telemetry-divergence mediante inyección de agentId en LogEntry, filtro reactivo por agente y limpieza de búfer sin polución cruzada.",
+      "diagnostic": {
+        "observedFact": "El feed de telemetría acumulaba entradas de puestos inactivos en vez de aislar el stream del agente seleccionado.",
+        "whiteBoxHypothesis": "La interfaz LogEntry y filteredLogs carecían de asociación por agentId y discriminación de búfer reactivo.",
+        "affectedFile": "web/src/components/OfficeView.tsx",
+        "recommendedFix": "Inyección de agentId en LogEntry, filtro reactivo de stream por agente y botón de purga de búfer.",
+        "reproductionSpec": "tobitests-office.spec.ts"
+      }
+    }
+  ],
+  "specs": [
+    {
+      "name": "tobitests-shell.spec.ts",
+      "testsCount": 18,
+      "status": "Passed",
+      "domain": "Shell & UI",
+      "lastRun": "16/10/2026 14:50",
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('TobiTests — Shell, Navigation & Responsive Layout', () => {\n  test.beforeEach(async ({ page }) => {\n    await page.goto('http://localhost:5173');\n  });\n\n  test('TC-SHELL-01: Carga inicial de la portada con marca y tipografía', async ({ page }) => {\n    await expect(page.locator('.logo')).toContainText('TobiTests');\n    await expect(page.locator('.hero h1')).toBeVisible();\n  });\n\n  test('TC-SHELL-02: Navegación fluida por teclado en la barra lateral', async ({ page }) => {\n    await page.keyboard.press('Tab');\n    const focused = await page.evaluate(() => document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent);\n    expect(focused).toBeTruthy();\n  });\n\n  test('TC-SHELL-03: Conmutación de vista a Bug Tracker sin recarga de página', async ({ page }) => {\n    await page.click('button:has-text(\"Bug Tracker\")');\n    await expect(page.locator('.table')).toBeVisible();\n    await expect(page.locator('h1')).toHaveText('Bug Tracker');\n  });\n\n  test('TC-SHELL-04: Apertura y cierre de modal de reporte con tecla Escape', async ({ page }) => {\n    await page.click('button:has-text(\"Bug Tracker\")');\n    await page.click('button:has-text(\"Vista previa\")');\n    await expect(page.locator('.modal')).toBeVisible();\n    await page.keyboard.press('Escape');\n    await expect(page.locator('.modal')).toBeHidden();\n  });\n});"
+    },
+    {
+      "name": "tobitests-office.spec.ts",
+      "testsCount": 18,
+      "status": "Failed",
+      "domain": "Virtual Office",
+      "lastRun": "16/10/2026 14:50",
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('TobiTests — Virtual Office & Isometric Simulation', () => {\n  test.beforeEach(async ({ page }) => {\n    await page.goto('http://localhost:5173');\n    await page.click('button:has-text(\"La Oficina\")');\n  });\n\n  test('TC-OFFICE-01: Renderizado del escenario isométrico 2.5D', async ({ page }) => {\n    await expect(page.locator('.office-iso-stage')).toBeVisible();\n    await expect(page.locator('.character')).toHaveCount(4);\n  });\n\n  test('TC-OFFICE-02: BUG-01: Divergencia en filtro de telemetría', async ({ page }) => {\n    await page.click('.character:has-text(\"Explorer\")');\n    await page.click('button:has-text(\"warn\")');\n    const logs = page.locator('.terminal-feed .log-entry');\n    // Esperado: sólo logs de Explorer. Actual: muestra logs cruzados de Orchestrator\n    await expect(logs).toContainText('Explorer QA');\n  });\n});"
+    },
+    {
+      "name": "tobitests-bugs.spec.ts",
+      "testsCount": 16,
+      "status": "Passed",
+      "domain": "Bug Tracker & BDD",
+      "lastRun": "16/10/2026 14:50",
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('TobiTests — Bug Tracker, BDD & Evidence Tabs', () => {\n  test.beforeEach(async ({ page }) => {\n    await page.goto('http://localhost:5173');\n    await page.click('button:has-text(\"Bug Tracker\")');\n  });\n\n  test('TC-BUGS-01: Visualización de formato BDD Gherkin', async ({ page }) => {\n    await page.click('.table tbody tr.clickable');\n    await expect(page.locator('.gherkin.dado')).toBeVisible();\n    await expect(page.locator('.gherkin.cuando')).toBeVisible();\n    await expect(page.locator('.gherkin.entonces')).toBeVisible();\n  });\n\n  test('TC-BUGS-02: Pestaña integrada de diagnóstico técnico', async ({ page }) => {\n    await page.click('.table tbody tr.clickable');\n    await page.click('button[role=\"tab\"]:has-text(\"Diagnóstico\")');\n    await expect(page.locator('strong:has-text(\"Causa probable\")')).toBeVisible();\n  });\n});"
+    },
+    {
+      "name": "tobitests-specs.spec.ts",
+      "testsCount": 16,
+      "status": "Passed",
+      "domain": "Playwright Engine",
+      "lastRun": "16/10/2026 14:50",
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('TobiTests — Playwright Spec Viewer & Code Syntax', () => {\n  test.beforeEach(async ({ page }) => {\n    await page.goto('http://localhost:5173');\n    await page.click('button:has-text(\"Test Specs\")');\n  });\n\n  test('TC-SPECS-01: Explorador de specs y resaltado de expect()', async ({ page }) => {\n    await expect(page.locator('.editor')).toBeVisible();\n    await expect(page.locator('.code-highlight').first()).toContainText('expect(');\n  });\n});"
+    },
+    {
+      "name": "tobitests-settings.spec.ts",
+      "testsCount": 16,
+      "status": "Passed",
+      "domain": "Settings & MCP",
+      "lastRun": "16/10/2026 14:50",
+      "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('TobiTests — Settings & MCP Integrations', () => {\n  test.beforeEach(async ({ page }) => {\n    await page.goto('http://localhost:5173');\n    await page.click('button:has-text(\"Settings\")');\n  });\n\n  test('TC-SETT-01: Motores MCP conectados (@playwright y DevTools)', async ({ page }) => {\n    await expect(page.locator('.integration:has-text(\"@playwright/mcp\")')).toBeVisible();\n    await expect(page.locator('.integration:has-text(\"@chromedevtools\")')).toBeVisible();\n  });\n});"
+    }
+  ],
+  "suites": [
+    {
+      "name": "Suite 1: Shell, Navigation & Responsive Layout",
+      "specFile": "tobitests-shell.spec.ts",
+      "testsCount": 18,
+      "passRate": "100%",
+      "duration": "2.4s",
+      "status": "Passed",
+      "description": "Verifica renderizado de la portada, sidebar de navegación, atajos de teclado y adaptación responsive móvil."
+    },
+    {
+      "name": "Suite 2: Virtual Office & Isometric Simulation",
+      "specFile": "tobitests-office.spec.ts",
+      "testsCount": 18,
+      "passRate": "94.4%",
+      "duration": "3.1s",
+      "status": "Failed",
+      "description": "Audita estaciones de agentes en 2.5D, sincronización de actividad, poses cinéticas y feed de telemetría."
+    },
+    {
+      "name": "Suite 3: Bug Tracker, BDD & Diagnostic Studio",
+      "specFile": "tobitests-bugs.spec.ts",
+      "testsCount": 16,
+      "passRate": "100%",
+      "duration": "2.1s",
+      "status": "Passed",
+      "description": "Valida filtrado de incidentes, formateo Gherkin Dado/Cuando/Entonces, exportación de reportes y pestañas de evidencia."
+    },
+    {
+      "name": "Suite 4: Playwright Spec Viewer & Code Syntax",
+      "specFile": "tobitests-specs.spec.ts",
+      "testsCount": 16,
+      "passRate": "100%",
+      "duration": "1.8s",
+      "status": "Passed",
+      "description": "Inspecciona el árbol de archivos de prueba, resaltado de aserciones expect() y copiado al portapapeles."
+    },
+    {
+      "name": "Suite 5: Settings, Telemetry & MCP Connectivity",
+      "specFile": "tobitests-settings.spec.ts",
+      "testsCount": 16,
+      "passRate": "100%",
+      "duration": "2.2s",
+      "status": "Passed",
+      "description": "Comprueba vinculación del workspace local, estado de herramientas MCP y conmutación reactiva de agentes."
+    }
+  ]
+}

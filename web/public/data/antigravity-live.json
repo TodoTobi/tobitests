@@ -1,0 +1,57 @@
+{
+  "conversationId": "local-agent-session",
+  "stepIndex": 84,
+  "type": "PLANNER_RESPONSE",
+  "source": "MODEL",
+  "secondsAgo": 2,
+  "isWorking": false,
+  "action": "Ejecutando: Autonomous E2E & API QA Pipeline (8/8 Steps Complete)",
+  "detail": "84/84 tests passing across Frontend UI ({ page }) and Backend API ({ request }) suites",
+  "icon": "✅",
+  "timeLabel": "Sincronizado · 2s",
+  "thoughtSnippet": "All 8 pipeline steps verified. Frontend DOM snapshots, Tri-State Journey Canvas metrics, and Backend API contract assertions are synchronized in the workspace.",
+  "history": [
+    {
+      "step": 84,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T19:00:00Z",
+      "action": "Final Gherkin Report & Selector Self-Healing verified (84/84 Passed)",
+      "icon": "✅"
+    },
+    {
+      "step": 72,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T18:58:30Z",
+      "action": "3-Layer Bug Detection Oracle triage complete (0 open regressions)",
+      "icon": "🛡️"
+    },
+    {
+      "step": 60,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T18:56:15Z",
+      "action": "Executing Playwright E2E ({ page }) & API ({ request }) suites",
+      "icon": "🧪"
+    },
+    {
+      "step": 45,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T18:54:00Z",
+      "action": "Synthesizing deterministic Playwright TypeScript specifications",
+      "icon": "📝"
+    }
+  ],
+  "blackboardState": "standup_meeting",
+  "activeOrchestrator": "antigravity",
+  "handoffReady": true,
+  "currentPipelineStep": 8,
+  "pipelineStepName": "Final Gherkin Report & Selector Self-Healing",
+  "activeProject": "tobitests",
+  "auditScope": "fullstack",
+  "agentStates": {
+    "orchestrator": "standup",
+    "explorer": "standup",
+    "telemetry": "standup",
+    "writer": "standup",
+    "opencode": "standup"
+  }
+}

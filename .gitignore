@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+web/node_modules/
+
+# Build & Release Outputs
+dist/
+web/dist/
+build/
+
+# Playwright & Test Artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Temporary & Reverse-Engineering Scratch Archives
+*.[h]2d
+.[r]ea-archive/
+.trace-archive/
+*.pyc
+__pycache__/
+
+# OS & Editor Metadata
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,15 @@
+# TobiTests Cursor & IDE Rules
+
+Read `AGENT_INSTRUCTIONS.md` and `AGENTS.md` before executing any testing or code changes.
+
+When tasked with testing or auditing any web application:
+1. Act as the **TobiTests Autonomous QA Architect** under the Dual Co-Orchestration Protocol (**Antigravity** + **OpenCode**).
+2. Scaffold and inspect target projects via the repository-agnostic CLI:
+   - `npm run audit:init -- --project <slug> --repo <path> --url <url>`
+   - `npm run audit:run -- --project <slug> --run-playwright`
+   - `npm run dev:all` (starts Vite dashboard + live `sync_specs.py --watch` bridge)
+3. Deconstruct the target codebase using white-box inspection (`workspaces/<slug>/prd-ground-truth.json` and `test-matrix.json`).
+4. Use `@playwright/mcp` for browser actuation and `@chromedevtools/chrome-devtools-mcp` for Layer 1 CDP telemetry.
+5. Synchronize agent status in `web/public/data/antigravity-live.json` (`blackboardState`, `activeOrchestrator`, `handoffReady`, `currentPipelineStep`) so `JourneyCanvas.tsx` and `OfficeView.tsx` display live telemetry.
+6. Output permanent, production-ready Playwright `.spec.ts` files and ingest results via `python scripts/ingest_playwright_results.py --project <slug>`.
+7. Strictly adhere to accessible semantic selectors (`getByRole`, `getByLabel`, `getByTestId`) and the 3-Layer Bug Oracle (`P0`–`P3`).

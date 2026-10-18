@@ -1,0 +1,40 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "name": "tobitests-autonomous-qa-engine",
+  "version": "3.0.0",
+  "description": "Local-First Autonomous Multi-Agent QA & E2E Testing Engine (Antigravity + OpenCode Co-Orchestration)",
+  "instructions": [
+    "AGENT_INSTRUCTIONS.md",
+    "AGENTS.md",
+    "docs/ARCHITECTURE.md"
+  ],
+  "scripts": {
+    "audit:init": "python scripts/tobitests_cli.py init",
+    "audit:run": "python scripts/ingest_playwright_results.py",
+    "audit:deep": "python scripts/run_deep_audit.py",
+    "sync:watch": "python scripts/sync_specs.py --watch",
+    "dev:all": "npm run dev:all"
+  },
+  "blackboard": {
+    "path": "web/public/data/antigravity-live.json",
+    "orchestratorId": "opencode",
+    "ownedPipelineSteps": [5, 6, 8],
+    "states": [
+      "idle",
+      "exploring",
+      "writing_specs",
+      "auditing_telemetry",
+      "standup_meeting"
+    ]
+  },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "@chromedevtools/chrome-devtools-mcp@latest"]
+    }
+  }
+}

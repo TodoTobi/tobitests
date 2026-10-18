@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "pipelineStep": 3,
+  "orchestrator": "antigravity",
+  "project": {
+    "name": "VetConnect",
+    "repoPath": "../vetconnect-demo",
+    "url": "http://localhost:5173",
+    "backendUrl": "http://localhost:3001",
+    "branch": "main",
+    "environment": "Local Monorepo",
+    "lastAudit": "Activo ahora"
+  },
+  "metrics": {
+    "passRate": "99.1%",
+    "totalRuns": 1,
+    "failedTests": 1,
+    "openBugs": 4,
+    "avgDuration": "1.2s",
+    "activeRun": "#RUN-01",
+    "totalTests": 108
+  },
+  "oraclesContract": {
+    "layer1Implicit": "Chrome DevTools MCP & Playwright runtime listeners (pageerror, console.error, HTTP >= 400, >3000ms timeouts)",
+    "layer2StateDivergence": "Playwright MCP cross-view and cross-role DOM state machine comparison against source code",
+    "layer3VisualAndA11y": "DOM Snapshot & computed style verification (pointer-events, scrollWidth overflow, Escape modal close, WCAG contrast)"
+  }
+}
