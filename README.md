@@ -3,7 +3,12 @@
 # TobiTests 🚀
 ### Autonomous Multi-Agent E2E QA & Visual Office Telemetry Framework
 
-[English](README.md) • [Español](README.es.md) • [Português](README.pt.md) • [简体中文](README.zh.md)
+<p align="center">
+  <a href="./README.md"><img src="https://img.shields.io/badge/Language-English-blue?style=flat-square" alt="English"></a>
+  <a href="./README.es.md"><img src="https://img.shields.io/badge/Documentaci%C3%B3n-Espa%C3%B1ol-orange?style=flat-square" alt="Español"></a>
+  <a href="./README.pt.md"><img src="https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-Portugu%C3%AAs-green?style=flat-square" alt="Português"></a>
+  <a href="./README.zh.md"><img src="https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-red?style=flat-square" alt="简体中文"></a>
+</p>
 
 [![Playwright](https://img.shields.io/badge/Playwright-v1.64+-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Playwright_%2B_DevTools-blueviolet?logo=anthropic&logoColor=white)](https://modelcontextprotocol.io/)
@@ -13,6 +18,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
+
+> [!TIP]
+> 🌐 **Read this in other languages / Leer en otros idiomas:**
+> * 🇪🇸 **[Español (README.es.md)](./README.es.md)** — Documentación completa en Español
+> * 🇧🇷 **[Português (README.pt.md)](./README.pt.md)** — Documentação em Português
+> * 🇨🇳 **[简体中文 (README.zh.md)](./README.zh.md)** — 完整中文文档
+> * 🇺🇸 **English (README.md)** — Default English version
 
 > **"A 100% local, open-source autonomous QA & diagnostics studio. Combine White-Box codebase intelligence, Playwright MCP actuation, Chrome DevTools CDP telemetry, and a real-time 2.5D Agent Office—with zero cloud quotas."**
 
