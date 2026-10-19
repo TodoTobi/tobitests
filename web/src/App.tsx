@@ -2223,8 +2223,24 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
 }
 
 export default function App() {
-  const [view, setView] = useState<AppView>("landing");
+  const [view, setView] = useState<AppView>(() => {
+    try {
+      const saved = localStorage.getItem("tobitests_current_view");
+      if (saved && ["dashboard", "journey", "test-runs", "run-detail", "live-run", "bug-tracker", "bug-detail", "office", "specs", "suites", "integrations", "settings"].includes(saved)) {
+        return saved as AppView;
+      }
+    } catch (e) {}
+    return "dashboard";
+  });
   const tobi = useTobiState();
-  if (view === "landing") return <Landing openDashboard={() => setView("dashboard")} openOffice={() => setView("office")} tobi={tobi} />;
-  return <Operations view={view} navigate={setView} onHome={() => setView("landing")} tobi={tobi} />;
+
+  const handleNavigate = (v: AppView) => {
+    setView(v);
+    try {
+      localStorage.setItem("tobitests_current_view", v);
+    } catch (e) {}
+  };
+
+  if (view === "landing") return <Landing openDashboard={() => handleNavigate("dashboard")} openOffice={() => handleNavigate("office")} tobi={tobi} />;
+  return <Operations view={view} navigate={handleNavigate} onHome={() => handleNavigate("landing")} tobi={tobi} />;
 }

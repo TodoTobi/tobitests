@@ -247,7 +247,9 @@ function tobiTestsBridgePlugin(): Plugin {
                 handoffReady: parsed.handoffReady,
                 currentPipelineStep: parsed.currentPipelineStep,
                 pipelineStepName: parsed.pipelineStepName,
-                activeProject: parsed.activeProject,
+                activeProject: (parsed.activeProject && (parsed.activeProject === 'tobitests' || fs.existsSync(path.resolve(__dirname, `./public/data/${parsed.activeProject}-state.json`))))
+                  ? parsed.activeProject
+                  : 'tobitests',
                 auditScope: parsed.auditScope,
                 orchestrationConfig: parsed.orchestrationConfig,
                 agentStates: parsed.agentStates,
@@ -558,18 +560,31 @@ function tobiTestsBridgePlugin(): Plugin {
           return;
         }
 
-        if (req.url === '/api/state' && req.method === 'POST') {
+        if (req.url?.startsWith('/api/state') && req.method === 'POST') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
           req.on('end', () => {
             try {
-              fs.writeFileSync(stateFilePath, body, 'utf8');
-              try {
-                fs.writeFileSync(path.resolve(__dirname, './public/data/tobi-state.json'), body, 'utf8');
-              } catch (e) {}
               const parsed = JSON.parse(body);
+              const projectName = (parsed?.project?.name || '').toLowerCase();
+              const isTobi = projectName.includes('tobi') || projectName === '';
+
+              if (isTobi) {
+                fs.writeFileSync(stateFilePath, body, 'utf8');
+                try {
+                  fs.writeFileSync(path.resolve(__dirname, './public/data/tobi-state.json'), body, 'utf8');
+                  fs.writeFileSync(path.resolve(__dirname, './public/data/tobitests-state.json'), body, 'utf8');
+                } catch (e) {}
+              } else {
+                const slug = projectName.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'custom';
+                const destPath = path.resolve(__dirname, `./public/data/${slug}-state.json`);
+                fs.writeFileSync(destPath, body, 'utf8');
+              }
+
               sseClients.forEach(client => {
-                client.write(`data: ${JSON.stringify({ type: 'UPDATE', payload: parsed })}\n\n`);
+                try {
+                  client.write(`data: ${JSON.stringify({ type: 'UPDATE', payload: parsed })}\n\n`);
+                } catch (e) {}
               });
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ ok: true }));

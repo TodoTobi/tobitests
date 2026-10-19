@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import tobiData from '../data/tobi-state.json';
-import vetData from '../data/vetconnect-state.json';
 
 export type AuditScope = 'frontend' | 'backend' | 'fullstack';
 
@@ -675,32 +674,40 @@ export function useTobiState() {
     })),
   ];
 
-  const [activeProjectId, setActiveProjectId] = useState<string>(() => {
-    const saved = localStorage.getItem("tobitests_active_project") || "tobitests";
+  const resolvedInitialProjectId = (() => {
+    let saved = "tobitests";
+    try {
+      saved = localStorage.getItem("tobitests_active_project") || "tobitests";
+    } catch (e) {}
+
     let deletedList: string[] = [];
     try {
       const d = localStorage.getItem("tobitests_deleted_projects");
       if (d) deletedList = JSON.parse(d);
     } catch (e) {}
 
-    if (!deletedList.includes(saved)) {
-      return saved;
-    }
-    const all = [
-      ...DEFAULT_PROJECTS,
-      ...(() => {
-        try {
-          const s = localStorage.getItem("tobitests_projects_v1") || localStorage.getItem("tobitests_custom_projects");
-          return s ? JSON.parse(s) : [];
-        } catch (e) { return []; }
-      })(),
-    ];
-    const candidate = all.find((p) => !deletedList.includes(p.id));
-    return candidate ? candidate.id : "tobitests";
-  });
+    let customList: ProjectOption[] = [];
+    try {
+      const s = localStorage.getItem("tobitests_projects_v1") || localStorage.getItem("tobitests_custom_projects");
+      if (s) customList = JSON.parse(s);
+    } catch (e) {}
+
+    const all = [...DEFAULT_PROJECTS, ...customList];
+    const candidate = all.find((p) => p.id === saved && !deletedList.includes(p.id));
+    if (candidate) return candidate.id;
+
+    const firstValid = all.find((p) => !deletedList.includes(p.id));
+    const fallbackId = firstValid ? firstValid.id : "tobitests";
+    try {
+      localStorage.setItem("tobitests_active_project", fallbackId);
+    } catch (e) {}
+    return fallbackId;
+  })();
+
+  const [activeProjectId, setActiveProjectId] = useState<string>(resolvedInitialProjectId);
 
   const [state, setState] = useState<TobiState>(() => {
-    const saved = localStorage.getItem("tobitests_active_project") || "tobitests";
+    const saved = resolvedInitialProjectId;
     const savedScopes = getSavedScopeMap();
     const resolvedScope: AuditScope = savedScopes[saved] || "fullstack";
 
@@ -721,8 +728,8 @@ export function useTobiState() {
       } catch (e) {}
     }
 
-    const raw = (saved === "vetconnect" ? vetData : tobiData) as unknown as TobiState;
-    const enriched = ensureBuiltInDualScopeData(raw, saved, resolvedScope);
+    const raw = tobiData as unknown as TobiState;
+    const enriched = ensureBuiltInDualScopeData(raw, "tobitests", resolvedScope);
     const idleAgents = (enriched.officeAgents || []).map((a) => ({
       ...a,
       status: "idle",
@@ -731,6 +738,12 @@ export function useTobiState() {
     const openBugsCount = (enriched.bugs || []).filter((b: any) => b.status !== "Resolved" && b.status !== "Closed").length;
     return {
       ...enriched,
+      project: {
+        ...enriched.project,
+        name: "TobiTests",
+        url: "http://localhost:5180",
+        environment: "Dogfooding Local",
+      },
       officeAgents: idleAgents,
       metrics: {
         ...enriched.metrics,
@@ -960,8 +973,8 @@ export function useTobiState() {
       return;
     }
 
-    const raw = (projectId === "vetconnect" ? vetData : tobiData) as unknown as TobiState;
-    const enriched = ensureBuiltInDualScopeData(raw, projectId, resolvedScope);
+    const raw = tobiData as unknown as TobiState;
+    const enriched = ensureBuiltInDualScopeData(raw, "tobitests", resolvedScope);
     const idleAgents = (enriched.officeAgents || []).map((a) => ({
       ...a,
       status: "idle",
@@ -970,6 +983,12 @@ export function useTobiState() {
     const openBugsCount = (enriched.bugs || []).filter((b: any) => b.status !== "Resolved" && b.status !== "Closed").length;
     setState({
       ...enriched,
+      project: {
+        ...enriched.project,
+        name: "TobiTests",
+        url: "http://localhost:5180",
+        environment: "Dogfooding Local",
+      },
       officeAgents: idleAgents,
       metrics: {
         ...enriched.metrics,
@@ -1084,23 +1103,30 @@ export function useTobiState() {
       localStorage.setItem("tobitests_projects_v1", JSON.stringify(updated));
       localStorage.setItem("tobitests_deleted_projects", JSON.stringify(nextDeleted));
       localStorage.removeItem(`tobitests_state_${projectId}`);
+      const customStatesRaw = localStorage.getItem("tobitests_custom_states_v1");
+      if (customStatesRaw) {
+        const customStates = JSON.parse(customStatesRaw);
+        delete customStates[projectId];
+        localStorage.setItem("tobitests_custom_states_v1", JSON.stringify(customStates));
+      }
     } catch (e) {}
 
-    if (activeProjectId === projectId) {
-      const remaining = [
-        ...DEFAULT_PROJECTS.filter((p) => !nextDeleted.includes(p.id)),
-        ...updated.filter((p) => !nextDeleted.includes(p.id)),
-      ];
-      if (remaining.length > 0) {
-        switchProject(remaining[0].id);
-      }
+    if (activeProjectId === projectId || updated.length === 0 || !updated.some(p => p.id === activeProjectId)) {
+      switchProject("tobitests");
+    } else {
+      switchProject(updated[0].id);
     }
   }, [customProjects, deletedProjects, activeProjectId, switchProject]);
 
   const restoreDefaultProjects = useCallback(() => {
     setDeletedProjects([]);
+    setCustomProjects([]);
     try {
       localStorage.removeItem("tobitests_deleted_projects");
+      localStorage.removeItem("tobitests_custom_projects");
+      localStorage.removeItem("tobitests_projects_v1");
+      localStorage.removeItem("tobitests_custom_states_v1");
+      localStorage.setItem("tobitests_active_project", "tobitests");
     } catch (e) {}
     switchProject("tobitests");
   }, [switchProject]);
@@ -1396,6 +1422,20 @@ Entonces ${bug.entonces}
   const runLiveAudit = useCallback((overrideScope?: AuditScope) => {
     const activeSc = overrideScope || auditScope;
     setAllAgentsMode("working");
+    setState((prev) => ({
+      ...prev,
+      liveRun: {
+        ...prev.liveRun,
+        status: "Running",
+        suite: `Exploración E2E en Curso (${activeSc.toUpperCase()})`,
+        telemetryLogs: [
+          { time: new Date().toLocaleTimeString(), level: "ACTION", message: `Iniciando auditoría ${activeSc.toUpperCase()} en ${state.project.url || "puerto local"}`, source: "ORCHESTRATOR" },
+          { time: new Date().toLocaleTimeString(), level: "ACTION", message: `Lanzando Chromium headless bajo los 3 Oráculos`, source: "PLAYWRIGHT" },
+          { time: new Date().toLocaleTimeString(), level: "info", message: `Monitoreando consola, red y layout`, source: "DEVTOOLS_CDP" },
+          ...(prev.liveRun?.telemetryLogs || []),
+        ],
+      },
+    }));
     try {
       fetch("/api/audit/trigger", {
         method: "POST",
