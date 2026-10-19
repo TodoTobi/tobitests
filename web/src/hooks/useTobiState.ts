@@ -1166,6 +1166,7 @@ export function useTobiState() {
     // Check if active project has completed runs on disk to hydrate immediately on mount
     const currentActive = localStorage.getItem("tobitests_active_project") || activeProjectId;
     if (currentActive && currentActive.startsWith("custom-")) {
+      const cleanSlug = currentActive.replace(/^custom-/, "");
       const candidates = [
         `/api/state?project=${encodeURIComponent(currentActive)}`,
         `/data/${currentActive}-state.json`,
