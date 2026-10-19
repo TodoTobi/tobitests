@@ -949,8 +949,8 @@ export function useTobiState() {
         } catch (e) {}
       }
 
-      // Proactively fetch real ingested runs from /data/<projectId>-state.json
-      fetch(`/data/${projectId}-state.json`)
+      // Proactively fetch real ingested runs from /api/state?project=
+      fetch(`/api/state?project=${encodeURIComponent(projectId)}`)
         .then(async (res) => {
           if (res.ok) {
             const serverState = await res.json();
@@ -1166,8 +1166,11 @@ export function useTobiState() {
     // Check if active project has completed runs on disk to hydrate immediately on mount
     const currentActive = localStorage.getItem("tobitests_active_project") || activeProjectId;
     if (currentActive && currentActive.startsWith("custom-")) {
-      const cleanSlug = currentActive.replace(/^custom-/, '');
-      const candidates = [`/data/${currentActive}-state.json`, `/data/${cleanSlug}-state.json`];
+      const candidates = [
+        `/api/state?project=${encodeURIComponent(currentActive)}`,
+        `/data/${currentActive}-state.json`,
+        `/data/${cleanSlug}-state.json`,
+      ];
       candidates.forEach((url) => {
         fetch(url)
           .then(async (res) => {

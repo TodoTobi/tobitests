@@ -389,11 +389,34 @@ function tobiTestsBridgePlugin(): Plugin {
         if (req.url === '/api/audit/trigger' && req.method === 'POST') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
-          req.on('end', () => {
+          req.on('end', async () => {
             try {
               const payload = JSON.parse(body || '{}');
               const proj = payload.project || 'tobitests';
-              const targetUrl = payload.url || 'http://localhost:5173';
+              const rawUrl = payload.url || 'http://localhost:5173';
+              let targetUrl = rawUrl;
+              try {
+                const u = new URL(rawUrl);
+                if (u.hostname === 'localhost') {
+                  const port = parseInt(u.port, 10) || 80;
+                  const testHost = (h: string): Promise<boolean> =>
+                    new Promise((res) => {
+                      const s = net.createConnection({ host: h, port, timeout: 200 }, () => {
+                        s.destroy();
+                        res(true);
+                      });
+                      s.on('error', () => { s.destroy(); res(false); });
+                      s.on('timeout', () => { s.destroy(); res(false); });
+                    });
+                  if (await testHost('127.0.0.1')) {
+                    u.hostname = '127.0.0.1';
+                    targetUrl = u.toString().replace(/\/$/, '');
+                  } else if (await testHost('::1')) {
+                    u.hostname = '[::1]';
+                    targetUrl = u.toString().replace(/\/$/, '');
+                  }
+                }
+              } catch (e) {}
               const repo = payload.repoPath || '.';
               const scope = payload.auditScope || 'fullstack';
 

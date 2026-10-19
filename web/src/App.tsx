@@ -1053,14 +1053,14 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
         </div>
         <div className="media" style={{ borderBottom: 0 }}>
           {mode === "screenshot" ? (
-            step?.screenshot ? (
+            (step?.screenshot || tobi.state.runs[0]?.tests?.find(t => t.screenshot)?.screenshot) ? (
               <>
-                <img src={step.screenshot} alt={step.description || "Ejecución en vivo"} />
+                <img src={step?.screenshot || tobi.state.runs[0]?.tests?.find(t => t.screenshot)?.screenshot} alt={step?.description || "Ejecución en vivo"} />
                 <div className="hud">
-                  <div><Badge tone="agent"><Icon name="spark" size="sm" />{step.agent || "Explorer QA"}</Badge></div>
-                  <strong>Paso {step.index} · {step.action}</strong>
-                  <code>{step.target}</code>
-                  <small>{step.description}</small>
+                  <div><Badge tone="agent"><Icon name="spark" size="sm" />{step?.agent || "Explorer QA"}</Badge></div>
+                  <strong>Paso {step?.index || 1} · {step?.action || "Test"}</strong>
+                  <code>{step?.target || project.url}</code>
+                  <small>{step?.description}</small>
                 </div>
               </>
             ) : (
@@ -1075,10 +1075,10 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
               </div>
             )
           ) : (
-            (liveRun.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : null)) ? (
+            (liveRun.videoUrl || step?.videoUrl || tobi.state.runs[0]?.tests?.find(t => t.videoUrl)?.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : null)) ? (
               <video
-                key={liveRun.videoUrl || tobi.activeProjectId}
-                src={liveRun.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : "")}
+                key={step?.videoUrl || liveRun.videoUrl || tobi.activeProjectId}
+                src={step?.videoUrl || liveRun.videoUrl || tobi.state.runs[0]?.tests?.find(t => t.videoUrl)?.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : "")}
                 controls
                 autoPlay
                 loop

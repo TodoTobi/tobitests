@@ -5,10 +5,11 @@ const isCustomTarget = targetUrl !== 'http://localhost:5180' && !targetUrl.inclu
 
 export default defineConfig({
   testDir: './specs',
+  timeout: 45000,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 2,
+  workers: 1,
   reporter: [
     ['list'],
     ['html', { open: 'never' }],
@@ -16,7 +17,7 @@ export default defineConfig({
   ],
   use: {
     baseURL: targetUrl,
-    trace: 'on',
+    trace: 'retain-on-failure',
     screenshot: 'on',
     video: 'on',
   },

@@ -18,9 +18,37 @@ import datetime
 import json
 import os
 import re
+import socket
 import sys
+import urllib.parse
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+
+def resolve_fastest_url(url_str: str) -> str:
+    try:
+        parsed = urllib.parse.urlparse(url_str)
+        if parsed.hostname == "localhost":
+            port = parsed.port or 80
+            s4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s4.settimeout(0.15)
+            try:
+                s4.connect(("127.0.0.1", port))
+                s4.close()
+                return url_str.replace("localhost", "127.0.0.1")
+            except Exception:
+                pass
+            s6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            s6.settimeout(0.15)
+            try:
+                s6.connect(("::1", port))
+                s6.close()
+                return url_str.replace("localhost", "[::1]")
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return url_str
 
 PIPELINE_STEPS: Dict[int, str] = {
     1: "Bootstrap & Port/Stack Discovery",
@@ -378,6 +406,7 @@ def generate_workspace_artifacts(
     audit_scope: str = "fullstack",
     force_clean: bool = False,
 ) -> Tuple[Path, Path, Path]:
+    url = resolve_fastest_url(url)
     ws_dir = repo_root / "workspaces" / project_slug
     ws_dir.mkdir(parents=True, exist_ok=True)
     public_data_dir = repo_root / "web" / "public" / "data"
