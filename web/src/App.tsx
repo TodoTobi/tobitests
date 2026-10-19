@@ -1021,7 +1021,7 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
   const [mode, setMode] = useState<"screenshot" | "video">("screenshot");
   const { liveRun, project } = tobi.state;
   const step = liveRun.steps[selected] || liveRun.steps[0];
-  const pct = Math.round(((liveRun.currentStep + 1) / liveRun.totalSteps) * 100);
+  const pct = liveRun.totalSteps > 0 ? Math.min(100, Math.round(((liveRun.currentStep + 1) / liveRun.totalSteps) * 100)) : (liveRun.status === "Running" ? 50 : 0);
   const logs = liveRun.telemetryLogs.filter((l) => filter === "all" || l.level === filter);
   const stepState = (s: string) => (s === "Passed" ? "passed" : s === "Failed" ? "failed" : s === "Running" ? "running" : "queued");
 
@@ -1039,7 +1039,7 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
       </div>
       <div className="progress">
         <div className="progress-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${pct}%` }} /></div>
-        <strong>{liveRun.currentStep + 1}/{liveRun.totalSteps} pasos</strong>
+        <strong>{liveRun.totalSteps > 0 ? `${Math.min(liveRun.currentStep + 1, liveRun.totalSteps)}/${liveRun.totalSteps} pasos` : (liveRun.status === "Running" ? "Ejecución en curso..." : "0 pasos")}</strong>
         <code>{liveRun.elapsedTime}</code>
       </div>
     </section>

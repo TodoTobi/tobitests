@@ -424,29 +424,73 @@ function tobiTestsBridgePlugin(): Plugin {
 
               // 2. Universal Agent Execution: Synthesize Specs & Run Playwright
               const repoRoot = path.resolve(__dirname, '..');
-              const specFile = `specs/${proj}.spec.ts`;
-              const customSpecFile = `specs/custom-${proj}.spec.ts`;
+              const cleanSlug = proj.replace(/^custom-/, '');
+              const candidates = [
+                `specs/${proj}.spec.ts`,
+                `specs/custom-${cleanSlug}.spec.ts`,
+                `specs/${cleanSlug}.spec.ts`,
+                `specs/custom-${proj}.spec.ts`,
+              ];
               let specTarget: string | null = null;
 
               if (proj !== 'tobitests') {
-                if (fs.existsSync(path.resolve(repoRoot, customSpecFile))) {
-                  specTarget = customSpecFile;
-                } else if (fs.existsSync(path.resolve(repoRoot, specFile))) {
-                  specTarget = specFile;
+                for (const cand of candidates) {
+                  if (fs.existsSync(path.resolve(repoRoot, cand))) {
+                    specTarget = cand;
+                    break;
+                  }
                 }
               }
 
+              const runProcessSafe = (
+                cmd: string,
+                args: string[],
+                customEnv: Record<string, string>,
+                onDone: (code: number | null) => void
+              ) => {
+                const child = spawn(cmd, args, {
+                  cwd: repoRoot,
+                  shell: true,
+                  env: { ...process.env, ...customEnv },
+                });
+                child.stdout?.on('data', (data) => {
+                  console.log(`[Tobi Runner ${cmd}] ${data.toString().trim()}`);
+                });
+                child.stderr?.on('data', (data) => {
+                  console.warn(`[Tobi Runner ${cmd} ERR] ${data.toString().trim()}`);
+                });
+                child.on('error', (err) => {
+                  console.error(`[Tobi Runner ${cmd} ERROR]`, err);
+                  onDone(-1);
+                });
+                child.on('close', (code) => {
+                  console.log(`[Tobi Runner ${cmd}] exited with code ${code}`);
+                  onDone(code);
+                });
+                return child;
+              };
+
               const broadcastUpdate = () => {
-                const projStateFile = path.resolve(__dirname, `./public/data/${proj}-state.json`);
-                if (fs.existsSync(projStateFile)) {
-                  try {
-                    const updatedPayload = JSON.parse(fs.readFileSync(projStateFile, 'utf8'));
-                    sseClients.forEach((client) => {
-                      try {
-                        client.write(`data: ${JSON.stringify({ type: 'UPDATE', payload: updatedPayload })}\n\n`);
-                      } catch (e) {}
-                    });
-                  } catch (e) {}
+                const possibleStateFiles = [
+                  path.resolve(__dirname, `./public/data/${proj}-state.json`),
+                  path.resolve(__dirname, `./public/data/${cleanSlug}-state.json`),
+                ];
+                let updatedPayload = null;
+                for (const sf of possibleStateFiles) {
+                  if (fs.existsSync(sf)) {
+                    try {
+                      updatedPayload = JSON.parse(fs.readFileSync(sf, 'utf8'));
+                      break;
+                    } catch (e) {}
+                  }
+                }
+
+                if (updatedPayload) {
+                  sseClients.forEach((client) => {
+                    try {
+                      client.write(`data: ${JSON.stringify({ type: 'UPDATE', project: proj, payload: updatedPayload })}\n\n`);
+                    } catch (e) {}
+                  });
                 }
 
                 const finalBlackboard = {
@@ -479,8 +523,7 @@ function tobiTestsBridgePlugin(): Plugin {
                   ...(targetSpec ? ['--spec', targetSpec] : []),
                   '--scope', scope,
                 ];
-                const pwProc = spawn('python', ingestArgs, { cwd: repoRoot, stdio: 'pipe' });
-                pwProc.on('close', () => {
+                runProcessSafe('python', ingestArgs, { TARGET_URL: targetUrl, BASE_URL: targetUrl }, () => {
                   broadcastUpdate();
                 });
               };
@@ -500,11 +543,15 @@ function tobiTestsBridgePlugin(): Plugin {
                   '--status', 'exploring',
                   '--step', '1',
                 ];
-                const initProc = spawn('python', initArgs, { cwd: repoRoot, stdio: 'pipe' });
-                initProc.on('close', () => {
-                  const createdSpec = `specs/${proj}.spec.ts`;
-                  const resolvedCreated = fs.existsSync(path.resolve(repoRoot, createdSpec)) ? createdSpec : null;
-                  executePlaywright(resolvedCreated);
+                runProcessSafe('python', initArgs, { TARGET_URL: targetUrl, BASE_URL: targetUrl }, () => {
+                  let foundSpec: string | null = null;
+                  for (const cand of candidates) {
+                    if (fs.existsSync(path.resolve(repoRoot, cand))) {
+                      foundSpec = cand;
+                      break;
+                    }
+                  }
+                  executePlaywright(foundSpec);
                 });
               }
 
@@ -518,7 +565,73 @@ function tobiTestsBridgePlugin(): Plugin {
           return;
         }
 
-        if (req.url === '/api/stream') {
+        if (req.url === '/api/project/delete' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const payload = JSON.parse(body || '{}');
+              const proj = payload.project;
+              if (proj && proj !== 'tobitests' && proj !== 'tobi') {
+                const cleanSlug = proj.replace(/^custom-/, '');
+                const repoRoot = path.resolve(__dirname, '..');
+                // 1. Delete state JSONs
+                [
+                  path.resolve(__dirname, `./public/data/${proj}-state.json`),
+                  path.resolve(__dirname, `./public/data/${cleanSlug}-state.json`),
+                ].forEach((p) => {
+                  if (fs.existsSync(p)) {
+                    try { fs.unlinkSync(p); } catch (e) {}
+                  }
+                });
+                // 2. Delete generated specs
+                [
+                  path.resolve(repoRoot, `specs/${proj}.spec.ts`),
+                  path.resolve(repoRoot, `specs/custom-${cleanSlug}.spec.ts`),
+                  path.resolve(repoRoot, `specs/${cleanSlug}.spec.ts`),
+                  path.resolve(repoRoot, `specs/custom-${proj}.spec.ts`),
+                ].forEach((s) => {
+                  if (fs.existsSync(s)) {
+                    try { fs.unlinkSync(s); } catch (e) {}
+                  }
+                });
+                // 3. Reset live blackboard if active
+                const current = getAntigravityLiveStatus();
+                if (current.activeProject === proj || current.activeProject === cleanSlug) {
+                  const resetLive = {
+                    ...current,
+                    activeProject: 'tobitests',
+                    blackboardState: 'idle',
+                    currentPipelineStep: 1,
+                    pipelineStepName: 'Bootstrap & Port/Stack Discovery',
+                    handoffReady: false,
+                    agentStates: {
+                      orchestrator: 'idle',
+                      explorer: 'idle',
+                      telemetry: 'idle',
+                      writer: 'idle',
+                      opencode: 'idle',
+                    },
+                  };
+                  fs.writeFileSync(publicLivePath, JSON.stringify(resetLive, null, 2), 'utf8');
+                  sseClients.forEach((client) => {
+                    try {
+                      client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: resetLive })}\n\n`);
+                    } catch (e) {}
+                  });
+                }
+              }
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: true, deleted: proj }));
+            } catch (err) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: String(err) }));
+            }
+          });
+          return;
+        }
+
+        if (req.url?.startsWith('/api/stream')) {
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
@@ -527,8 +640,19 @@ function tobiTestsBridgePlugin(): Plugin {
           sseClients.add(res);
           req.on('close', () => sseClients.delete(res));
           try {
-            const raw = fs.readFileSync(stateFilePath, 'utf8');
-            res.write(`data: ${JSON.stringify({ type: 'INIT', payload: JSON.parse(raw) })}\n\n`);
+            const urlObj = new URL(req.url, 'http://localhost');
+            const projParam = urlObj.searchParams.get('project');
+            const targetStateFile = projParam && projParam !== 'tobitests' && projParam !== 'tobi'
+              ? path.resolve(__dirname, `./public/data/${projParam}-state.json`)
+              : stateFilePath;
+
+            if (fs.existsSync(targetStateFile)) {
+              const raw = fs.readFileSync(targetStateFile, 'utf8');
+              res.write(`data: ${JSON.stringify({ type: 'INIT', project: projParam || 'tobitests', payload: JSON.parse(raw) })}\n\n`);
+            } else {
+              const raw = fs.readFileSync(stateFilePath, 'utf8');
+              res.write(`data: ${JSON.stringify({ type: 'INIT', project: 'tobitests', payload: JSON.parse(raw) })}\n\n`);
+            }
             const live = getAntigravityLiveStatus();
             if (live) {
               res.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: live })}\n\n`);

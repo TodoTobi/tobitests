@@ -1109,6 +1109,11 @@ export function useTobiState() {
         delete customStates[projectId];
         localStorage.setItem("tobitests_custom_states_v1", JSON.stringify(customStates));
       }
+      fetch("/api/project/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project: projectId }),
+      }).catch(() => {});
     } catch (e) {}
 
     if (activeProjectId === projectId || updated.length === 0 || !updated.some(p => p.id === activeProjectId)) {
@@ -1158,16 +1163,57 @@ export function useTobiState() {
 
     fetchLiveTelemetry();
 
+    // Check if active project has completed runs on disk to hydrate immediately on mount
+    const currentActive = localStorage.getItem("tobitests_active_project") || activeProjectId;
+    if (currentActive && currentActive.startsWith("custom-")) {
+      const cleanSlug = currentActive.replace(/^custom-/, '');
+      const candidates = [`/data/${currentActive}-state.json`, `/data/${cleanSlug}-state.json`];
+      candidates.forEach((url) => {
+        fetch(url)
+          .then(async (res) => {
+            if (res.ok) {
+              const fresh = await res.json();
+              if (fresh && Array.isArray(fresh.runs) && fresh.runs.length > 0) {
+                setState((prev) => ({
+                  ...fresh,
+                  auditScope: prev.auditScope || fresh.auditScope || "fullstack",
+                  project: { ...fresh.project, auditScope: prev.auditScope || fresh.auditScope || "fullstack" },
+                }));
+                try {
+                  localStorage.setItem(`tobitests_state_${currentActive}`, JSON.stringify(fresh));
+                } catch (e) {}
+              }
+            }
+          })
+          .catch(() => {});
+      });
+    }
+
     try {
-      es = new EventSource('/api/stream');
+      es = new EventSource(`/api/stream?project=${encodeURIComponent(currentActive)}`);
       es.onopen = () => setConnected(true);
       es.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          const currentProjId = localStorage.getItem("tobitests_active_project") || activeProjectId;
           if (data?.type === 'ANTIGRAVITY_LIVE' && data.payload) {
             setAntigravityLive(data.payload);
-          } else if (data?.payload && data?.type !== 'ANTIGRAVITY_LIVE') {
-            setState(data.payload);
+          } else if (data?.type === 'UPDATE' && data.payload) {
+            const updateProj = data.project || data.payload?.project?.id || data.payload?.project?.name;
+            const matches = !updateProj || updateProj === currentProjId || updateProj.replace(/^custom-/, '') === currentProjId.replace(/^custom-/, '');
+            if (matches) {
+              setState(data.payload);
+              if (currentProjId.startsWith("custom-")) {
+                try {
+                  localStorage.setItem(`tobitests_state_${currentProjId}`, JSON.stringify(data.payload));
+                } catch (e) {}
+              }
+            }
+          } else if (data?.type === 'INIT' && data.payload) {
+            const initProj = data.project || 'tobitests';
+            if (initProj === currentProjId || (initProj === 'tobitests' && currentProjId === 'tobitests')) {
+              setState(data.payload);
+            }
           }
         } catch (e) {
           console.warn('[TobiTests Bridge] Parse error:', e);
@@ -1178,7 +1224,8 @@ export function useTobiState() {
         es?.close();
         pollInterval = setInterval(async () => {
           try {
-            const res = await fetch('/api/state');
+            const currentProjId = localStorage.getItem("tobitests_active_project") || activeProjectId;
+            const res = await fetch(`/api/state?project=${encodeURIComponent(currentProjId)}`);
             if (res.ok) {
               const data = await res.json();
               setState(data);
@@ -1186,11 +1233,11 @@ export function useTobiState() {
             }
           } catch (err) {}
           fetchLiveTelemetry();
-        }, 2000);
+        }, 2500);
       };
     } catch (e) {
       console.warn('[TobiTests Bridge] SSE failed, using local data');
-      pollInterval = setInterval(fetchLiveTelemetry, 2000);
+      pollInterval = setInterval(fetchLiveTelemetry, 2500);
     }
 
     return () => {
@@ -1427,7 +1474,15 @@ Entonces ${bug.entonces}
       liveRun: {
         ...prev.liveRun,
         status: "Running",
+        currentStep: 0,
+        totalSteps: 4,
         suite: `Exploración E2E en Curso (${activeSc.toUpperCase()})`,
+        steps: [
+          { index: 1, action: "Entry Point & DOM Readiness", target: state.project.url || "/", status: "Running", description: "Verificando código HTTP < 400 y renderizado del DOM", agent: "Explorer QA" },
+          { index: 2, action: "Runtime Telemetry & Console", target: "Console / CDP", status: "Pending", description: "Auditoría de errores fatales en consola de Chrome", agent: "Telemetry Auditor" },
+          { index: 3, action: "Interactive Surface & Accessibility", target: "DOM Tree", status: "Pending", description: "Detección de botones, enlaces e interacción básica", agent: "Explorer QA" },
+          { index: 4, action: "Viewport Adaptability & Layout", target: "375x812 Viewport", status: "Pending", description: "Prueba responsive y verificación de overflow horizontal", agent: "Spec Writer" },
+        ],
         telemetryLogs: [
           { time: new Date().toLocaleTimeString(), level: "ACTION", message: `Iniciando auditoría ${activeSc.toUpperCase()} en ${state.project.url || "puerto local"}`, source: "ORCHESTRATOR" },
           { time: new Date().toLocaleTimeString(), level: "ACTION", message: `Lanzando Chromium headless bajo los 3 Oráculos`, source: "PLAYWRIGHT" },

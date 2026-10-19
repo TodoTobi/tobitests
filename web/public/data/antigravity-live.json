@@ -1,98 +1,92 @@
 {
   "conversationId": "local-agent-session",
-  "stepIndex": 1230,
-  "type": "PLANNER_RESPONSE",
-  "source": "MODEL",
-  "secondsAgo": 1481,
+  "stepIndex": 1441,
+  "type": "BLACKBOARD_SYNC",
+  "source": "OPENCODE",
+  "secondsAgo": 1,
   "isWorking": true,
-  "action": "En guardia · Mesa de Comando",
-  "detail": "Esperando nuevo requerimiento o consulta",
-  "icon": "☕",
-  "timeLabel": "Standby · 25m",
-  "thoughtSnippet": null,
-  "history": [
-    {
-      "step": 1228,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:37:49Z",
-      "action": "Saving memory to Engram",
-      "icon": "🛠️"
-    },
-    {
-      "step": 1226,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:37:42Z",
-      "action": "Verifying clean git state",
-      "icon": "💻"
-    },
-    {
-      "step": 1223,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:37:37Z",
-      "action": "Checking git push status",
-      "icon": "🛠️"
-    },
-    {
-      "step": 1221,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:37:20Z",
-      "action": "Pushing commit to GitHub",
-      "icon": "💻"
-    },
-    {
-      "step": 1219,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:37:12Z",
-      "action": "Committing changes",
-      "icon": "💻"
-    },
-    {
-      "step": 1217,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:37:05Z",
-      "action": "Verifying web dashboard build",
-      "icon": "💻"
-    },
-    {
-      "step": 1215,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:36:59Z",
-      "action": "Checking staged changes",
-      "icon": "💻"
-    },
-    {
-      "step": 1213,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-19T01:36:53Z",
-      "action": "Staging git changes",
-      "icon": "💻"
-    }
-  ],
-  "blackboardState": "standup_meeting",
+  "action": "Standup de Co-Orquestación · Ingesta Playwright Completada",
+  "detail": "Proyecto: custom-the-ten-thrones-4225 (FULLSTACK) · Paso 8/8: Final Gherkin Report & Selector Self-Healing",
+  "icon": "🤝",
+  "timeLabel": "Standup · Step 8/8",
+  "thoughtSnippet": "Playwright execution report and media artifacts ingested for 'custom-the-ten-thrones-4225' (scope='fullstack'). Blackboard transitioned to standup_meeting (Step 8/8, handoffReady=true).",
+  "blackboardState": "idle",
   "activeOrchestrator": "antigravity",
-  "handoffReady": true,
-  "currentPipelineStep": 8,
-  "pipelineStepName": "Final Gherkin Report & Selector Self-Healing",
+  "handoffReady": false,
+  "currentPipelineStep": 1,
+  "pipelineStepName": "Bootstrap & Port/Stack Discovery",
   "activeProject": "tobitests",
-  "auditScope": "frontend",
-  "orchestrationConfig": {
-    "mode": "dual",
-    "primaryAgent": "antigravity",
-    "secondaryAgent": "opencode",
-    "detectedAgents": [
-      "antigravity",
-      "opencode",
-      "claude-code",
-      "cursor",
-      "windsurf",
-      "custom"
-    ]
-  },
+  "auditScope": "fullstack",
   "agentStates": {
     "orchestrator": "idle",
     "explorer": "idle",
     "telemetry": "idle",
     "writer": "idle",
     "opencode": "idle"
-  }
+  },
+  "history": [
+    {
+      "step": 1441,
+      "type": "PLAYWRIGHT_INGESTION",
+      "time": "2026-10-19T02:35:48Z",
+      "action": "[OPENCODE -> ANTIGRAVITY] Ingested Playwright report.json for 'custom-the-ten-thrones-4225' (scope=fullstack, Step 8 Standup)",
+      "icon": "🤝"
+    },
+    {
+      "step": 1440,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:27:20Z",
+      "action": "Running smoke test to measure time",
+      "icon": "💻"
+    },
+    {
+      "step": 1437,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:27:10Z",
+      "action": "Viewing playwright.config.ts",
+      "icon": "🔍"
+    },
+    {
+      "step": 1435,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:26:56Z",
+      "action": "Killing task-1431",
+      "icon": "🛠️"
+    },
+    {
+      "step": 1433,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:26:26Z",
+      "action": "Viewing Playwright log",
+      "icon": "🔍"
+    },
+    {
+      "step": 1430,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:26:03Z",
+      "action": "Testing Playwright CLI directly on spec",
+      "icon": "💻"
+    },
+    {
+      "step": 1428,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:25:49Z",
+      "action": "Killing stuck task-1419",
+      "icon": "🛠️"
+    },
+    {
+      "step": 1426,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:25:37Z",
+      "action": "Checking running processes",
+      "icon": "💻"
+    },
+    {
+      "step": 1424,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-19T02:25:23Z",
+      "action": "Checking task status",
+      "icon": "🛠️"
+    }
+  ]
 }
