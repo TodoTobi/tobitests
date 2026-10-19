@@ -417,16 +417,24 @@ Fase 5: Validación
               {activeTab === "preview" ? (
                 <div className="viewport-stage">
                   {viewMode === "video" ? (
-                    <video
-                      key={currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "/evidence/videos/doctor-portal-audit.webm")}
-                      src={currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "/evidence/videos/doctor-portal-audit.webm")}
-                      controls
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="stage-video"
-                    />
+                    currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : null) ? (
+                      <video
+                        key={currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "")}
+                        src={currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "")}
+                        controls
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="stage-video"
+                      />
+                    ) : (
+                      <div className="stage-placeholder" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--muted)", gap: 8, padding: 32 }}>
+                        <span style={{ fontSize: 36 }}>🎬</span>
+                        <strong style={{ fontSize: 13, color: "var(--fg)" }}>Sin video registrado para este test</strong>
+                        <span style={{ fontSize: 11 }}>Las grabaciones .webm se generan al ejecutar las pruebas de Playwright con captura de video activa.</span>
+                      </div>
+                    )
                   ) : viewMode === "http" ? (
                     <div
                       className="http-trace-inspector"
@@ -521,21 +529,29 @@ Fase 5: Validación
                       </div>
                     </div>
                   ) : (
-                    <div className="stage-image-wrap">
-                      <img
-                        key={(activeStep as any)?.screenshot || currentTest.screenshot}
-                        src={(activeStep as any)?.screenshot || currentTest.screenshot || (isTobi ? "/evidence/runs/tobi-04-office.png" : "/evidence/runs/05-tutor-dashboard.png")}
-                        alt={currentTest.name}
-                        className="stage-image"
-                      />
-                      {/* Floating Step Badge overlay */}
-                      <div className="stage-floating-step-badge">
-                        <span className="badge-icon">🎯</span>
-                        <span className="badge-text">
-                          Paso #{currentStepIdx + 1}: {activeStep?.action} — {activeStep?.target}
-                        </span>
+                    ((activeStep as any)?.screenshot || currentTest.screenshot || (isTobi ? "/evidence/runs/tobi-04-office.png" : null)) ? (
+                      <div className="stage-image-wrap">
+                        <img
+                          key={(activeStep as any)?.screenshot || currentTest.screenshot}
+                          src={(activeStep as any)?.screenshot || currentTest.screenshot || (isTobi ? "/evidence/runs/tobi-04-office.png" : "")}
+                          alt={currentTest.name}
+                          className="stage-image"
+                        />
+                        {/* Floating Step Badge overlay */}
+                        <div className="stage-floating-step-badge">
+                          <span className="badge-icon">🎯</span>
+                          <span className="badge-text">
+                            Paso #{currentStepIdx + 1}: {activeStep?.action} — {activeStep?.target}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="stage-placeholder" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--muted)", gap: 8, padding: 32 }}>
+                        <span style={{ fontSize: 36 }}>📸</span>
+                        <strong style={{ fontSize: 13, color: "var(--fg)" }}>Sin captura registrada para este paso</strong>
+                        <span style={{ fontSize: 11 }}>Las capturas visuales se graban automáticamente con @playwright/mcp durante la ejecución.</span>
+                      </div>
+                    )
                   )}
 
                   {/* Player Bottom Bar */}

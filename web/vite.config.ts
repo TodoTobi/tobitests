@@ -2,8 +2,10 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import fs from 'node:fs'
+import net from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
+import { spawn } from 'node:child_process'
 
 import siteConfiguration from './.figma/make/site.json'
 
@@ -382,6 +384,138 @@ function tobiTestsBridgePlugin(): Plugin {
           return;
         }
 
+        if (req.url === '/api/audit/trigger' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const payload = JSON.parse(body || '{}');
+              const proj = payload.project || 'tobitests';
+              const targetUrl = payload.url || 'http://localhost:5173';
+              const repo = payload.repoPath || '.';
+              const scope = payload.auditScope || 'fullstack';
+
+              // 1. Immediately wake up all agents on the blackboard
+              const current = getMergedLivePayload() || {};
+              const exploringState = {
+                ...current,
+                blackboardState: 'exploring',
+                isWorking: true,
+                activeProject: proj,
+                auditScope: scope,
+                currentPipelineStep: 1,
+                pipelineStepName: 'Bootstrap & Port/Stack Discovery',
+                agentStates: {
+                  orchestrator: 'working',
+                  explorer: 'working',
+                  telemetry: 'working',
+                  writer: 'working',
+                  opencode: 'working',
+                },
+              };
+              fs.writeFileSync(publicLivePath, JSON.stringify(exploringState, null, 2), 'utf8');
+              sseClients.forEach((client) => {
+                try {
+                  client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: exploringState })}\n\n`);
+                } catch (e) {}
+              });
+
+              // 2. Universal Agent Execution: Synthesize Specs & Run Playwright
+              const repoRoot = path.resolve(__dirname, '..');
+              const specFile = `specs/${proj}.spec.ts`;
+              const customSpecFile = `specs/custom-${proj}.spec.ts`;
+              let specTarget: string | null = null;
+
+              if (proj !== 'tobitests') {
+                if (fs.existsSync(path.resolve(repoRoot, customSpecFile))) {
+                  specTarget = customSpecFile;
+                } else if (fs.existsSync(path.resolve(repoRoot, specFile))) {
+                  specTarget = specFile;
+                }
+              }
+
+              const broadcastUpdate = () => {
+                const projStateFile = path.resolve(__dirname, `./public/data/${proj}-state.json`);
+                if (fs.existsSync(projStateFile)) {
+                  try {
+                    const updatedPayload = JSON.parse(fs.readFileSync(projStateFile, 'utf8'));
+                    sseClients.forEach((client) => {
+                      try {
+                        client.write(`data: ${JSON.stringify({ type: 'UPDATE', payload: updatedPayload })}\n\n`);
+                      } catch (e) {}
+                    });
+                  } catch (e) {}
+                }
+
+                const finalBlackboard = {
+                  ...exploringState,
+                  blackboardState: 'standup_meeting',
+                  currentPipelineStep: 8,
+                  pipelineStepName: 'Final Gherkin Report & Selector Self-Healing',
+                  handoffReady: true,
+                  agentStates: {
+                    orchestrator: 'idle',
+                    explorer: 'idle',
+                    telemetry: 'idle',
+                    writer: 'idle',
+                    opencode: 'idle',
+                  },
+                };
+                fs.writeFileSync(publicLivePath, JSON.stringify(finalBlackboard, null, 2), 'utf8');
+                sseClients.forEach((client) => {
+                  try {
+                    client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: finalBlackboard })}\n\n`);
+                  } catch (e) {}
+                });
+              };
+
+              const executePlaywright = (targetSpec: string | null) => {
+                const ingestArgs = [
+                  'scripts/ingest_playwright_results.py',
+                  '--project', proj,
+                  '--run-playwright',
+                  ...(targetSpec ? ['--spec', targetSpec] : []),
+                  '--scope', scope,
+                ];
+                const pwProc = spawn('python', ingestArgs, { cwd: repoRoot, stdio: 'pipe' });
+                pwProc.on('close', () => {
+                  broadcastUpdate();
+                });
+              };
+
+              if (proj === 'tobitests') {
+                executePlaywright(null);
+              } else if (specTarget) {
+                executePlaywright(specTarget);
+              } else {
+                // Synthesize PRD, Matrix, and physical specs/<proj>.spec.ts via Steps 1-5 first, then run Playwright
+                const initArgs = [
+                  'scripts/tobitests_cli.py',
+                  '--project', proj,
+                  '--repo', repo,
+                  '--url', targetUrl,
+                  '--scope', scope,
+                  '--status', 'exploring',
+                  '--step', '1',
+                ];
+                const initProc = spawn('python', initArgs, { cwd: repoRoot, stdio: 'pipe' });
+                initProc.on('close', () => {
+                  const createdSpec = `specs/${proj}.spec.ts`;
+                  const resolvedCreated = fs.existsSync(path.resolve(repoRoot, createdSpec)) ? createdSpec : null;
+                  executePlaywright(resolvedCreated);
+                });
+              }
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: true, status: 'started', project: proj }));
+            } catch (err) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: String(err) }));
+            }
+          });
+          return;
+        }
+
         if (req.url === '/api/stream') {
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -401,11 +535,22 @@ function tobiTestsBridgePlugin(): Plugin {
           return;
         }
 
-        if (req.url === '/api/state' && req.method === 'GET') {
+        if (req.url?.startsWith('/api/state') && req.method === 'GET') {
           res.setHeader('Content-Type', 'application/json');
           try {
-            const raw = fs.readFileSync(stateFilePath, 'utf8');
-            res.end(raw);
+            const urlObj = new URL(req.url, 'http://localhost');
+            const projParam = urlObj.searchParams.get('project');
+            const targetStateFile = projParam && projParam !== 'tobitests' && projParam !== 'tobi'
+              ? path.resolve(__dirname, `./public/data/${projParam}-state.json`)
+              : stateFilePath;
+
+            if (fs.existsSync(targetStateFile)) {
+              const raw = fs.readFileSync(targetStateFile, 'utf8');
+              res.end(raw);
+            } else {
+              const raw = fs.readFileSync(stateFilePath, 'utf8');
+              res.end(raw);
+            }
           } catch (e) {
             res.statusCode = 500;
             res.end(JSON.stringify({ error: String(e) }));
@@ -436,16 +581,75 @@ function tobiTestsBridgePlugin(): Plugin {
           return;
         }
 
+        if (req.url === '/api/detect-local-ports' && req.method === 'GET') {
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-cache');
+
+          const commonPorts = [5173, 3000, 8080, 8000, 4173, 4200, 5000];
+          const checks = commonPorts.map((p) => {
+            return new Promise<{ port: number; active: boolean }>((resolve) => {
+              const socket = new net.Socket();
+              socket.setTimeout(350);
+              socket.on('connect', () => {
+                socket.destroy();
+                resolve({ port: p, active: true });
+              });
+              socket.on('timeout', () => {
+                socket.destroy();
+                resolve({ port: p, active: false });
+              });
+              socket.on('error', () => {
+                resolve({ port: p, active: false });
+              });
+              socket.connect(p, '127.0.0.1');
+            });
+          });
+
+          Promise.all(checks).then((results) => {
+            const active = results.filter((r) => r.active).map((r) => r.port);
+            res.end(JSON.stringify({ activePorts: active }));
+          });
+          return;
+        }
+
         next();
       });
     }
   };
 }
 
+function isPortAvailable(port: number, host = '127.0.0.1'): Promise<boolean> {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once('error', () => {
+      resolve(false);
+    });
+    server.once('listening', () => {
+      server.close(() => resolve(true));
+    });
+    server.listen(port, host);
+  });
+}
+
+async function resolveDevPort(preferred: number, host = '127.0.0.1'): Promise<number> {
+  for (let i = 0; i < 25; i++) {
+    const target = preferred + i;
+    if (await isPortAvailable(target, host)) {
+      if (i > 0) {
+        console.log(`\n\x1b[33m[TobiTests Port Guard]\x1b[0m Puerto ${preferred} en uso por otra aplicación. Cambiando automáticamente a http://localhost:${target} para evitar colisión.\n`);
+      }
+      return target;
+    }
+  }
+  return preferred;
+}
+
 // Vite config — https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
   const emitSourcemaps = mode === 'development'
+  const preferredPort = parseInt(process.env.PORT || '5180', 10)
+  const resolvedPort = await resolveDevPort(preferredPort)
 
   return {
     base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : '/',
@@ -469,7 +673,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
-      port: parseInt(process.env.PORT || '5173'),
+      port: resolvedPort,
       strictPort: false,
       watch: {
         ignored: [
@@ -479,7 +683,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: {
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
-      port: parseInt(process.env.PORT || '5173'),
+      port: resolvedPort,
     },
   }
 })

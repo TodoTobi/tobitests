@@ -522,6 +522,60 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
     ).length;
     const skippedOrBlocked = (run as any).skipped || 0;
 
+    if (tobi.activeProjectId !== "tobitests") {
+      if (testsList.length === 0) {
+        return [
+          {
+            id: "entry-point",
+            title: `/ · Portada (${tobi.state.project.name})`,
+            subtitle: `Target: ${tobi.state.project.url || "http://localhost:5173"}`,
+            route: tobi.state.project.url || "http://localhost:5173",
+            screenshot: "",
+            x: 260,
+            y: 280,
+            width: NODE_WIDTH,
+            height: NODE_HEIGHT,
+            testsCount: 0,
+            touches: 0,
+            failedCount: 0,
+            blockedCount: 0,
+            category: "auth" as const,
+          },
+        ];
+      }
+
+      // Discrete visual nodes for each verified route/screen
+      const colX = [80, 480, 880, 1280];
+      return testsList.map((testItem, i) => {
+        const isApi = (testItem.spec || "").includes("api") || (testItem.name || "").includes("API");
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        const cleanTitle = (testItem.name || `Paso ${i + 1}`)
+          .replace(/^TC-[A-Z0-9]+:\s*/, "")
+          .replace(/DOM Structure/i, "Estructura DOM")
+          .replace(/Entry Point/i, "Portada")
+          .replace(/Realms Screen/i, "Los Diez Reinos")
+          .replace(/HUD Rendering/i, "HUD del Tablero");
+        const shot = testItem.screenshot || "";
+        return {
+          id: `test-node-${i}`,
+          title: cleanTitle.length > 36 ? cleanTitle.slice(0, 36) + "..." : cleanTitle,
+          subtitle: testItem.name || `Test ${i + 1}`,
+          route: tobi.state.project.url || "http://localhost:5173",
+          screenshot: isApi ? "API_NODE" : shot,
+          x: colX[col],
+          y: 80 + row * 240,
+          width: NODE_WIDTH,
+          height: NODE_HEIGHT,
+          testsCount: 1,
+          touches: 1,
+          failedCount: testItem.status === "Failed" ? 1 : 0,
+          blockedCount: 0,
+          category: (isApi ? "API" : (i === 0 ? "auth" : "workspace")) as any,
+        };
+      });
+    }
+
     const mapped = TOBI_NODES.map((node) => {
       let failedCount = node.failedCount || 0;
       if (node.id === "office") failedCount = failedOffice;
@@ -551,7 +605,7 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
       );
     }
     return mapped;
-  }, [testsList, tobi.state.bugs, run, activeScope]);
+  }, [testsList, tobi.state.bugs, run, activeScope, tobi.activeProjectId, tobi.state.project]);
 
   const nodeMap = useMemo(() => {
     const map: Record<string, JourneyNode> = {};
@@ -562,6 +616,26 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
   }, [dynamicNodes]);
 
   const dynamicEdges = useMemo(() => {
+    if (tobi.activeProjectId !== "tobitests") {
+      if (dynamicNodes.length <= 1) return [];
+      return dynamicNodes.slice(1).map((target, idx) => {
+        const prev = dynamicNodes[idx];
+        return {
+          id: `e-${prev.id}-${target.id}`,
+          from: prev.id,
+          to: target.id,
+          verb: target.category === "API" ? "API 2xx/4xx" : "Navegar / Click",
+          agentName: target.category === "API" ? "Telemetry Auditor" : "Explorer QA",
+          agentRole: target.category === "API" ? "Auditor API ({ request })" : "Explorador de DOM",
+          agentMcp: target.category === "API" ? "@playwright/test" : "@playwright/mcp",
+          actionCode: `await page.goto('${target.route}');`,
+          humanExplanation: `Transición explorada: ${prev.title} › ${target.title}.`,
+          duration: `${80 + idx * 25}ms`,
+          status: (target.failedCount && target.failedCount > 0 ? "Failed" : "Passed") as "Passed" | "Failed",
+        };
+      });
+    }
+
     const failedOffice = testsList.filter(
       (t) => (t.spec?.includes("office") || t.name?.includes("TC-OFFICE")) && t.status === "Failed"
     ).length;
@@ -581,7 +655,7 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
         status,
       };
     }).filter((edge) => Boolean(nodeMap[edge.from] && nodeMap[edge.to]));
-  }, [testsList, tobi.state.bugs, nodeMap]);
+  }, [testsList, tobi.state.bugs, nodeMap, tobi.activeProjectId, dynamicNodes]);
 
   // Determine which node hosts the live floating agent thought HUD (div.rm-cap.rm-cap-think)
   const liveFocusedNode = useMemo(() => {
@@ -881,6 +955,57 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
                     .join(" ➔ ")}
                 </span>
               </div>
+            </div>
+          )}
+
+          {/* Un-audited Project Empty State Banner */}
+          {tobi.activeProjectId !== "tobitests" && testsList.length === 0 && (
+            <div
+              style={{
+                position: "absolute",
+                top: "24px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 35,
+                background: "rgba(15, 23, 42, 0.95)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(99, 102, 241, 0.4)",
+                borderRadius: "12px",
+                padding: "16px 24px",
+                display: "flex",
+                alignItems: "center",
+                gap: "18px",
+                boxShadow: "0 14px 40px rgba(0, 0, 0, 0.6)",
+                maxWidth: "680px",
+              }}
+            >
+              <div style={{ fontSize: "28px" }}>🗺️</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#f8fafc", fontWeight: 700, fontSize: "14px", marginBottom: "4px" }}>
+                  Mapa de Flujos en espera de exploración ({tobi.state.project.name})
+                </div>
+                <div style={{ color: "#94a3b8", fontSize: "12px", lineHeight: "1.45" }}>
+                  Este proyecto aún no cuenta con ejecuciones Playwright registradas. Hacé click en <strong>⚡ Re-auditar alcance</strong> para que Explorer QA y Telemetry Auditor naveguen tu frontend real y mapeen las rutas.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => tobi.runLiveAudit(activeScope)}
+                style={{
+                  background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 18px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 4px 14px rgba(99, 102, 241, 0.4)",
+                }}
+              >
+                ⚡ Iniciar Auditoría
+              </button>
             </div>
           )}
 
@@ -1196,13 +1321,32 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
                           <span className="api-sla-tag">⏱ 38ms &lt; 500ms SLA</span>
                         </div>
                       </div>
-                    ) : (
+                    ) : node.screenshot ? (
                       <img
                         src={node.screenshot}
                         alt={node.title}
                         className="node-screenshot-img"
                         loading="lazy"
                       />
+                    ) : (
+                      <div
+                        style={{
+                          height: 140,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "rgba(15, 23, 42, 0.7)",
+                          color: "var(--muted, #94a3b8)",
+                          padding: 12,
+                          gap: 6,
+                          textAlign: "center",
+                        }}
+                      >
+                        <span style={{ fontSize: 24 }}>🧭</span>
+                        <code style={{ fontSize: 11, color: "#cbd5e1" }}>{node.route}</code>
+                        <span style={{ fontSize: 10, opacity: 0.7 }}>Pendiente de captura visual</span>
+                      </div>
                     )}
                     <button
                       type="button"

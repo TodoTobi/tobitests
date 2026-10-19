@@ -74,9 +74,13 @@ def extract_tests_from_suite(
     default_spec: str,
     default_screenshot: str,
     default_video: str,
+    repo_root: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
     extracted: List[Dict[str, Any]] = []
     spec_file = Path(suite.get("file", default_spec)).name if suite.get("file") else default_spec
+
+    runs_evidence_dir = (repo_root / "web" / "public" / "evidence" / "runs") if repo_root else None
+    videos_evidence_dir = (repo_root / "web" / "public" / "evidence" / "videos") if repo_root else None
 
     for spec in suite.get("specs", []):
         title = spec.get("title", "Unnamed Test")
@@ -84,8 +88,8 @@ def extract_tests_from_suite(
         status_str = "Passed"
         duration_ms = 180
         steps_out: List[Dict[str, Any]] = []
-        screenshot_url = default_screenshot
-        video_url = default_video
+        screenshot_url = ""
+        video_url = ""
 
         if tests:
             t0 = tests[0]
@@ -100,6 +104,29 @@ def extract_tests_from_suite(
                 else:
                     status_str = "Passed"
                 duration_ms = int(r0.get("duration", 180))
+
+                for att in r0.get("attachments", []):
+                    att_path = att.get("path")
+                    att_name = att.get("name", "")
+                    if att_path:
+                        p = Path(att_path)
+                        if p.exists() and repo_root:
+                            if p.suffix == ".png" or att_name == "screenshot":
+                                dest_name = f"pw-{slugify(title)}-{p.name}"
+                                dest_p = runs_evidence_dir / dest_name
+                                try:
+                                    shutil.copy2(p, dest_p)
+                                    screenshot_url = f"/evidence/runs/{dest_name}"
+                                except Exception:
+                                    pass
+                            elif p.suffix == ".webm" or att_name == "video":
+                                dest_name = f"pw-{slugify(title)}-{p.name}"
+                                dest_p = videos_evidence_dir / dest_name
+                                try:
+                                    shutil.copy2(p, dest_p)
+                                    video_url = f"/evidence/videos/{dest_name}"
+                                except Exception:
+                                    pass
 
                 for idx, st in enumerate(r0.get("steps", []), start=1):
                     st_title = st.get("title", "Step")
@@ -154,6 +181,7 @@ def extract_tests_from_suite(
                 default_spec=spec_file,
                 default_screenshot=default_screenshot,
                 default_video=default_video,
+                repo_root=repo_root,
             )
         )
 
@@ -172,9 +200,37 @@ def ingest_report_into_state(
     state_file = data_dir / ("tobi-state.json" if project_slug in ("tobitests", "tobi") else f"{project_slug}-state.json")
 
     if not state_file.exists():
-        fallback = data_dir / "tobi-state.json"
-        if fallback.exists():
-            shutil.copy2(fallback, state_file)
+        clean_state = {
+            "auditScope": audit_scope or "fullstack",
+            "project": {
+                "name": project_slug.replace("-", " ").title(),
+                "repoPath": str(repo_root),
+                "url": "http://localhost:5173",
+                "backendUrl": "ws://localhost:9222 (Playwright + Chrome CDP)",
+                "branch": "main",
+                "environment": "Universal Web Application",
+                "lastAudit": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
+                "auditScope": audit_scope or "fullstack",
+            },
+            "metrics": {
+                "passRate": "0%",
+                "totalRuns": 0,
+                "failedTests": 0,
+                "openBugs": 0,
+                "avgDuration": "0.0s",
+                "activeRun": "#RUN-PW-LIVE",
+                "totalTests": 0,
+            },
+            "journeyMap": {
+                "nodes": [],
+                "edges": [],
+            },
+            "runs": [],
+            "bugs": [],
+            "specs": [],
+            "suites": [],
+        }
+        state_file.write_text(json.dumps(clean_state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     state: Dict[str, Any] = json.loads(state_file.read_text(encoding="utf-8"))
     resolved_scope = audit_scope or state.get("auditScope") or state.get("project", {}).get("auditScope") or "fullstack"
@@ -182,8 +238,8 @@ def ingest_report_into_state(
     if "project" in state and isinstance(state["project"], dict):
         state["project"]["auditScope"] = resolved_scope
 
-    default_shot = copied_screenshots[0] if copied_screenshots else "/evidence/runs/tobi-02-dashboard.png"
-    default_vid = copied_videos[0] if copied_videos else "/evidence/videos/tobitests-self-audit.webm"
+    default_shot = ""
+    default_vid = ""
 
     parsed_tests: List[Dict[str, Any]] = []
     total_duration_ms = 0
@@ -198,6 +254,7 @@ def ingest_report_into_state(
                         default_spec=top_suite.get("file", f"{project_slug}.spec.ts"),
                         default_screenshot=default_shot,
                         default_video=default_vid,
+                        repo_root=repo_root,
                     )
                 )
             stats = report_data.get("stats", {})

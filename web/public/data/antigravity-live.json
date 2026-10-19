@@ -1,80 +1,22 @@
 {
   "conversationId": "local-agent-session",
-  "stepIndex": 521,
-  "type": "PLANNER_RESPONSE",
-  "source": "MODEL",
-  "secondsAgo": 7,
-  "isWorking": true,
-  "action": "Running npm test",
-  "detail": "npm test",
-  "icon": "💻",
-  "timeLabel": "Ejecutando · 7s",
-  "thoughtSnippet": null,
-  "history": [
-    {
-      "step": 521,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:03:14Z",
-      "action": "Running npm test",
-      "icon": "💻"
-    },
-    {
-      "step": 519,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:03:12Z",
-      "action": "Viewing smoke spec",
-      "icon": "🔍"
-    },
-    {
-      "step": 517,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:03:08Z",
-      "action": "Viewing playwright.config.ts",
-      "icon": "🔍"
-    },
-    {
-      "step": 515,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:03:05Z",
-      "action": "Checking git status",
-      "icon": "💻"
-    },
-    {
-      "step": 513,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:03:00Z",
-      "action": "Resetting blackboard status to idle",
-      "icon": "💻"
-    },
-    {
-      "step": 511,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:02:56Z",
-      "action": "Checking git diff for live state",
-      "icon": "💻"
-    },
-    {
-      "step": 509,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:02:53Z",
-      "action": "Checking git status",
-      "icon": "💻"
-    },
-    {
-      "step": 506,
-      "type": "PLANNER_RESPONSE",
-      "time": "2026-10-18T20:02:48Z",
-      "action": "Checking test status",
-      "icon": "🛠️"
-    }
-  ],
+  "stepIndex": 682,
+  "type": "BLACKBOARD_SYNC",
+  "source": "ANTIGRAVITY",
+  "secondsAgo": 1,
+  "isWorking": false,
+  "action": "En guardia · Mesa de Comando",
+  "detail": "Proyecto: demo-store (FRONTEND) · Paso 8/8: Final Gherkin Report & Selector Self-Healing [DUAL MODE]",
+  "icon": "☕",
+  "timeLabel": "Standby · Activo",
+  "thoughtSnippet": "Co-Orchestration Blackboard [ANTIGRAVITY] executing Step 8 (Final Gherkin Report & Selector Self-Healing) in state 'idle' (mode='dual', primary='antigravity') for project 'demo-store'.",
   "blackboardState": "idle",
   "activeOrchestrator": "antigravity",
   "handoffReady": true,
   "currentPipelineStep": 8,
   "pipelineStepName": "Final Gherkin Report & Selector Self-Healing",
-  "activeProject": "tobitests",
-  "auditScope": "fullstack",
+  "activeProject": "demo-store",
+  "auditScope": "frontend",
   "orchestrationConfig": {
     "mode": "dual",
     "primaryAgent": "antigravity",
@@ -94,5 +36,84 @@
     "telemetry": "idle",
     "writer": "idle",
     "opencode": "idle"
-  }
+  },
+  "history": [
+    {
+      "step": 682,
+      "type": "BLACKBOARD_SYNC",
+      "time": "2026-10-19T00:47:07Z",
+      "action": "[ANTIGRAVITY] Step 8/8 (Final Gherkin Report & Selector Self-Healing) · scope=frontend · state=idle · mode=dual",
+      "icon": "☕"
+    },
+    {
+      "step": 681,
+      "type": "PLAYWRIGHT_INGESTION",
+      "time": "2026-10-18T22:38:13Z",
+      "action": "[OPENCODE -> ANTIGRAVITY] Ingested Playwright report.json for 'custom-the-ten-thrones-7034' (scope=frontend, Step 8 Standup)",
+      "icon": "🤝"
+    },
+    {
+      "step": 680,
+      "type": "PLAYWRIGHT_INGESTION",
+      "time": "2026-10-18T22:33:46Z",
+      "action": "[OPENCODE -> ANTIGRAVITY] Ingested Playwright report.json for 'custom-the-ten-thrones-7034' (scope=frontend, Step 8 Standup)",
+      "icon": "🤝"
+    },
+    {
+      "step": 679,
+      "type": "USER_INPUT",
+      "time": "2026-10-18T22:22:37Z",
+      "action": "Mensaje del Operator",
+      "icon": "👤"
+    },
+    {
+      "step": 676,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T22:10:50Z",
+      "action": "Saving memory in Engram",
+      "icon": "🛠️"
+    },
+    {
+      "step": 674,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T22:10:38Z",
+      "action": "Building frontend with new test data",
+      "icon": "💻"
+    },
+    {
+      "step": 672,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T22:10:27Z",
+      "action": "Viewing web/src/data/tobi-state.json lines 30-50",
+      "icon": "🔍"
+    },
+    {
+      "step": 670,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T22:10:16Z",
+      "action": "Viewing tobitests-state.json tests 2 and 3",
+      "icon": "🔍"
+    },
+    {
+      "step": 668,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T22:10:02Z",
+      "action": "Viewing tobitests-state.json latest run",
+      "icon": "🔍"
+    },
+    {
+      "step": 665,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T22:09:47Z",
+      "action": "Ingesting real Playwright test results",
+      "icon": "💻"
+    },
+    {
+      "step": 662,
+      "type": "PLANNER_RESPONSE",
+      "time": "2026-10-18T22:09:37Z",
+      "action": "Waiting for task-657 final test",
+      "icon": "🛠️"
+    }
+  ]
 }

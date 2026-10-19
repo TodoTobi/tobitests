@@ -321,17 +321,7 @@ const DEFAULT_PROJECTS: ProjectOption[] = [
     environment: "Dogfooding Local",
     branch: "main",
     repoPath: ".",
-    url: "http://localhost:5173",
-    auditScope: "fullstack",
-    isCustom: false
-  },
-  {
-    id: "vetconnect",
-    name: "VetConnect",
-    environment: "Staging Local",
-    branch: "main",
-    repoPath: "../vetconnect-demo",
-    url: "http://localhost:3000",
+    url: "http://localhost:5180",
     auditScope: "fullstack",
     isCustom: false
   }
@@ -480,57 +470,29 @@ function ensureBuiltInDualScopeData(raw: TobiState, projectId: string, scope: Au
 }
 
 function createCustomProjectInitialState(proj: ProjectOption): TobiState {
-  const currentDate = new Date().toLocaleDateString("es-AR");
   const scope: AuditScope = proj.auditScope || "fullstack";
   return {
     auditScope: scope,
     project: {
       name: proj.name,
       repoPath: proj.repoPath,
-      url: proj.url || "http://localhost:3000",
-      backendUrl: proj.backendUrl || proj.url || "http://localhost:3000",
+      url: proj.url || "http://localhost:5173",
+      backendUrl: proj.backendUrl || proj.url || "http://localhost:5173",
       branch: proj.branch || "main",
       environment: proj.environment || "Local Workspace",
-      lastAudit: "Recién vinculado",
+      lastAudit: "Pendiente de ejecución",
       auditScope: scope,
     },
     metrics: {
-      passRate: "100%",
-      totalRuns: 1,
+      passRate: "—",
+      totalRuns: 0,
       failedTests: 0,
       openBugs: 0,
-      avgDuration: "12s",
-      activeRun: "#RUN-INIT-01",
+      avgDuration: "—",
+      activeRun: "Ninguno",
+      totalTests: 0,
     },
-    runs: [
-      {
-        id: "run-init-01",
-        suite: `Baseline Discovery (${scope.toUpperCase()})`,
-        branch: proj.branch || "main",
-        status: "Passed",
-        total: 12,
-        passed: 12,
-        failed: 0,
-        skipped: 0,
-        duration: "12s",
-        date: currentDate,
-        commit: "HEAD",
-        tests: [
-          { name: "TC-UI-01: Verificar estructura del repositorio y árbol de archivos", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.2s" },
-          { name: "TC-UI-02: Inspeccionar package.json y dependencias del proyecto", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "0.8s" },
-          { name: "TC-UI-03: Auditar disponibilidad del puerto local del servicio web", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.5s" },
-          { name: "TC-UI-04: Escanear contratos de rutas UI y componentes principales", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "2.1s" },
-          { name: "TC-UI-05: Verificar árbol DOM de accesibilidad y roles semánticos (a11y)", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "2.4s" },
-          { name: "TC-UI-06: Verificar consistencia visual, responsive y cierre Escape en modales", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.6s" },
-          { name: "TC-UI-07: Comprobar errores en consola y excepciones no capturadas (Layer 1)", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.1s" },
-          { name: "TC-UI-08: Generar fixture inicial de Playwright para testing continuo", spec: "workspace-discovery.spec.ts", status: "Passed", duration: "1.3s" },
-          { name: "TC-API-01: GET /api/health devuelve 200 OK, application/json y latencia < 500ms", spec: "workspace-api.spec.ts", status: "Passed", duration: "0.09s" },
-          { name: "TC-API-02: POST /api/v1/items valida fuzzing 400/422 ante payloads malformados (nunca 500)", spec: "workspace-api.spec.ts", status: "Passed", duration: "0.14s" },
-          { name: "TC-API-03: RBAC 401/403 rechaza tokens JWT expirados o escalación de privilegios", spec: "workspace-api.spec.ts", status: "Passed", duration: "0.11s" },
-          { name: "TC-API-04: Concurrencia Promise.all verifica idempotencia sin race conditions", spec: "workspace-api.spec.ts", status: "Passed", duration: "0.15s" },
-        ],
-      },
-    ],
+    runs: [],
     officeAgents: [
       {
         id: "orchestrator",
@@ -540,12 +502,12 @@ function createCustomProjectInitialState(proj: ProjectOption): TobiState {
         employment: "Coordinador & Descomposición",
         status: "idle",
         activity: "desk",
-        bubble: `Vinculado al workspace de ${proj.name} (${scope}). Listo para orquestar suites.`,
-        idleBubble: `En guardia · Workspace ${proj.name} (${scope}) conectado`,
-        task: `Supervisando auditoría (${scope}) de ${proj.name}`,
+        bubble: `En guardia · Listo para auditar ${proj.name}.`,
+        idleBubble: `En guardia · Workspace ${proj.name} conectado`,
+        task: `Esperando comando de auditoría para ${proj.name}`,
         mcp: "@playwright/mcp",
         tone: "agent",
-        run: "#RUN-INIT-01",
+        run: "—",
       },
       {
         id: "explorer",
@@ -555,12 +517,12 @@ function createCustomProjectInitialState(proj: ProjectOption): TobiState {
         employment: "Exploración de Flujos",
         status: "idle",
         activity: "desk",
-        bubble: `Explorando navegación de ${proj.name} en ${proj.url || "http://localhost:3000"}`,
+        bubble: `Listo para explorar ${proj.name} en ${proj.url || "http://localhost:5173"}.`,
         idleBubble: "Esperando nueva orden de exploración",
-        task: `Mapeando endpoints y recorridos de ${proj.name}`,
+        task: `En espera de escaneo para ${proj.name}`,
         mcp: "@playwright/mcp",
         tone: "success",
-        run: "#RUN-INIT-01",
+        run: "—",
       },
       {
         id: "telemetry",
@@ -570,12 +532,12 @@ function createCustomProjectInitialState(proj: ProjectOption): TobiState {
         employment: "Auditoría de Consola y Red",
         status: "idle",
         activity: "server",
-        bubble: `Monitoreando tráfico de red y consola de ${proj.name}`,
-        idleBubble: "Chrome CDP escuchando eventos de red",
-        task: `Supervisando consola y llamadas API de ${proj.name}`,
+        bubble: `Chrome CDP en standby para escuchar ${proj.url || "http://localhost:5173"}.`,
+        idleBubble: "Chrome CDP en espera",
+        task: `Listo para auditar consola y llamadas de ${proj.name}`,
         mcp: "@chromedevtools/chrome-devtools-mcp",
         tone: "warning",
-        run: "#RUN-INIT-01",
+        run: "—",
       },
       {
         id: "writer",
@@ -585,12 +547,12 @@ function createCustomProjectInitialState(proj: ProjectOption): TobiState {
         employment: "Generación de Tests E2E",
         status: "idle",
         activity: "desk",
-        bubble: `Generando especificaciones .spec.ts para ${proj.name}`,
+        bubble: `Listo para sintetizar specs para ${proj.name} tras el descubrimiento.`,
         idleBubble: "Listo para compilar nuevas suites",
-        task: `Sintetizando tests Playwright para ${proj.name}`,
+        task: `En espera de flujos descubiertos para ${proj.name}`,
         mcp: "@playwright/mcp",
         tone: "agent",
-        run: "#RUN-INIT-01",
+        run: "—",
       },
       {
         id: "opencode",
@@ -600,73 +562,85 @@ function createCustomProjectInitialState(proj: ProjectOption): TobiState {
         employment: "Motor de Refactorización",
         status: "idle",
         activity: "desk",
-        bubble: `Analizando AST de ${proj.name} con DeepSeek v4.1`,
+        bubble: `Modelos cargados en standby para ${proj.name}.`,
         idleBubble: "Modelos cargados en standby",
-        task: `Inspeccionando selectores y tipos de ${proj.name}`,
+        task: `En espera de ejecución para ${proj.name}`,
         mcp: "@opencode/deepseek",
         tone: "info",
-        run: "#RUN-INIT-01",
+        run: "—",
       },
     ],
     liveRun: {
-      id: "run-init-01",
-      suite: `Baseline Discovery (${scope.toUpperCase()})`,
-      target: proj.url || "http://localhost:3000",
-      status: "Completed",
-      currentStep: 8,
-      totalSteps: 8,
-      elapsedTime: "12s",
-      steps: [
-        { index: "01", action: "page.goto", target: proj.url || "http://localhost:3000", status: "Passed", duration: "1.2s", description: `Carga inicial de ${proj.name}` },
-        { index: "02", action: "expect.title", target: proj.name, status: "Passed", duration: "0.8s", description: `Verificación de título y encabezado de ${proj.name}` },
-      ],
+      id: "standby",
+      suite: `Auditoría pendiente (${scope.toUpperCase()})`,
+      target: proj.url || "http://localhost:5173",
+      status: "Pending",
+      currentStep: 0,
+      totalSteps: 0,
+      elapsedTime: "0s",
+      steps: [],
       telemetryLogs: [
-        { time: "14:00:00", level: "info", message: `Workspace vinculado: ${proj.repoPath} (scope=${scope})`, source: "ORCHESTRATOR" },
-        { time: "14:00:02", level: "info", message: `Chrome CDP escuchando en ${proj.url || "http://localhost:3000"}`, source: "DEVTOOLS_CDP" },
+        { time: new Date().toLocaleTimeString(), level: "info", message: `Workspace vinculado: ${proj.repoPath} (${proj.name})`, source: "ORCHESTRATOR" },
+        { time: new Date().toLocaleTimeString(), level: "info", message: `Presioná 'Re-auditar alcance' para que los agentes exploren ${proj.url || "http://localhost:5173"}`, source: "DEVTOOLS_CDP" },
       ],
     },
     bugs: [],
-    specs: [
-      {
-        name: "workspace-discovery.spec.ts",
-        domain: "Frontend UX/UI & DOM",
-        status: "Passed",
-        testsCount: 8,
-        lastRun: currentDate,
-        code: `import { test, expect } from '@playwright/test';\n\ntest.describe('${proj.name} - Frontend UX/UI Discovery', () => {\n  test('TC-UI-01: debe cargar el punto de entrada sin errores en consola', async ({ page }) => {\n    await page.goto('${proj.url || "http://localhost:3000"}');\n    await expect(page).toHaveTitle(/.+/);\n  });\n});`,
-      },
-      {
-        name: "workspace-api.spec.ts",
-        domain: "Backend / REST API ({ request })",
-        status: "Passed",
-        testsCount: 4,
-        lastRun: currentDate,
-        code: `import { test, expect } from '@playwright/test';\n\ntest.describe('${proj.name} - Pure Backend API Contracts', () => {\n  test('TC-API-01: GET /api/health returns 200 OK & application/json (< 500ms)', async ({ request }) => {\n    const res = await request.get('${proj.backendUrl || proj.url || "http://localhost:3000"}/api/health');\n    expect(res.status()).toBeLessThan(500);\n  });\n});`,
-      },
-    ],
-    suites: [
-      {
-        name: "Frontend UX/UI & A11y Smoke Suite",
-        description: `Pruebas visuales de DOM, responsive, modales y accesibilidad para ${proj.name}`,
-        tests: 8,
-        status: "Passed",
-        passRate: "100%",
-        duration: "6.4s",
-        lastRun: currentDate,
-        specFile: "workspace-discovery.spec.ts",
-      },
-      {
-        name: "Backend API Contracts, RBAC & Concurrency ({ request })",
-        description: `Auditoría de endpoints REST 2xx/4xx, esquemas JSON, JWT y concurrencia para ${proj.name}`,
-        tests: 4,
-        status: "Passed",
-        passRate: "100%",
-        duration: "0.49s",
-        lastRun: currentDate,
-        specFile: "workspace-api.spec.ts",
-      },
-    ],
+    specs: [],
+    suites: [],
   };
+}
+
+function sanitizeCustomStateIfLegacy(parsed: any, projectId: string): any {
+  if (!parsed || !projectId.startsWith("custom-")) return parsed;
+  const runs = parsed.runs || [];
+  const hasLegacyMock = runs.some((r: any) =>
+    r.id === "run-init-01" ||
+    r.tests?.some((t: any) => t.id === "TC-UI-01" || (typeof t.name === "string" && t.name.includes("Verificar estructura del repositorio")))
+  );
+  if (hasLegacyMock) {
+    const sanitized: TobiState = {
+      ...parsed,
+      runs: [],
+      specs: [],
+      suites: [],
+      metrics: {
+        ...parsed.metrics,
+        totalRuns: 0,
+        totalTests: 0,
+        passRate: "—",
+        openBugs: 0,
+        failedTests: 0,
+        avgDuration: "—",
+        activeRun: "Ninguno",
+      },
+      liveRun: {
+        id: "standby",
+        suite: `Auditoría pendiente (${(parsed.auditScope || "fullstack").toUpperCase()})`,
+        target: parsed.project?.url || "http://localhost:5173",
+        status: "Pending",
+        currentStep: 0,
+        totalSteps: 0,
+        elapsedTime: "0s",
+        steps: [],
+        telemetryLogs: [
+          { time: new Date().toLocaleTimeString(), level: "info", message: `Workspace vinculado: ${parsed.project?.repoPath || ""} (${parsed.project?.name || "Proyecto"})`, source: "ORCHESTRATOR" },
+          { time: new Date().toLocaleTimeString(), level: "info", message: `Presioná 'Re-auditar alcance' para que los agentes exploren ${parsed.project?.url || "http://localhost:5173"}`, source: "DEVTOOLS_CDP" },
+        ],
+      },
+      bugs: [],
+    };
+    try {
+      localStorage.setItem(`tobitests_state_${projectId}`, JSON.stringify(sanitized));
+      const customStatesRaw = localStorage.getItem("tobitests_custom_states_v1");
+      if (customStatesRaw) {
+        const customStates = JSON.parse(customStatesRaw);
+        customStates[projectId] = sanitized;
+        localStorage.setItem("tobitests_custom_states_v1", JSON.stringify(customStates));
+      }
+    } catch (e) {}
+    return sanitized;
+  }
+  return parsed;
 }
 
 export function useTobiState() {
@@ -679,21 +653,50 @@ export function useTobiState() {
     }
   });
 
+  const [deletedProjects, setDeletedProjects] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("tobitests_deleted_projects");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [scopeMap, setScopeMap] = useState<Record<string, AuditScope>>(() => getSavedScopeMap());
 
   const availableProjects: ProjectOption[] = [
-    ...DEFAULT_PROJECTS.map((p) => ({
+    ...DEFAULT_PROJECTS.filter((p) => !deletedProjects.includes(p.id)).map((p) => ({
       ...p,
       auditScope: scopeMap[p.id] || p.auditScope || "fullstack",
     })),
-    ...customProjects.map((p) => ({
+    ...customProjects.filter((p) => !deletedProjects.includes(p.id)).map((p) => ({
       ...p,
       auditScope: scopeMap[p.id] || p.auditScope || "fullstack",
     })),
   ];
 
   const [activeProjectId, setActiveProjectId] = useState<string>(() => {
-    return localStorage.getItem("tobitests_active_project") || "tobitests";
+    const saved = localStorage.getItem("tobitests_active_project") || "tobitests";
+    let deletedList: string[] = [];
+    try {
+      const d = localStorage.getItem("tobitests_deleted_projects");
+      if (d) deletedList = JSON.parse(d);
+    } catch (e) {}
+
+    if (!deletedList.includes(saved)) {
+      return saved;
+    }
+    const all = [
+      ...DEFAULT_PROJECTS,
+      ...(() => {
+        try {
+          const s = localStorage.getItem("tobitests_projects_v1") || localStorage.getItem("tobitests_custom_projects");
+          return s ? JSON.parse(s) : [];
+        } catch (e) { return []; }
+      })(),
+    ];
+    const candidate = all.find((p) => !deletedList.includes(p.id));
+    return candidate ? candidate.id : "tobitests";
   });
 
   const [state, setState] = useState<TobiState>(() => {
@@ -706,7 +709,8 @@ export function useTobiState() {
       try {
         const cached = localStorage.getItem(`tobitests_state_${saved}`);
         if (cached) {
-          const parsed = JSON.parse(cached);
+          const rawParsed = JSON.parse(cached);
+          const parsed = sanitizeCustomStateIfLegacy(rawParsed, saved);
           const sc = savedScopes[saved] || parsed.auditScope || parsed.project?.auditScope || "fullstack";
           return {
             ...parsed,
@@ -903,32 +907,57 @@ export function useTobiState() {
     const resolvedScope: AuditScope = savedScopes[projectId] || "fullstack";
 
     if (projectId.startsWith("custom-")) {
+      let applied = false;
       try {
         const cached = localStorage.getItem(`tobitests_state_${projectId}`);
         if (cached) {
-          const parsed = JSON.parse(cached);
+          const rawParsed = JSON.parse(cached);
+          const parsed = sanitizeCustomStateIfLegacy(rawParsed, projectId);
           const sc: AuditScope = savedScopes[projectId] || parsed.auditScope || parsed.project?.auditScope || "fullstack";
           setState({
             ...parsed,
             auditScope: sc,
             project: { ...parsed.project, auditScope: sc },
           });
-          return;
+          applied = true;
         }
       } catch (e) {}
 
-      // Fallback: look up in custom projects list
-      try {
-        const savedList = localStorage.getItem("tobitests_projects_v1") || localStorage.getItem("tobitests_custom_projects");
-        const list: ProjectOption[] = savedList ? JSON.parse(savedList) : [];
-        const match = list.find((p) => p.id === projectId);
-        if (match) {
-          const fresh = createCustomProjectInitialState(match);
-          setState(fresh);
-          localStorage.setItem(`tobitests_state_${projectId}`, JSON.stringify(fresh));
-          return;
-        }
-      } catch (e) {}
+      if (!applied) {
+        try {
+          const savedList = localStorage.getItem("tobitests_projects_v1") || localStorage.getItem("tobitests_custom_projects");
+          const list: ProjectOption[] = savedList ? JSON.parse(savedList) : [];
+          const match = list.find((p) => p.id === projectId);
+          if (match) {
+            const fresh = createCustomProjectInitialState(match);
+            setState(fresh);
+            localStorage.setItem(`tobitests_state_${projectId}`, JSON.stringify(fresh));
+          }
+        } catch (e) {}
+      }
+
+      // Proactively fetch real ingested runs from /data/<projectId>-state.json
+      fetch(`/data/${projectId}-state.json`)
+        .then(async (res) => {
+          if (res.ok) {
+            const serverState = await res.json();
+            if (serverState && Array.isArray(serverState.runs) && serverState.runs.length > 0) {
+              const sc: AuditScope = savedScopes[projectId] || serverState.auditScope || "fullstack";
+              const updated = {
+                ...serverState,
+                auditScope: sc,
+                project: { ...serverState.project, auditScope: sc },
+              };
+              setState(updated);
+              try {
+                localStorage.setItem(`tobitests_state_${projectId}`, JSON.stringify(updated));
+              } catch (e) {}
+            }
+          }
+        })
+        .catch(() => {});
+
+      return;
     }
 
     const raw = (projectId === "vetconnect" ? vetData : tobiData) as unknown as TobiState;
@@ -949,7 +978,7 @@ export function useTobiState() {
     });
   }, []);
 
-  const addProject = useCallback((params: { id?: string; name: string; repoPath: string; url?: string; backendUrl?: string; auditScope?: AuditScope; environment?: string; branch?: string; isCustom?: boolean }) => {
+  const addProject = useCallback((params: { id?: string; name: string; repoPath: string; url?: string; backendUrl?: string; auditScope?: AuditScope; environment?: string; branch?: string; isCustom?: boolean; autoRun?: boolean }) => {
     const slug = params.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "proyecto";
     const id = params.id || `custom-${slug}-${Date.now().toString(36)}`;
     const chosenScope: AuditScope = params.auditScope || "fullstack";
@@ -968,14 +997,45 @@ export function useTobiState() {
     saveScopeForProject(id, chosenScope);
     setScopeMap((prev) => ({ ...prev, [id]: chosenScope }));
 
-    const updated = [...customProjects, newProj];
+    if (deletedProjects.includes(id)) {
+      const nextDel = deletedProjects.filter((d) => d !== id);
+      setDeletedProjects(nextDel);
+      try {
+        localStorage.setItem("tobitests_deleted_projects", JSON.stringify(nextDel));
+      } catch (e) {}
+    }
+
+    const updated = [...customProjects.filter((p) => p.id !== id), newProj];
     setCustomProjects(updated);
     try {
       localStorage.setItem("tobitests_custom_projects", JSON.stringify(updated));
       localStorage.setItem("tobitests_projects_v1", JSON.stringify(updated));
     } catch (e) {}
 
-    const initialState = createCustomProjectInitialState(newProj);
+    const shouldAutoRun = params.autoRun !== false;
+    const baseInitialState = createCustomProjectInitialState(newProj);
+    const initialState: TobiState = shouldAutoRun
+      ? {
+          ...baseInitialState,
+          officeAgents: baseInitialState.officeAgents.map((a) => ({
+            ...a,
+            status: "working",
+            task: `Explorando rutas y DOM en ${newProj.url} (@playwright/mcp)`,
+            bubble: `Iniciando auditoría ${chosenScope.toUpperCase()} en ${newProj.url}...`,
+          })),
+          liveRun: {
+            ...baseInitialState.liveRun,
+            status: "Running",
+            suite: `Exploración E2E en Curso (${chosenScope.toUpperCase()})`,
+            telemetryLogs: [
+              { time: new Date().toLocaleTimeString(), level: "ACTION", message: `Workspace vinculado: ${newProj.repoPath} (${newProj.name})`, source: "ORCHESTRATOR" },
+              { time: new Date().toLocaleTimeString(), level: "ACTION", message: `Lanzando navegador Chromium headless hacia ${newProj.url}`, source: "PLAYWRIGHT" },
+              { time: new Date().toLocaleTimeString(), level: "info", message: `Monitoreando consola, red y layout bajo los 3 Oráculos`, source: "DEVTOOLS_CDP" },
+            ],
+          },
+        }
+      : baseInitialState;
+
     try {
       localStorage.setItem(`tobitests_state_${id}`, JSON.stringify(initialState));
       const customStatesRaw = localStorage.getItem("tobitests_custom_states_v1");
@@ -995,21 +1055,55 @@ export function useTobiState() {
         body: JSON.stringify({ project: id, auditScope: chosenScope }),
       }).catch(() => {});
     } catch (e) {}
-  }, [customProjects]);
+
+    if (shouldAutoRun) {
+      try {
+        fetch("/api/audit/trigger", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project: id,
+            auditScope: chosenScope,
+            url: newProj.url,
+            repoPath: newProj.repoPath,
+          }),
+        }).catch(() => {});
+      } catch (e) {}
+    }
+  }, [customProjects, deletedProjects]);
 
   const removeProject = useCallback((projectId: string) => {
     const updated = customProjects.filter((p) => p.id !== projectId);
     setCustomProjects(updated);
+
+    const nextDeleted = Array.from(new Set([...deletedProjects, projectId]));
+    setDeletedProjects(nextDeleted);
+
     try {
       localStorage.setItem("tobitests_custom_projects", JSON.stringify(updated));
       localStorage.setItem("tobitests_projects_v1", JSON.stringify(updated));
+      localStorage.setItem("tobitests_deleted_projects", JSON.stringify(nextDeleted));
       localStorage.removeItem(`tobitests_state_${projectId}`);
     } catch (e) {}
 
     if (activeProjectId === projectId) {
-      switchProject("tobitests");
+      const remaining = [
+        ...DEFAULT_PROJECTS.filter((p) => !nextDeleted.includes(p.id)),
+        ...updated.filter((p) => !nextDeleted.includes(p.id)),
+      ];
+      if (remaining.length > 0) {
+        switchProject(remaining[0].id);
+      }
     }
-  }, [customProjects, activeProjectId, switchProject]);
+  }, [customProjects, deletedProjects, activeProjectId, switchProject]);
+
+  const restoreDefaultProjects = useCallback(() => {
+    setDeletedProjects([]);
+    try {
+      localStorage.removeItem("tobitests_deleted_projects");
+    } catch (e) {}
+    switchProject("tobitests");
+  }, [switchProject]);
 
   useEffect(() => {
     let es: EventSource | null = null;
@@ -1303,13 +1397,18 @@ Entonces ${bug.entonces}
     const activeSc = overrideScope || auditScope;
     setAllAgentsMode("working");
     try {
-      fetch("/api/antigravity/scope", {
+      fetch("/api/audit/trigger", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project: activeProjectId, auditScope: activeSc }),
+        body: JSON.stringify({
+          project: activeProjectId,
+          auditScope: activeSc,
+          url: state.project.url,
+          repoPath: state.project.repoPath,
+        }),
       }).catch(() => {});
     } catch (e) {}
-  }, [activeProjectId, auditScope, setAllAgentsMode]);
+  }, [activeProjectId, auditScope, state.project, setAllAgentsMode]);
 
   const displayOfficeAgents: OfficeAgent[] = useMemo(() => {
     const primaryEngine = SUPPORTED_AGENT_ENGINES[orchestrationConfig.primaryAgent] || SUPPORTED_AGENT_ENGINES.antigravity;
@@ -1385,6 +1484,8 @@ Entonces ${bug.entonces}
     swapAgentRoles,
     toggleSecondaryAgent,
     SUPPORTED_AGENT_ENGINES,
+    deletedProjects,
+    restoreDefaultProjects,
   };
 }
 

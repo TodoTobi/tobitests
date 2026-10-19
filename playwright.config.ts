@@ -2,24 +2,24 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './specs',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 2,
   reporter: [
     ['list'],
     ['html', { open: 'never' }],
     ['json', { outputFile: 'test-results/report.json' }],
   ],
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    baseURL: process.env.BASE_URL || 'http://localhost:5180',
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on',
   },
   webServer: {
     command: 'npm run dev --prefix web',
-    url: 'http://localhost:5173',
+    url: process.env.BASE_URL || 'http://localhost:5180',
     reuseExistingServer: !process.env.CI,
     timeout: 60 * 1000,
   },

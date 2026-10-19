@@ -375,7 +375,7 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi, onO
                       </div>
                       {isSelected && <Icon name="check" size="sm" />}
                     </button>
-                    {proj.isCustom && (
+                    {tobi.availableProjects.length > 1 && (
                       <button
                         type="button"
                         style={{ padding: "6px 8px", background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer", borderRadius: "4px" }}
@@ -416,6 +416,24 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi, onO
             >
               <span>+ Agregar Proyecto</span>
             </button>
+
+            {tobi.deletedProjects && tobi.deletedProjects.length > 0 && (
+              <button
+                type="button"
+                className="button button-ghost"
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  padding: "4px 8px",
+                  fontSize: 11,
+                  color: "var(--muted)",
+                  marginBottom: 6,
+                }}
+                onClick={() => tobi.restoreDefaultProjects()}
+              >
+                Restaurar proyectos de demo
+              </button>
+            )}
 
             <dl style={{ margin: 0, paddingTop: 6, borderTop: "1px solid var(--border)" }}>
               <dt>Rama</dt><dd><code>{project.branch}</code></dd>
@@ -502,11 +520,11 @@ function AppHeader({ title, onMenu, onNotifications, onLive, tobi, onOpenAddProj
                   <span style={{ flex: 1, textAlign: "left" }}>{p.name}</span>
                   {tobi.activeProjectId === p.id && <Icon name="check" size="sm" />}
                 </button>
-                {p.isCustom && (
+                {tobi.availableProjects.length > 1 && (
                   <button
                     type="button"
                     style={{ padding: "4px 6px", background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer" }}
-                    title="Eliminar proyecto"
+                    title={`Eliminar ${p.name}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       tobi.removeProject(p.id);
@@ -609,8 +627,48 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
       <Stat label="Tasa de aprobación" value={metrics.passRate} meta={`${scopedTests.length} tests visibles (${activeScope})`} tone="success" />
       <Stat label="Ejecuciones" value={String(metrics.totalRuns)} meta={`Rama ${project.branch}`} />
       <Stat label="Tests fallidos" value={String(metrics.failedTests)} meta="Requieren revisión" tone="danger" />
-      <Stat label="Bugs abiertos" value={String(metrics.openBugs)} meta="Documentados en BDD" tone="warning" />
     </div>
+
+    {runs.length === 0 && (
+      <div
+        className="panel"
+        style={{
+          background: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(20,16,32,0.85) 100%)",
+          border: "1px solid var(--primary, #6366f1)",
+          padding: "20px 24px",
+          marginBottom: 20,
+          borderRadius: "var(--radius-lg, 12px)",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ maxWidth: 640 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span className="live-pulse" />
+              <strong style={{ fontSize: 16, color: "var(--fg)" }}>
+                Frontend Vinculado en {project.url || "puerto local"} · Pendiente de Exploración
+              </strong>
+            </div>
+            <p className="t-muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.4 }}>
+              Tu servidor está corriendo. Presioná <strong>Iniciar Exploración del Frontend</strong> para que Antigravity y Explorer QA recorran tu aplicación con Playwright, extraigan rutas y capturen evidencia real con capturas y videos .webm.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Button
+              variant="primary"
+              onClick={() => {
+                tobi.runLiveAudit(activeScope);
+                navigate("live-run");
+              }}
+              style={{ padding: "10px 18px", fontSize: 13.5, fontWeight: 600 }}
+            >
+              <Icon name="play" size="sm" />
+              ⚡ Iniciar Exploración del Frontend
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
 
     <div className="dashboard-grid">
       <div className="stack">
@@ -907,9 +965,23 @@ function RunDetailPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppVie
           <span className="url-pill">{selected?.spec}</span>
         </div>
         <div className="media">
-          {media === "video"
-            ? <video key={selected?.videoUrl} src={selected?.videoUrl || "/evidence/videos/doctor-portal-audit.webm"} controls muted loop playsInline />
-            : <img src={selected?.screenshot || "/evidence/runs/05-tutor-dashboard.png"} alt={`Captura de ${selected?.name}`} />}
+          {media === "video" ? (
+            selected?.videoUrl ? (
+              <video key={selected.videoUrl} src={selected.videoUrl} controls muted loop playsInline />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 180, background: "rgba(0,0,0,0.3)", color: "var(--muted)", gap: 6, padding: 16 }}>
+                <Icon name="video" size="md" />
+                <span style={{ fontSize: 12 }}>Sin grabación de video registrada para este test</span>
+              </div>
+            )
+          ) : selected?.screenshot ? (
+            <img src={selected.screenshot} alt={`Captura de ${selected.name}`} />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 180, background: "rgba(0,0,0,0.3)", color: "var(--muted)", gap: 6, padding: 16 }}>
+              <Icon name="search" size="md" />
+              <span style={{ fontSize: 12 }}>Sin captura disponible para este test</span>
+            </div>
+          )}
         </div>
 
         {failed && (
@@ -980,24 +1052,48 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
           <Tabs value={mode} onChange={setMode} items={[{ id: "screenshot", label: "Captura" }, { id: "video", label: "Video" }]} />
         </div>
         <div className="media" style={{ borderBottom: 0 }}>
-          {mode === "screenshot" ? <>
-            <img src={step?.screenshot || "/evidence/runs/tobi-01-landing.png"} alt={step?.description || "Ejecución en vivo"} />
-            <div className="hud">
-              <div><Badge tone="agent"><Icon name="spark" size="sm" />{step?.agent || "Explorer QA"}</Badge></div>
-              <strong>Paso {step?.index} · {step?.action}</strong>
-              <code>{step?.target}</code>
-              <small>{step?.description}</small>
-            </div>
-          </> : (
-            <video
-              key={tobi.activeProjectId}
-              src={tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : "/evidence/videos/bug-01-cancellation-replay.webm"}
-              controls
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
+          {mode === "screenshot" ? (
+            step?.screenshot ? (
+              <>
+                <img src={step.screenshot} alt={step.description || "Ejecución en vivo"} />
+                <div className="hud">
+                  <div><Badge tone="agent"><Icon name="spark" size="sm" />{step.agent || "Explorer QA"}</Badge></div>
+                  <strong>Paso {step.index} · {step.action}</strong>
+                  <code>{step.target}</code>
+                  <small>{step.description}</small>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 280, background: "rgba(0,0,0,0.35)", color: "var(--muted)", gap: 8, padding: 24 }}>
+                <Icon name="search" size="lg" />
+                <strong style={{ fontSize: 13, color: "var(--fg)" }}>Esperando capturas de {project.name}</strong>
+                <span style={{ fontSize: 11, maxWidth: 360, textAlign: "center", lineHeight: 1.4 }}>
+                  {liveRun.steps.length === 0
+                    ? "No hay pasos ejecutados todavía. Hacé clic en 'Re-auditar alcance' para que los agentes naveguen tu frontend."
+                    : `Paso ${step?.index || 1}: ${step?.action || "Esperando acción..."}`}
+                </span>
+              </div>
+            )
+          ) : (
+            (liveRun.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : null)) ? (
+              <video
+                key={liveRun.videoUrl || tobi.activeProjectId}
+                src={liveRun.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : "")}
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 280, background: "rgba(0,0,0,0.35)", color: "var(--muted)", gap: 8, padding: 24 }}>
+                <Icon name="video" size="lg" />
+                <strong style={{ fontSize: 13, color: "var(--fg)" }}>Sin video disponible para {project.name}</strong>
+                <span style={{ fontSize: 11, maxWidth: 360, textAlign: "center", lineHeight: 1.4 }}>
+                  Las grabaciones .webm se generan automáticamente al ejecutar la auditoría de Playwright sobre tu aplicación.
+                </span>
+              </div>
+            )
           )}
         </div>
       </section>
@@ -1537,19 +1633,36 @@ function NotificationPanel({ open, onClose, navigate, tobi }: { open: boolean; o
   </>;
 }
 
-function AddProjectModal({ open, onClose, tobi }: { open: boolean; onClose: () => void; tobi: Tobi }) {
+function AddProjectModal({ open, onClose, tobi, onNavigate }: { open: boolean; onClose: () => void; tobi: Tobi; onNavigate?: (v: AppView) => void }) {
   const [folderName, setFolderName] = useState("");
   const [repoPath, setRepoPath] = useState("");
   const [projectUrl, setProjectUrl] = useState("http://localhost:5173");
   const [env, setEnv] = useState("development");
   const [auditScope, setAuditScope] = useState<AuditScope>("fullstack");
   const [isPicking, setIsPicking] = useState(false);
+  const [detectedPorts, setDetectedPorts] = useState<number[]>([]);
+  const [autoStartAudit, setAutoStartAudit] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
+
+    fetch("/api/detect-local-ports")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.activePorts)) {
+          const currentPort = window.location.port ? parseInt(window.location.port, 10) : 5180;
+          const external = data.activePorts.filter((p: number) => p !== currentPort);
+          setDetectedPorts(external);
+          if (external.length > 0) {
+            setProjectUrl(`http://localhost:${external[0]}`);
+          }
+        }
+      })
+      .catch(() => {});
+
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
@@ -1603,8 +1716,12 @@ function AddProjectModal({ open, onClose, tobi }: { open: boolean; onClose: () =
       url: projectUrl.trim() || defaultUrl,
       isCustom: true,
       auditScope,
+      autoRun: autoStartAudit,
     });
     onClose();
+    if (autoStartAudit) {
+      onNavigate?.("live-run");
+    }
   };
 
   const scopeCards: { id: AuditScope; icon: string; title: string; desc: string }[] = [
@@ -1833,6 +1950,30 @@ function AddProjectModal({ open, onClose, tobi }: { open: boolean; onClose: () =
                   fontSize: 12
                 }}
               />
+              {detectedPorts.length > 0 && (
+                <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", fontSize: 11 }}>
+                  <span style={{ color: "var(--success, #10b981)", fontWeight: 600 }}>🟢 Activo detectado:</span>
+                  {detectedPorts.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      style={{
+                        padding: "2px 6px",
+                        background: projectUrl === `http://localhost:${p}` ? "var(--primary)" : "rgba(255,255,255,0.06)",
+                        color: projectUrl === `http://localhost:${p}` ? "#fff" : "var(--fg)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                        fontSize: 11,
+                        fontWeight: 600,
+                      }}
+                      onClick={() => setProjectUrl(`http://localhost:${p}`)}
+                    >
+                      :{p}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 12, fontWeight: 600 }}>Entorno</label>
@@ -1855,6 +1996,19 @@ function AddProjectModal({ open, onClose, tobi }: { open: boolean; onClose: () =
                 <option value="production">production (smoke)</option>
               </select>
             </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "rgba(99,102,241,0.08)", borderRadius: "var(--radius-md)", border: "1px solid rgba(99,102,241,0.25)" }}>
+            <input
+              type="checkbox"
+              id="auto-start-audit-cb"
+              checked={autoStartAudit}
+              onChange={(e) => setAutoStartAudit(e.target.checked)}
+              style={{ cursor: "pointer", width: 17, height: 17 }}
+            />
+            <label htmlFor="auto-start-audit-cb" style={{ fontSize: 12.5, cursor: "pointer", fontWeight: 600, color: "var(--fg)" }}>
+              ⚡ Iniciar exploración y pruebas del frontend automáticamente al vincular
+            </label>
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 6 }}>
@@ -1959,6 +2113,7 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
         open={isAddProjectOpen}
         onClose={() => setIsAddProjectOpen(false)}
         tobi={tobi}
+        onNavigate={go}
       />
     </div>
   );
