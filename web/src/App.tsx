@@ -2044,12 +2044,30 @@ function AddProjectModal({ open, onClose, tobi, onNavigate }: { open: boolean; o
 }
 
 function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate: (v: AppView) => void; onHome: () => void; tobi: Tobi }) {
-  const [compact, setCompact] = useState(false);
+  const [compact, setCompact] = useState<boolean>(() => {
+    try {
+      return typeof window !== "undefined" && window.localStorage?.getItem("tobi.sidebar.compact") === "1";
+    } catch {
+      return false;
+    }
+  });
   const [mobileNav, setMobileNav] = useState(false);
   const [notifications, setNotifications] = useState(false);
   const [activeBugId, setActiveBugId] = useState("BUG-01");
   const [inspectedTest, setInspectedTest] = useState<TestCaseItem | null>(null);
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
+
+  const toggleCompact = () => {
+    setCompact((prev) => {
+      const next = !prev;
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage?.setItem("tobi.sidebar.compact", next ? "1" : "0");
+        }
+      } catch {}
+      return next;
+    });
+  };
 
   const go = (v: AppView) => { navigate(v); setMobileNav(false); };
   const labels: Record<AppView, string> = {
@@ -2089,7 +2107,7 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
       <Sidebar
         compact={compact}
         activeView={view}
-        onCompact={() => setCompact(!compact)}
+        onCompact={toggleCompact}
         onHome={onHome}
         onNavigate={go}
         tobi={tobi}

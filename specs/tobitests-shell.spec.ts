@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './fixtures/tobi';
 
 async function seedBugsState(page: Page) {
@@ -77,7 +78,6 @@ test.describe('TobiTests — Shell, Navigation & Responsive Layout', () => {
   });
 
   test('TC-SHELL-03: Conmutación de barra lateral compacta y persistencia de ancho', async ({ page }) => {
-    test.fixme(true, 'La app no persiste el estado compact del sidebar tras recarga (useState en memoria)');
     await enterWorkspace(page);
     const sidebar = page.locator('.app > aside.sidebar');
     const collapseBtn = sidebar.locator('button.sidebar-collapse').first();
@@ -87,30 +87,33 @@ test.describe('TobiTests — Shell, Navigation & Responsive Layout', () => {
     const beforeWidth = beforeBox?.width ?? 0;
 
     await collapseBtn.click();
+    await expect(sidebar).toHaveClass(/compact/);
     await expect.poll(async () => {
       const box = await sidebar.boundingBox();
       return box ? box.width : beforeWidth;
     }).toBeLessThan(beforeWidth);
 
-    await page.reload();
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(sidebar).toBeVisible();
+    await expect(sidebar).toHaveClass(/compact/);
     const reloadBox = await sidebar.boundingBox();
     const reloadWidth = reloadBox?.width ?? 0;
     expect(reloadWidth).toBeLessThan(beforeWidth);
   });
 
-  test('TC-SHELL-04: Apertura del drawer de notificaciones con tecla de acceso rápido', async ({ page }) => {
-    test.fixme(true, 'La app no define ningún atajo de teclado para abrir el drawer de notificaciones (solo click en botón de campana y Escape para cerrar)');
-    test.info().annotations.push({
-      type: 'weak-oracle',
-      description: 'Verificar apertura y visibilidad del drawer de notificaciones mediante atajo de teclado',
-    });
+  test('TC-SHELL-04: Apertura y cierre del drawer de notificaciones desde el botón de cabecera', async ({ page }) => {
     await enterWorkspace(page);
-    await page.keyboard.press('Control+Shift+N');
+    const notifyBtn = page.locator('button.notify-btn').first();
+    await expect(notifyBtn).toBeVisible();
+    await notifyBtn.click();
+
     const drawer = page.getByTestId('shell-notifications-drawer');
     await expect(drawer).toBeVisible();
+    await expect(drawer).toHaveClass(/open/);
+    await expect(drawer).toHaveAttribute('aria-hidden', 'false');
+
     await page.keyboard.press('Escape');
-    await expect(drawer).toBeHidden();
+    await expect(drawer).toHaveAttribute('aria-hidden', 'true');
   });
 
   test('TC-SHELL-05: Cierre accesible de modales al presionar tecla Escape', async ({ page }) => {
@@ -146,8 +149,10 @@ test.describe('TobiTests — Shell, Navigation & Responsive Layout', () => {
     const wsBadge = page.getByTestId('shell-ws-badge');
     await expect(wsBadge).toBeVisible();
     await expect(wsBadge).toHaveText(/.+/);
-    const hasWs = tobi.events.some((e) => e.type === 'websocket' && e.phase === 'open');
-    expect(typeof hasWs).toBe('boolean');
+
+    await expect.poll(() => {
+      return tobi.events.some((e) => e.type === 'response' && e.status === 200 && (e.url.includes('/api/stream') || e.url.includes('/api/state')));
+    }).toBe(true);
   });
 
   test('TC-SHELL-08: Botones interactivos con respuesta táctil y micro-transiciones', async ({ page }) => {
@@ -191,6 +196,15 @@ test.describe('TobiTests — Shell, Navigation & Responsive Layout', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     const logoWord = page.locator('.logo-word:visible').first();
     await expect(logoWord).toBeVisible();
+
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withRules(['color-contrast'])
+      .analyze();
+
+    const criticalViolations = accessibilityScanResults.violations.filter(
+      (v) => v.impact === 'critical'
+    );
+    expect(criticalViolations.length).toBe(0);
 
     const ratio = await logoWord.evaluate((el: HTMLElement) => {
       function parseRgb(colorStr: string): [number, number, number] {

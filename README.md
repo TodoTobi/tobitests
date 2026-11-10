@@ -130,7 +130,7 @@ The TobiTests web platform (`web/src/`) provides three flagship observability st
 
 ### Mode 1: Interactive Portfolio Demo (Pre-Loaded Workspaces)
 TobiTests ships with two complete, pre-audited workspaces ready to explore in the browser (and deployable as a static build to Vercel or GitHub Pages):
-* **`TobiTests (Self-Audit)`:** 5 suites, 84 E2E tests, flow map (including API contract telemetry nodes), and `.webm` self-audit video recordings.
+* **`TobiTests (Self-Audit)`:** 8 suites, 45 E2E tests, flow map (including API contract telemetry nodes), native steps reporter (`tobi-steps-reporter.ts`), and `.webm` self-audit video recordings.
 * **`VetConnect`:** 6 suites, 108 E2E tests, and 4 real Gherkin-documented bugs (`BUG-01` to `BUG-04`) with video replays.
 
 ```bash
@@ -214,7 +214,7 @@ tobitests/
 │   └── sample-api.spec.ts          # Pure Backend / REST API audit template ({ request } 2xx/4xx/RBAC/Race)
 ├── specs/                          # Permanent Playwright E2E & API test specifications (.spec.ts)
 ├── workspaces/                     # Decoupled per-project PRDs, Test Matrices & project-specific scripts
-│   ├── tobitests-self-audit/       # 5 suites / 84 self-audit tests & verification scripts
+│   ├── tobitests/                  # 8 suites / 45 self-audit tests & verification scripts
 │   └── vetconnect-demo/            # 6 suites / 108 VetConnect tests, 4 bugs & scripts
 ├── web/                            # React + TypeScript + Vite Visual Observability App
 │   ├── public/data/                # Live state JSONs, projects.json & Shared Blackboard (antigravity-live.json)

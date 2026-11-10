@@ -111,6 +111,8 @@ flowchart LR
 * **Objective:** Execute the synthesized specs and exploratory journeys in isolated browser contexts with full multi-modal evidence collection.
 * **Actions:**
   * Run tests with Playwright native video recording (`web/public/evidence/videos/*.webm`), per-step high-resolution screenshots (`web/public/evidence/runs/*.png` and `web/public/evidence/bugs/*.png`), and execution timing metrics (`duration` in `ms`/`s`).
+  * Ingest granular execution steps via native custom reporter ([`reporters/tobi-steps-reporter.ts`](../reporters/tobi-steps-reporter.ts)) and JSONL telemetry through the custom `tobi` fixture ([`specs/fixtures/tobi.ts`](../specs/fixtures/tobi.ts)).
+  * Self-audit validation suite covers 8 suites and 45 deterministic tests across all system views (Shell, Navigation, Office, Specs, Telemetry, Run Detail, Settings, Smoke).
   * Record route graph traversal (`touches`, `testsCount`, `failedCount`, `blockedCount`) to drive [`JourneyCanvas.tsx`](../web/src/components/JourneyCanvas.tsx).
 
 ### Step 7: Triage & 3-Layer Divergence Oracle
