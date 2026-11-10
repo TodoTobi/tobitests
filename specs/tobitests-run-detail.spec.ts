@@ -315,4 +315,54 @@ test.describe('TobiTests — RunDetailPage & Front Compatibility', () => {
     await expect(runChip).not.toContainText('#RUN-LIVE');
     await expect(runChip).toContainText('—');
   });
+
+  test('TC-RUN-07: Recarga tras nueva ingesta actualiza el run activo sin quedar atrapado en caché viejo de localStorage', async ({ page }) => {
+    const oldState = createMockState({
+      auditScope: 'fullstack',
+      tests: [
+        {
+          name: 'TC-OLD-01',
+          spec: 'old.spec.ts',
+          status: 'Passed',
+          duration: '40ms',
+          steps: [],
+        },
+      ],
+    });
+    oldState.runs[0].id = '#RUN-OLD-00';
+    if (oldState.liveRun) oldState.liveRun.id = '#RUN-OLD-00';
+
+    const newState = createMockState({
+      auditScope: 'fullstack',
+      tests: [
+        {
+          name: 'TC-NEW-99',
+          spec: 'new.spec.ts',
+          status: 'Passed',
+          duration: '60ms',
+          steps: [],
+        },
+      ],
+    });
+    newState.runs[0].id = '#RUN-NEW-99';
+    if (newState.liveRun) newState.liveRun.id = '#RUN-NEW-99';
+
+    // Interceptar /api/state* devolviendo newState
+    await page.route('**/api/state*', (route) => route.fulfill({ json: newState }));
+    await page.route('**/data/*state.json', (route) => route.fulfill({ json: newState }));
+
+    // Sembrar localStorage con #RUN-OLD-00
+    await page.addInitScript((stateJson) => {
+      window.localStorage.setItem('tobitests_current_view', 'run-detail');
+      window.localStorage.setItem('tobitests_active_project', 'tobitests');
+      window.localStorage.setItem('tobitests_state_tobitests', stateJson);
+    }, JSON.stringify(oldState));
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
+    // La UI debe actualizarse mostrando #RUN-NEW-99 en el chip de ejecución
+    await expect(page.locator('.run-chip')).toContainText('#RUN-NEW-99');
+    await expect(page.locator('.app')).toContainText('#RUN-NEW-99');
+  });
 });

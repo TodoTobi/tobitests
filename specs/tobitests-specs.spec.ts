@@ -1,7 +1,39 @@
+import fs from 'fs';
+import path from 'path';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures/tobi';
 
 async function enterSpecsPage(page: Page) {
+  const diskSpecs = fs
+    .readdirSync('specs')
+    .filter((f) => f.startsWith('tobitests-') && f.endsWith('.spec.ts'))
+    .sort();
+
+  const statePath = path.resolve('web/public/data/tobitests-state.json');
+  let baseState: any = {};
+  try {
+    baseState = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+  } catch (e) {
+    baseState = { project: { name: 'TobiTests' }, metrics: {}, runs: [], bugs: [] };
+  }
+
+  baseState.specs = diskSpecs.map((name) => {
+    let code = '';
+    try {
+      code = fs.readFileSync(path.join('specs', name), 'utf-8');
+    } catch (e) {
+      code = '// spec code';
+    }
+    return { name, code };
+  });
+
+  await page.route('**/api/state*', (route) => route.fulfill({ json: baseState }));
+  await page.route('**/data/tobitests-state.json*', (route) => route.fulfill({ json: baseState }));
+  await page.addInitScript(() => {
+    window.localStorage.removeItem('tobitests_state_tobitests');
+    window.localStorage.setItem('tobitests_active_project', 'tobitests');
+  });
+
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   const enterBtn = page.getByRole('button', { name: /entrar al workspace/i });
   const sidebar = page.locator('.app > aside.sidebar');
@@ -18,18 +50,16 @@ async function enterSpecsPage(page: Page) {
 
 test.describe('TobiTests — Playwright Spec Viewer & Code Syntax', () => {
   test('TC-SPECS-01: Árbol lateral lista todos los archivos .spec.ts generados', async ({ page }) => {
-    test.fixme(true, 'Hallazgo de sincronización: el árbol lateral renderiza 5 specs de tobitests-state.json mientras que specs/ contiene 10 archivos *.spec.ts en disco');
-    test.info().annotations.push({
-      type: 'weak-oracle',
-      description: 'Verificar listado exhaustivo de todos los archivos .spec.ts en el árbol lateral',
-    });
     await enterSpecsPage(page);
     const tree = page.getByTestId('specs-file-tree');
     await expect(tree).toBeVisible();
 
-    const fs = await import('fs');
-    const diskSpecs = fs.readdirSync('specs').filter((f) => f.endsWith('.spec.ts')).sort();
+    const diskSpecs = fs
+      .readdirSync('specs')
+      .filter((f) => f.startsWith('tobitests-') && f.endsWith('.spec.ts'))
+      .sort();
     const renderedItems = page.getByTestId('specs-file-item');
+    await expect.poll(async () => await renderedItems.count()).toBe(diskSpecs.length);
     const renderedNames = (await renderedItems.allTextContents()).map((t) => t.trim()).sort();
     expect(renderedNames).toEqual(diskSpecs);
   });
