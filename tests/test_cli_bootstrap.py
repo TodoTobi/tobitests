@@ -159,14 +159,14 @@ def test_rerun_preserves_real_data(tmp_path):
     assert saved["project"]["auditScope"] == "backend"
 
 
-def test_force_on_protected_demo_requires_wipe_flag(monkeypatch):
+def test_force_on_protected_demo_requires_wipe_flag(isolated_scripts):
     """T7: --force sobre slug protegido devuelve 2 sin modificar archivos si falta --wipe-demo."""
     # Sin --wipe-demo -> exit 2
-    exit_code = cli.main(["--project", "tobitests", "--force"])
+    exit_code = isolated_scripts.cli.main(["--project", "tobitests", "--force"])
     assert exit_code == 2
 
     # Con --wipe-demo -> procede (retorna 0)
-    exit_code_ok = cli.main(["--project", "tobitests", "--force", "--wipe-demo"])
+    exit_code_ok = isolated_scripts.cli.main(["--project", "tobitests", "--force", "--wipe-demo"])
     assert exit_code_ok == 0
 
 
