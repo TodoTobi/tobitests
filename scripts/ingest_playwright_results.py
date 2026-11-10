@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.parse
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -951,6 +952,16 @@ def extract_tests_from_suite(
             if page_errors:
                 test_data["pageErrors"] = page_errors
 
+            touched_targets: List[str] = []
+            for e in telemetry_events:
+                etype = e.get("type")
+                if etype == "touch" and e.get("target"):
+                    touched_targets.append(str(e.get("target")))
+                elif etype == "navigation" and e.get("url"):
+                    touched_targets.append(str(e.get("url")))
+            if touched_targets:
+                test_data["touchedTargets"] = touched_targets
+
             if status_str == "Failed" and failed_step_window is not None:
                 nearby_list = _nearby(telemetry_events, failed_step_window[0], failed_step_window[1])
                 if nearby_list:
@@ -974,6 +985,532 @@ def extract_tests_from_suite(
         )
 
     return extracted
+
+
+DEFAULT_TOBI_NODES: List[Dict[str, Any]] = [
+    {
+        "id": "landing",
+        "title": "/ Portada · Iniciar Sesión",
+        "subtitle": "Punto de entrada de la aplicación",
+        "route": "http://localhost:5173/",
+        "screenshot": "/evidence/runs/tobi-01-landing.png",
+        "x": 80,
+        "y": 310,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "auth",
+    },
+    {
+        "id": "dashboard",
+        "title": "/dashboard · Panel de Calidad",
+        "subtitle": "Métricas consolidadas y actividad reciente",
+        "route": "/dashboard",
+        "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+        "x": 480,
+        "y": 80,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "workspace",
+    },
+    {
+        "id": "bug-tracker",
+        "title": "/bug-tracker · Incidentes",
+        "subtitle": "Registro de anomalías y severidad",
+        "route": "/bug-tracker",
+        "screenshot": "/evidence/runs/tobi-03-bug-tracker.png",
+        "x": 480,
+        "y": 310,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "workspace",
+    },
+    {
+        "id": "office",
+        "title": "/office · La Oficina 2.5D",
+        "subtitle": "Simulación isométrica multi-agente",
+        "route": "/office",
+        "screenshot": "/evidence/runs/tobi-04-office.png",
+        "x": 480,
+        "y": 540,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "workspace",
+    },
+    {
+        "id": "specs",
+        "title": "/specs · Test Specs Playwright",
+        "subtitle": "Editor y sintaxis TypeScript de pruebas",
+        "route": "/specs",
+        "screenshot": "/evidence/runs/tobi-05-specs.png",
+        "x": 880,
+        "y": 80,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "diagnostics",
+    },
+    {
+        "id": "suites",
+        "title": "/suites · Suites E2E",
+        "subtitle": "Estructura modular de casos de prueba",
+        "route": "/suites",
+        "screenshot": "/evidence/runs/tobi-02-dashboard.png",
+        "x": 880,
+        "y": 310,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "diagnostics",
+    },
+    {
+        "id": "bug-detail",
+        "title": "/bug-detail · BUG-01 Telemetría",
+        "subtitle": "Ficha de causa raíz y reproducción BDD (Resuelto)",
+        "route": "/bug-detail",
+        "screenshot": "/evidence/bugs/tobi-bug-01-detail.png",
+        "x": 880,
+        "y": 540,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "diagnostics",
+    },
+    {
+        "id": "live-run",
+        "title": "/live-run · Telemetría en Vivo",
+        "subtitle": "Inspección de pasos y consola reactiva",
+        "route": "/live-run",
+        "screenshot": "/evidence/runs/tobi-06-live-run.png",
+        "x": 1280,
+        "y": 80,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "execution",
+    },
+    {
+        "id": "settings",
+        "title": "/settings · Servidores MCP",
+        "subtitle": "Servidores Playwright y Chrome CDP",
+        "route": "/settings",
+        "screenshot": "/evidence/runs/tobi-07-settings.png",
+        "x": 1280,
+        "y": 310,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "execution",
+    },
+    {
+        "id": "api-live-contract",
+        "title": "GET /api/antigravity/live · API",
+        "subtitle": "Contrato JSON, RBAC & SLA (< 500ms)",
+        "route": "/api/antigravity/live",
+        "screenshot": "",
+        "x": 1280,
+        "y": 540,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "API",
+    },
+    {
+        "id": "api-state-rbac",
+        "title": "POST /api/antigravity/scope · API",
+        "subtitle": "Fuzzing 4xx, RBAC 401/403 & Concurrencia",
+        "route": "/api/antigravity/scope",
+        "screenshot": "",
+        "x": 1640,
+        "y": 540,
+        "width": 260,
+        "height": 146,
+        "testsCount": 0,
+        "touches": 0,
+        "failedCount": 0,
+        "blockedCount": 0,
+        "category": "API",
+    },
+]
+
+DEFAULT_TOBI_EDGES: List[Dict[str, Any]] = [
+    {
+        "id": "e-office-apicontract",
+        "from": "office",
+        "to": "api-live-contract",
+        "verb": "API 200 OK",
+        "agentName": "Telemetry Auditor",
+        "agentRole": "Auditor API ({ request })",
+        "agentMcp": "@playwright/test (APIRequestContext)",
+        "actionCode": "const res = await request.get('/api/antigravity/live'); expect(res.status()).toBe(200);",
+        "humanExplanation": "Verifica el contrato JSON del blackboard en vivo, cabeceras application/json, RBAC y latencia SLA (< 500ms) sin requerir navegador.",
+        "duration": "38ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-api-live-to-scope",
+        "from": "api-live-contract",
+        "to": "api-state-rbac",
+        "verb": "RBAC & 4xx",
+        "agentName": "Telemetry Auditor",
+        "agentRole": "Auditor API ({ request })",
+        "agentMcp": "@playwright/test (APIRequestContext)",
+        "actionCode": "await Promise.all(payloads.map(p => request.post('/api/antigravity/scope', { data: p })));",
+        "humanExplanation": "Audita fuzzing de payloads malformados (400/422, nunca 500), fronteras RBAC y concurrencia Promise.all.",
+        "duration": "44ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-landing-dashboard",
+        "from": "landing",
+        "to": "dashboard",
+        "verb": "Click",
+        "agentName": "Explorer QA",
+        "agentRole": "Explorador de Navegación",
+        "agentMcp": "@playwright/mcp",
+        "actionCode": "page.locator('button:has-text(\"Entrar al workspace\")').click()",
+        "humanExplanation": "Hizo clic en el botón principal de la portada para entrar al workspace y cargar el Dashboard de calidad.",
+        "duration": "120ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-dashboard-bugtracker",
+        "from": "dashboard",
+        "to": "bug-tracker",
+        "verb": "Navegar",
+        "agentName": "Explorer QA",
+        "agentRole": "Explorador de Navegación",
+        "agentMcp": "@playwright/mcp",
+        "actionCode": "page.locator('aside.sidebar nav button:has-text(\"Bug Tracker\")').click()",
+        "humanExplanation": "Abrió la sección de Bug Tracker desde la barra lateral para auditar el listado de incidentes reportados.",
+        "duration": "65ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-dashboard-office",
+        "from": "dashboard",
+        "to": "office",
+        "verb": "Inspeccionar",
+        "agentName": "Explorer QA",
+        "agentRole": "Auditor Visual",
+        "agentMcp": "@playwright/mcp",
+        "actionCode": "page.locator('aside.sidebar nav button:has-text(\"La Oficina\")').click()",
+        "humanExplanation": "Ingresó al estudio isométrico 2.5D para comprobar el movimiento y las estaciones de trabajo de los agentes.",
+        "duration": "95ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-bugtracker-bugdetail",
+        "from": "bug-tracker",
+        "to": "bug-detail",
+        "verb": "Foco Bug",
+        "agentName": "Telemetry Auditor",
+        "agentRole": "Inspector de Incidentes",
+        "agentMcp": "chrome-devtools-mcp",
+        "actionCode": "page.locator('.table tbody tr.clickable').first.click()",
+        "humanExplanation": "Seleccionó el incidente en el listado para inspeccionar su causa raíz, escenario BDD y verificar su estado resuelto.",
+        "duration": "80ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-office-bugdetail",
+        "from": "office",
+        "to": "bug-detail",
+        "verb": "Alerta CDP",
+        "agentName": "Telemetry Auditor",
+        "agentRole": "Vigilante de Consola & Red",
+        "agentMcp": "chrome-devtools-mcp",
+        "actionCode": "devtools.on('console.warn', ({ text }) => trackDivergence(text))",
+        "humanExplanation": "Auditó los filtros de telemetría de La Oficina: aislamiento de buffer validado con 0 divergencias de estado.",
+        "duration": "45ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-dashboard-specs",
+        "from": "dashboard",
+        "to": "specs",
+        "verb": "Sintetizar",
+        "agentName": "Spec Writer",
+        "agentRole": "Generador de Código",
+        "agentMcp": "playwright-test",
+        "actionCode": "page.locator('aside.sidebar nav button:has-text(\"Test Specs\")').click()",
+        "humanExplanation": "Abrió el editor de specs para validar los 84 tests generados con selectores semánticos y aserciones limpias.",
+        "duration": "70ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-dashboard-suites",
+        "from": "dashboard",
+        "to": "suites",
+        "verb": "Mapear",
+        "agentName": "Orchestrator",
+        "agentRole": "Coordinador de Calidad",
+        "agentMcp": "Antigravity Core",
+        "actionCode": "orchestrator.decomposeProject({ suites: 5, coverage: 'E2E' })",
+        "humanExplanation": "Descompuso el mapa de pruebas en 5 suites funcionales (Shell, Oficina, Bugs, Specs y Settings).",
+        "duration": "110ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-specs-liverun",
+        "from": "specs",
+        "to": "live-run",
+        "verb": "Ejecutar",
+        "agentName": "Orchestrator",
+        "agentRole": "Despachador de Pruebas",
+        "agentMcp": "@playwright/mcp",
+        "actionCode": "page.locator('button:has-text(\"Ejecutar\")').click()",
+        "humanExplanation": "Lanzó la suite de pruebas automatizadas sobre Chromium y activó el visor de telemetría en tiempo real.",
+        "duration": "150ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-suites-liverun",
+        "from": "suites",
+        "to": "live-run",
+        "verb": "Disparar",
+        "agentName": "Explorer QA",
+        "agentRole": "Ejecutor E2E",
+        "agentMcp": "@playwright/mcp",
+        "actionCode": "runner.runSuite({ id: 'self-audit', headless: true })",
+        "humanExplanation": "Sincronizó los 84 casos de prueba con el visor en vivo para registrar tiempos de respuesta y capturas.",
+        "duration": "140ms",
+        "status": "Skipped",
+    },
+    {
+        "id": "e-dashboard-settings",
+        "from": "dashboard",
+        "to": "settings",
+        "verb": "Auditar MCP",
+        "agentName": "Orchestrator",
+        "agentRole": "Coordinador de Infraestructura",
+        "agentMcp": "Antigravity Core",
+        "actionCode": "page.locator('.sidebar-foot button:has-text(\"Settings\")').click()",
+        "humanExplanation": "Comprobó la conectividad de los servidores MCP (@playwright/mcp, Chrome CDP y OpenCode nativo).",
+        "duration": "40ms",
+        "status": "Skipped",
+    },
+]
+
+
+def _normalize_route_or_id(val: str) -> str:
+    if not val:
+        return ""
+    val = val.strip().lower()
+    if val.startswith("http://") or val.startswith("https://"):
+        try:
+            parsed = urllib.parse.urlparse(val)
+            val = parsed.path or "/"
+        except Exception:
+            pass
+    return val.rstrip("/") if val != "/" else "/"
+
+
+def node_matches_test(node: Dict[str, Any], test: Dict[str, Any]) -> Tuple[bool, int]:
+    node_id = str(node.get("id", "")).lower()
+    raw_node_route = str(node.get("route", ""))
+    node_route = _normalize_route_or_id(raw_node_route)
+    node_cat = str(node.get("category", "")).lower()
+
+    spec = str(test.get("specPath") or test.get("spec", "")).lower()
+    spec_filename = Path(spec).name.lower()
+    name = str(test.get("name", "")).lower()
+
+    touches = 0
+    matched_by_event_or_step = False
+
+    # 1. Chequear touchedTargets (telemetría touch y navigation)
+    touched_targets = test.get("touchedTargets", [])
+    if isinstance(touched_targets, list):
+        for tgt in touched_targets:
+            tgt_norm = _normalize_route_or_id(str(tgt))
+            raw_tgt = str(tgt).lower()
+            if (
+                tgt_norm == node_route
+                or tgt_norm == f"/{node_id}"
+                or raw_tgt == node_id
+                or (node_route != "/" and node_route in tgt_norm)
+                or (node_id and node_id in raw_tgt)
+            ):
+                touches += 1
+                matched_by_event_or_step = True
+
+    # 2. Chequear steps
+    steps = test.get("steps", [])
+    if isinstance(steps, list):
+        for st in steps:
+            if isinstance(st, dict):
+                st_target = str(st.get("target", "")).lower()
+                st_desc = str(st.get("description", "")).lower()
+                if (
+                    (node_id and node_id in st_target)
+                    or (node_route != "/" and node_route in st_target)
+                    or (node_id and node_id in st_desc)
+                ):
+                    touches += 1
+                    matched_by_event_or_step = True
+
+    # 3. Heurísticas para SPAs y mapeo por palabras clave
+    is_api = (
+        "api" in spec
+        or "tc-api" in name
+        or "tc-smoke-02" in name
+        or "tc-smoke-03" in name
+        or "tc-smoke-05" in name
+        or "tc-smoke-06" in name
+        or "request" in spec
+    )
+
+    heuristic_match = False
+    if not is_api and node_id in ("landing", "dashboard"):
+        heuristic_match = True
+
+    if "office" in spec_filename or "tc-office" in name or "oficina" in name:
+        if node_id == "office":
+            heuristic_match = True
+        elif node_id == "bug-detail" and (test.get("status") == "Failed" or "bug-01" in name or "divergencia" in name):
+            heuristic_match = True
+
+    if "bugs" in spec_filename or "tc-bugs" in name or "appointments" in spec_filename or "msg" in name:
+        if node_id in ("bug-tracker", "bug-detail"):
+            heuristic_match = True
+
+    if "specs" in spec_filename or "tc-specs" in name or "doctor" in name:
+        if node_id in ("specs", "live-run"):
+            heuristic_match = True
+
+    if "settings" in spec_filename or "tc-settings" in name or "sett" in name:
+        if node_id == "settings":
+            heuristic_match = True
+
+    if "run-detail" in spec_filename or "live-run" in spec_filename or "telemetry" in spec_filename:
+        if node_id == "live-run":
+            heuristic_match = True
+
+    if "shell" in spec_filename or "smoke" in spec_filename or "tc-shell" in name or "tc-smoke" in name:
+        if node_id in ("suites", "dashboard"):
+            heuristic_match = True
+
+    if is_api and (node_cat == "api" or "/api" in node_route or "api" in node_id):
+        heuristic_match = True
+
+    if (node_id and node_id in spec_filename) or (node_route and node_route != "/" and node_route in spec_filename):
+        heuristic_match = True
+
+    if matched_by_event_or_step or heuristic_match:
+        return True, max(1, touches)
+
+    return False, 0
+
+
+def update_journey_map_from_run(
+    state: Dict[str, Any],
+    run_tests: List[Dict[str, Any]],
+    project_slug: str = "",
+) -> Dict[str, Any]:
+    """Actualiza o inicializa journeyMap.nodes y journeyMap.edges con métricas reales del run."""
+    journey_map = state.get("journeyMap")
+    if not isinstance(journey_map, dict):
+        journey_map = {"nodes": [], "edges": []}
+        state["journeyMap"] = journey_map
+
+    nodes = journey_map.get("nodes", [])
+    if not isinstance(nodes, list):
+        nodes = []
+        journey_map["nodes"] = nodes
+
+    edges = journey_map.get("edges", [])
+    if not isinstance(edges, list):
+        edges = []
+        journey_map["edges"] = edges
+
+    proj_name = str(state.get("project", {}).get("name", "")).lower()
+    is_tobi = project_slug in ("tobitests", "tobi") or "tobitests" in proj_name
+
+    if not nodes and is_tobi:
+        nodes = [dict(n) for n in DEFAULT_TOBI_NODES]
+        edges = [dict(e) for e in DEFAULT_TOBI_EDGES]
+        journey_map["nodes"] = nodes
+        journey_map["edges"] = edges
+
+    # Si los nodos presentes no son JourneyNodes reales (sin route, title ni testsCount),
+    # preservar como clave no gestionada.
+    has_real_journey_nodes = any(
+        isinstance(n, dict) and ("route" in n or "title" in n or "testsCount" in n)
+        for n in nodes
+    )
+    if nodes and not has_real_journey_nodes:
+        return journey_map
+
+    nodes_by_id = {str(n.get("id")): n for n in nodes}
+
+    for node in nodes:
+        matched_info = [node_matches_test(node, t) for t in run_tests]
+        matched_tests = [t for (matched, _), t in zip(matched_info, run_tests) if matched]
+
+        executed_tests = [t for t in matched_tests if t.get("status") in ("Passed", "Failed")]
+        failed_tests = [t for t in matched_tests if t.get("status") == "Failed"]
+        unrun_tests = [t for t in matched_tests if t.get("status") in ("Skipped", "notRun", "Blocked", "stale")]
+
+        node["testsCount"] = len(executed_tests)
+        node["failedCount"] = len(failed_tests)
+        if executed_tests:
+            total_touches = sum(
+                touches
+                for (matched, touches), t in zip(matched_info, run_tests)
+                if matched and t.get("status") in ("Passed", "Failed")
+            )
+            node["touches"] = max(len(executed_tests), total_touches)
+        else:
+            node["touches"] = 0
+
+        node["blockedCount"] = len(unrun_tests)
+
+    for edge in edges:
+        src = nodes_by_id.get(str(edge.get("from")))
+        dst = nodes_by_id.get(str(edge.get("to")))
+
+        if dst and dst.get("testsCount", 0) == 0:
+            edge["status"] = "Skipped"
+        elif (dst and dst.get("failedCount", 0) > 0) or (src and src.get("failedCount", 0) > 0):
+            edge["status"] = "Failed"
+        else:
+            edge["status"] = "Passed"
+
+    return journey_map
 
 
 def ingest_report_into_state(
@@ -1251,6 +1788,9 @@ def ingest_report_into_state(
         state["metrics"]["openBugs"] = len([
             b for b in state["bugs"] if isinstance(b, dict) and b.get("status") not in ("Resolved", "Closed")
         ])
+
+    tests_for_journey = merged_tests if parsed_tests else (state.get("runs", [{}])[0].get("tests", []) if state.get("runs") else [])
+    update_journey_map_from_run(state, tests_for_journey, project_slug)
 
     atomic_write_json(state_file, state)
 

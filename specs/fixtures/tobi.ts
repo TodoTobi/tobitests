@@ -11,12 +11,15 @@ export type TobiEvent =
   | { t: number; type: 'requestfailed'; id: number; url: string; error: string }
   | { t: number; type: 'hung'; id: number; url: string; ms: number }
   | { t: number; type: 'websocket'; url: string; phase: 'open' | 'close' }
-  | { t: number; type: 'snap'; name: string; file: string };
+  | { t: number; type: 'snap'; name: string; file: string }
+  | { t: number; type: 'navigation'; url: string }
+  | { t: number; type: 'touch'; target: string };
 
 export interface Tobi {
   events: TobiEvent[];
   step<T>(title: string, fn: () => Promise<T>): Promise<T>;
   snap(name: string): Promise<void>;
+  touch: (target: string) => void;
   allowPageErrors(): void;
 }
 
@@ -37,6 +40,20 @@ export const test = baseTest.extend<{ tobi: Tobi }>({
       const pendingRequests = new Map<Request, { id: number; startMs: number; url: string }>();
 
       // Listeners sobre page
+      await page.route('**/api/stream*', (route) => route.abort());
+      await page.route('**/api/antigravity/live', (route) => route.abort());
+      await page.route('**/data/antigravity-live.json', (route) => route.abort());
+
+      page.on('framenavigated', (frame) => {
+        if (frame === page.mainFrame()) {
+          events.push({
+            t: now(),
+            type: 'navigation',
+            url: frame.url(),
+          });
+        }
+      });
+
       page.on('console', (msg) => {
         events.push({
           t: now(),
@@ -164,6 +181,13 @@ export const test = baseTest.extend<{ tobi: Tobi }>({
         events,
         step,
         snap,
+        touch: (target: string) => {
+          events.push({
+            t: now(),
+            type: 'touch',
+            target,
+          });
+        },
         allowPageErrors: () => {
           strictPageErrors = false;
         },
