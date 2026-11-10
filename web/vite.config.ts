@@ -232,6 +232,7 @@ function tobiTestsBridgePlugin(): Plugin {
       const stateFilePath = path.resolve(__dirname, './src/data/tobi-state.json');
       const publicLivePath = path.resolve(__dirname, './public/data/antigravity-live.json');
       const sseClients = new Set<any>();
+      let auditInProgress = false;
 
       // Helper to merge live transcript status with Shared Blackboard state
       const getMergedLivePayload = () => {
@@ -387,6 +388,13 @@ function tobiTestsBridgePlugin(): Plugin {
         }
 
         if (req.url === '/api/audit/trigger' && req.method === 'POST') {
+          if (auditInProgress) {
+            res.statusCode = 202;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ ok: true, alreadyRunning: true, message: 'Audit already in progress' }));
+            return;
+          }
+          auditInProgress = true;
           let body = '';
           req.on('data', chunk => { body += chunk; });
           req.on('end', async () => {
@@ -547,7 +555,11 @@ function tobiTestsBridgePlugin(): Plugin {
                   '--scope', scope,
                 ];
                 runProcessSafe('python', ingestArgs, { TARGET_URL: targetUrl, BASE_URL: targetUrl }, () => {
-                  broadcastUpdate();
+                  try {
+                    broadcastUpdate();
+                  } finally {
+                    auditInProgress = false;
+                  }
                 });
               };
 
@@ -566,7 +578,11 @@ function tobiTestsBridgePlugin(): Plugin {
                   '--status', 'exploring',
                   '--step', '1',
                 ];
-                runProcessSafe('python', initArgs, { TARGET_URL: targetUrl, BASE_URL: targetUrl }, () => {
+                runProcessSafe('python', initArgs, { TARGET_URL: targetUrl, BASE_URL: targetUrl }, (initCode) => {
+                  if (initCode !== 0) {
+                    auditInProgress = false;
+                    return;
+                  }
                   let foundSpec: string | null = null;
                   for (const cand of candidates) {
                     if (fs.existsSync(path.resolve(repoRoot, cand))) {
@@ -581,6 +597,7 @@ function tobiTestsBridgePlugin(): Plugin {
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ ok: true, status: 'started', project: proj }));
             } catch (err) {
+              auditInProgress = false;
               res.statusCode = 400;
               res.end(JSON.stringify({ error: String(err) }));
             }
@@ -840,6 +857,11 @@ export default defineConfig(async ({ mode }) => {
       watch: {
         ignored: [
           '**/.figma/**',
+          '**/public/data/**',
+          '**/public/evidence/**',
+          '**/src/data/**',
+          '**/test-results/**',
+          '**/playwright-report/**',
         ],
       },
     },
