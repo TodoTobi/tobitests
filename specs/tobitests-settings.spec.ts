@@ -18,12 +18,18 @@ async function enterSettings(page: Page) {
 
 test.describe('TobiTests — Settings, Telemetry & MCP Connectivity', () => {
   test('TC-SETTINGS-01: Panel Proyecto muestra directorio local, URL y rama de Git', async ({ page }) => {
-    test.info().annotations.push({
-      type: 'weak-oracle',
-      description: 'Verificar visualización de directorio local, URL y rama Git en el panel',
-    });
     await enterSettings(page);
-    await expect(page.locator('.panel, main').first()).toBeVisible();
+    const defs = page.getByTestId('settings-project-defs');
+    await expect(defs).toBeVisible();
+
+    const stateRes = await page.request.get('/api/state?project=tobitests');
+    const stateJson = await stateRes.json();
+    const proj = stateJson.project || {};
+
+    const text = (await defs.textContent()) || '';
+    if (proj.url) expect(text).toContain(proj.url);
+    if (proj.branch) expect(text).toContain(proj.branch);
+    if (proj.repoPath) expect(text).toContain(proj.repoPath);
   });
 
   test('TC-SETTINGS-02: Detección activa del motor de acción Playwright y DevTools CDP', async ({ page }) => {
@@ -32,11 +38,37 @@ test.describe('TobiTests — Settings, Telemetry & MCP Connectivity', () => {
   });
 
   test('TC-SETTINGS-03: Conmutación reactiva de configuración de orquestación BYOA', async ({ page }) => {
-    test.info().annotations.push({
-      type: 'weak-oracle',
-      description: 'Verificar conmutación reactiva de configuración de orquestación BYOA en UI',
-    });
     await enterSettings(page);
-    await expect(page.locator('.panel').first()).toBeVisible();
+    // Cambiar a La Oficina donde está la barra interactiva de orquestación BYOA
+    const sidebar = page.locator('.app > aside.sidebar');
+    const officeBtn = sidebar.locator('button:has-text("La Oficina")').first();
+    await officeBtn.click();
+
+    const primarySelect = page.getByTestId('settings-primary-agent-select');
+    const secondarySelect = page.getByTestId('settings-secondary-agent-select');
+    await expect(primarySelect).toBeVisible();
+    await expect(secondarySelect).toBeVisible();
+
+    const originalPrimary = await primarySelect.inputValue();
+    const originalSecondary = await secondarySelect.inputValue();
+
+    const targetPrimary = originalPrimary === 'claude-code' ? 'cursor' : 'claude-code';
+
+    try {
+      const [postReq] = await Promise.all([
+        page.waitForRequest((req) => req.url().includes('/api/antigravity/orchestration') && req.method() === 'POST'),
+        primarySelect.selectOption(targetPrimary),
+      ]);
+      const res = await postReq.response();
+      expect(res?.status()).toBe(200);
+
+      await page.reload();
+      await expect(primarySelect).toHaveValue(targetPrimary);
+    } finally {
+      await primarySelect.selectOption(originalPrimary);
+      if (originalSecondary) {
+        await secondarySelect.selectOption(originalSecondary);
+      }
+    }
   });
 });

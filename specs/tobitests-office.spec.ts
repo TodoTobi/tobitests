@@ -27,22 +27,31 @@ test.describe('TobiTests — Virtual Office & Isometric Simulation', () => {
   });
 
   test('TC-OFFICE-02: Estación Mesa de Comando Central con agente Orchestrator activo', async ({ page }) => {
-    test.info().annotations.push({
-      type: 'weak-oracle',
-      description: 'Verificar agente orchestrator en estación central con estado activo',
-    });
     await enterOffice(page);
-    await expect(page.locator('.iso-stage, .iso-layout, canvas').first()).toBeVisible();
+    const orchestratorAgent = page.getByTestId('office-agent-orchestrator');
+    await expect(orchestratorAgent).toBeVisible();
+    const stateAttr = await orchestratorAgent.getAttribute('data-state');
+    expect(['working', 'idle']).toContain(stateAttr);
+
+    const stateRes = await page.request.get('/api/state?project=tobitests');
+    const stateJson = await stateRes.json();
+    const expectedAgents = stateJson.officeAgents || [];
+    const renderedAgents = page.locator('[data-testid^="office-agent-"]');
+    await expect(renderedAgents).toHaveCount(expectedAgents.length);
   });
 
   test('TC-OFFICE-03: Feed de telemetría en tiempo real con niveles info, warn y success', async ({ page }) => {
-    test.info().annotations.push({
-      type: 'weak-oracle',
-      description: 'Verificar presencia de feed de telemetría en vivo con entradas clasificadas por nivel info, warn y success',
-    });
     await enterOffice(page);
-    const panel = page.locator('.panel, .iso-layout, .iso-stage, .iso-terminal').first();
-    await expect(panel).toBeVisible();
+    const feed = page.getByTestId('office-feed');
+    await expect(feed).toBeVisible();
+    const items = feed.locator('[data-testid="office-feed-item"]');
+    await expect.poll(async () => await items.count()).toBeGreaterThanOrEqual(1);
+
+    const count = await items.count();
+    for (let i = 0; i < count; i++) {
+      const level = await items.nth(i).getAttribute('data-level');
+      expect(['info', 'warn', 'success', 'error']).toContain(level);
+    }
   });
 
   test('TC-OFFICE-04: Conmutación entre estado working e idle con actualización de avatar', async ({ page }) => {
@@ -65,12 +74,27 @@ test.describe('TobiTests — Virtual Office & Isometric Simulation', () => {
   });
 
   test('TC-OFFICE-13: Divergencia de estado en filtros de telemetría al alternar agentes (BUG-01)', async ({ page }) => {
-    test.info().annotations.push({
-      type: 'weak-oracle',
-      description: 'Verificar divergencia de estado en filtros de telemetría al conmutar entre agentes',
-    });
     await enterOffice(page);
-    const officeContainer = page.locator('.iso-layout, .iso-stage, canvas, main').first();
-    await expect(officeContainer).toBeVisible();
+    const filterAllBtn = page.getByTestId('office-filter-all');
+    await expect(filterAllBtn).toBeVisible();
+
+    const getCounter = async () => {
+      const text = (await filterAllBtn.textContent()) || '';
+      const match = text.match(/\((\d+)\)/);
+      return match ? parseInt(match[1], 10) : 0;
+    };
+
+    const countBefore = await getCounter();
+    const itemsBefore = await page.getByTestId('office-feed-item').count();
+    expect(itemsBefore).toBe(countBefore);
+
+    const explorer = page.getByTestId('office-agent-explorer');
+    if (await explorer.isVisible()) {
+      await explorer.click();
+    }
+
+    const countAfter = await getCounter();
+    const itemsAfter = await page.getByTestId('office-feed-item').count();
+    expect(itemsAfter).toBe(countAfter);
   });
 });

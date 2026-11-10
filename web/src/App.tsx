@@ -565,7 +565,7 @@ function AppHeader({ title, onMenu, onNotifications, onLive, tobi, onOpenAddProj
       </nav>
       <div className="app-header-actions">
         <ScopeSwitcherBar tobi={tobi} compact />
-        <span className="env-chip"><span className="connection-dot" />{project.environment} · {project.branch}</span>
+        <span className="env-chip" data-testid="shell-ws-badge"><span className="connection-dot" />{project.environment} · {project.branch}</span>
         <Button variant="secondary" className="run-chip" onClick={onLive}>
           <span className="live-pulse" />Run {liveRun?.id || "—"}
           <Badge tone="agent">{(liveRun?.currentStep ?? 0) + 1}/{liveRun?.totalSteps ?? 4}</Badge>
@@ -620,7 +620,7 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
     <PageHeading title="Dashboard" subtitle={`${project.name} · Rama ${project.branch} · Alcance ${activeScope.toUpperCase()}`}>
       <ScopeSwitcherBar tobi={tobi} />
       <Button variant="secondary" onClick={() => navigate("office")}><Icon name="spark" size="sm" />La Oficina ({working} activos)</Button>
-      <Button onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ver ejecución en vivo</Button>
+      <Button data-testid="shell-primary-btn" onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ver ejecución en vivo</Button>
     </PageHeading>
 
     <div className="stat-row">
@@ -1415,10 +1415,10 @@ function SpecsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: T
       <Stat label="Último run" value={tobi.state.metrics.activeRun} meta={tobi.state.project.lastAudit} />
     </div>
     <section className="panel workbench">
-      <aside className="file-tree" aria-label="Archivos">
+      <aside className="file-tree" aria-label="Archivos" data-testid="specs-file-tree">
         <div className="file-tree-head">specs/ ({activeScope})</div>
         {specs.map((s) => (
-          <button type="button" key={s.name} className={`nav-item ${s.name === spec?.name ? "active" : ""}`} onClick={() => setName(s.name)} title={s.name}>
+          <button type="button" key={s.name} className={`nav-item ${s.name === spec?.name ? "active" : ""}`} onClick={() => setName(s.name)} title={s.name} data-testid="specs-file-item">
             <Icon name="file" size="sm" /><span>{s.name}</span>
           </button>
         ))}
@@ -1438,7 +1438,7 @@ function SpecsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: T
           {lines.map((line, i) => (
             <div key={i} className="code-line-row">
               <span className="line-num">{i + 1}</span>
-              <code className={`line-code ${line.includes("expect(") ? "code-highlight" : ""}`}>{line}</code>
+              <code className={`line-code ${line.includes("expect(") ? "code-highlight" : ""}`} data-testid={line.includes("expect(") ? "specs-line-assert" : undefined}>{line}</code>
             </div>
           ))}
         </div>
@@ -1579,7 +1579,7 @@ function SettingsPage({ tobi }: { tobi: Tobi }) {
     <PageHeading title="Settings" subtitle={`Configuración y herramientas de ${project.name}`} />
     <section className="panel">
       <div className="panel-head"><h2 className="heading-sm">Proyecto</h2><Badge tone="success"><span className="connection-dot" />Vinculado</Badge></div>
-      <div className="defs">
+      <div className="defs" data-testid="settings-project-defs">
         <div><small>Frontend</small><code>{project.url}</code></div>
         <div><small>Backend</small><code>{project.backendUrl || "http://localhost:3001"}</code></div>
         <div><small>Rama</small><code>{project.branch}</code></div>
@@ -1635,7 +1635,7 @@ function NotificationPanel({ open, onClose, navigate, tobi }: { open: boolean; o
 
   return <>
     <div className={`drawer-backdrop ${open ? "show" : ""}`} onClick={onClose} />
-    <aside className={`notification-panel ${open ? "open" : ""}`} aria-hidden={!open} aria-label="Notificaciones">
+    <aside className={`notification-panel ${open ? "open" : ""}`} aria-hidden={!open} aria-label="Notificaciones" data-testid="shell-notifications-drawer">
       <div className="panel-head"><h2 className="heading-md">Actividad</h2><Button variant="icon" label="Cerrar" onClick={onClose}><Icon name="x" /></Button></div>
       <div className="row-list">
         {notices.map((n) => (

@@ -458,6 +458,7 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
             </span>
             <select
               className="iso-roster-select"
+              data-testid="settings-primary-agent-select"
               value={tobi.orchestrationConfig?.primaryAgent || "antigravity"}
               onChange={(e) => tobi.setPrimaryAgent(e.target.value as any)}
             >
@@ -489,6 +490,7 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
               <span className="iso-roster-label">Secundario (5, 6, 8):</span>
               <select
                 className="iso-roster-select"
+                data-testid="settings-secondary-agent-select"
                 value={tobi.orchestrationConfig?.secondaryAgent || "opencode"}
                 onChange={(e) => tobi.setSecondaryAgent(e.target.value as any)}
               >
@@ -789,6 +791,7 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
                 <button
                   key={key}
                   type="button"
+                  data-testid={`office-filter-${key}`}
                   className={`iso-filter ${terminalFilter === key ? "active" : ""}`}
                   onClick={() => setTerminalFilter(key)}
                 >
@@ -806,12 +809,12 @@ export function OfficeView({ navigate, tobi, Badge, Button, Icon, PageHeading }:
             </div>
           </div>
 
-          <div className="iso-terminal-logs">
+          <div className="iso-terminal-logs" data-testid="office-feed">
             {filteredLogs.length === 0 ? (
               <div className="iso-term-empty">Sin eventos para este filtro.</div>
             ) : (
               filteredLogs.map((log) => (
-                <div className={`iso-term-line log-${log.level}`} key={log.id}>
+                <div className={`iso-term-line log-${log.level}`} key={log.id} data-testid="office-feed-item" data-level={log.level === "accent" ? "info" : log.level}>
                   <span className="iso-term-time">{log.time}</span>
                   <span className={`iso-term-source tag-${log.source.toLowerCase()}`}>[{log.source}]</span>
                   <span className="iso-term-msg">{log.message}</span>

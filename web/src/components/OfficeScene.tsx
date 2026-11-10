@@ -634,6 +634,7 @@ export function OfficeScene({
         return (
           <div
             key={agent.id}
+            data-testid={`office-agent-${agent.id}`} data-state={isWorking ? "working" : "idle"}
             className={`iso-agent ${walking ? "is-walking" : ""} ${!walking && (isAntigravity ? isWorking : pose.action === "work") ? "is-working" : ""} ${
               !walking && !(isAntigravity ? isWorking : pose.action === "work") ? "is-resting" : ""
             } ${selectedId === agent.id ? "is-selected" : ""} ${isStandup ? "is-in-standup" : ""}`}
