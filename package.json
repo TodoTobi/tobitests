@@ -7,6 +7,7 @@
     "audit": "python scripts/tobitests_cli.py",
     "audit:init": "python scripts/tobitests_cli.py --status exploring --step 1",
     "audit:run": "python scripts/ingest_playwright_results.py --run-playwright",
+    "sync:watch": "python scripts/sync_specs.py --watch",
     "dev:all": "npm run dev --prefix web",
     "test": "playwright test",
     "test:ui": "playwright test --ui",

@@ -1,19 +1,27 @@
-import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { test, expect } from './fixtures/tobi';
 
-async function enterSettings(page: any) {
+async function enterSettings(page: Page) {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  const enterBtn = page.locator("button:has-text('Entrar al workspace')").first();
-  if (await enterBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+  const enterBtn = page.getByRole('button', { name: /entrar al workspace/i });
+  const sidebar = page.locator('.app > aside.sidebar');
+  await expect(enterBtn.or(sidebar).first()).toBeVisible();
+  if (await enterBtn.isVisible()) {
     await enterBtn.click();
   }
-  await page.locator('.app > aside.sidebar').waitFor({ state: 'visible', timeout: 5000 });
-  const settingsBtn = page.locator('.app > aside.sidebar button:has-text("Settings")').first();
+  await expect(sidebar).toBeVisible();
+
+  const settingsBtn = sidebar.locator('button:has-text("Settings")').first();
   await settingsBtn.click();
-  await page.waitForSelector('.panel, main', { timeout: 8000 });
+  await expect(page.locator('.panel, main').first()).toBeVisible();
 }
 
 test.describe('TobiTests — Settings, Telemetry & MCP Connectivity', () => {
   test('TC-SETTINGS-01: Panel Proyecto muestra directorio local, URL y rama de Git', async ({ page }) => {
+    test.info().annotations.push({
+      type: 'weak-oracle',
+      description: 'Verificar visualización de directorio local, URL y rama Git en el panel',
+    });
     await enterSettings(page);
     await expect(page.locator('.panel, main').first()).toBeVisible();
   });
@@ -24,6 +32,10 @@ test.describe('TobiTests — Settings, Telemetry & MCP Connectivity', () => {
   });
 
   test('TC-SETTINGS-03: Conmutación reactiva de configuración de orquestación BYOA', async ({ page }) => {
+    test.info().annotations.push({
+      type: 'weak-oracle',
+      description: 'Verificar conmutación reactiva de configuración de orquestación BYOA en UI',
+    });
     await enterSettings(page);
     await expect(page.locator('.panel').first()).toBeVisible();
   });

@@ -9,11 +9,11 @@
     "docs/ARCHITECTURE.md"
   ],
   "scripts": {
-    "audit:init": "python scripts/tobitests_cli.py init",
+    "audit:init": "python scripts/tobitests_cli.py",
     "audit:run": "python scripts/ingest_playwright_results.py",
     "audit:deep": "python scripts/run_deep_audit.py",
     "sync:watch": "python scripts/sync_specs.py --watch",
-    "dev:all": "npm run dev:all"
+    "dev:all": "npm run dev --prefix web"
   },
   "blackboard": {
     "path": "web/public/data/antigravity-live.json",

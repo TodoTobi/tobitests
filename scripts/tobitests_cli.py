@@ -20,9 +20,10 @@ import os
 import re
 import socket
 import sys
+import time
 import urllib.parse
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
 def resolve_fastest_url(url_str: str) -> str:
@@ -138,6 +139,68 @@ BLACKBOARD_STATE_META: Dict[str, Dict[str, Any]] = {
 def slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug or "custom-project"
+
+
+def state_path(repo_root: Path, slug: str) -> Path:
+    """Devuelve la ruta canónica del archivo de estado según el Paso 0."""
+    return repo_root / "web" / "public" / "data" / f"{slug}-state.json"
+
+def atomic_write_json(path: Path, payload: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.parent / f".{path.name}.{os.getpid()}.{time.time_ns()}.tmp"
+    try:
+        tmp_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        os.replace(tmp_path, path)
+    except Exception:
+        if tmp_path.exists():
+            try:
+                tmp_path.unlink()
+            except Exception:
+                pass
+        raise
+
+
+def locked_update(path: Path, fn: Callable[[Dict[str, Any]], Dict[str, Any]]) -> Dict[str, Any]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = Path(f"{str(path)}.lock")
+
+    lock_acquired = False
+    for attempt in range(5):
+        try:
+            if lock_path.exists() and (time.time() - lock_path.stat().st_mtime > 10):
+                try:
+                    lock_path.unlink()
+                except Exception:
+                    pass
+        except OSError:
+            pass
+
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_RDWR)
+            os.close(fd)
+            lock_acquired = True
+            break
+        except FileExistsError:
+            if attempt < 4:
+                time.sleep(0.1)
+
+    try:
+        data: Dict[str, Any] = {}
+        if path.exists():
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+
+        updated = fn(data)
+        atomic_write_json(path, updated)
+        return updated
+    finally:
+        if lock_acquired and lock_path.exists():
+            try:
+                lock_path.unlink()
+            except Exception:
+                pass
 
 
 def detect_stack_and_routes(
@@ -349,8 +412,8 @@ def build_journey_graph(routes: List[Dict[str, str]], project_name: str) -> Tupl
                 "y": 310 if i == 0 else (80 + row * 230),
                 "width": 260,
                 "height": 146,
-                "testsCount": 4 if is_api else 6,
-                "touches": 4 if is_api else 6,
+                "testsCount": 0,
+                "touches": 0,
                 "failedCount": 0,
                 "blockedCount": 0,
                 "category": "API" if is_api else r["category"],
@@ -372,9 +435,9 @@ def build_journey_graph(routes: List[Dict[str, str]], project_name: str) -> Tupl
                     "agentRole": "Auditor API ({ request })" if is_target_api else ("Explorador de DOM" if idx % 2 == 1 else "Auditor CDP"),
                     "agentMcp": "@playwright/test (APIRequestContext)" if is_target_api else ("@playwright/mcp" if idx % 2 == 1 else "@chromedevtools/chrome-devtools-mcp"),
                     "actionCode": f"await request.get('{target['route']}');" if is_target_api else f"await page.goto('{target['route']}');",
-                    "humanExplanation": f"Transición verificada hacia {target['title']} bajo el Oráculo de 3 Capas.",
-                    "duration": f"{45 + idx * 12}ms" if is_target_api else f"{85 + idx * 15}ms",
-                    "status": "Passed",
+                    "humanExplanation": "Pendiente de verificación",
+                    "duration": "—",
+                    "status": "Skipped",
                 }
             )
 
@@ -414,7 +477,7 @@ def generate_workspace_artifacts(
 
     prd_path = ws_dir / "prd-ground-truth.json"
     matrix_path = ws_dir / "test-matrix.json"
-    state_path = public_data_dir / f"{project_slug}-state.json"
+    target_state = state_path(repo_root, project_slug)
 
     existing_prd: Dict[str, Any] = {}
     existing_matrix: Dict[str, Any] = {}
@@ -431,9 +494,9 @@ def generate_workspace_artifacts(
                 existing_matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
             except Exception:
                 existing_matrix = {}
-        if state_path.exists():
+        if target_state.exists():
             try:
-                existing_state = json.loads(state_path.read_text(encoding="utf-8"))
+                existing_state = json.loads(target_state.read_text(encoding="utf-8"))
             except Exception:
                 existing_state = {}
 
@@ -474,10 +537,25 @@ def generate_workspace_artifacts(
         },
         "routesDiscovered": merged_routes,
     }
-    prd_path.write_text(json.dumps(prd_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    atomic_write_json(prd_path, prd_data)
 
     # 2. Generate / Merge Test Matrix (Step 4)
-    new_suites_spec: List[Dict[str, Any]] = []
+    generated_spec_cases = [
+        "TC-01: Entry Point & DOM Readiness (Layer 1 Oracle)",
+        "TC-02: Runtime Telemetry & Console Health (Layer 1 Oracle)",
+        "TC-03: Interactive Surface & Accessibility Tree (Layer 2 Oracle)",
+        "TC-04: Viewport Adaptability & Layout Integrity (Layer 3 Oracle)",
+    ]
+    own_suite = {
+        "domain": f"{project_name} — Core 3-Layer Oracle Audit",
+        "scope": audit_scope,
+        "specFile": f"{project_slug}.spec.ts",
+        "description": f"Suite Playwright sintética para auditoría autónoma en {project_name}.",
+        "implemented": True,
+        "cases": generated_spec_cases,
+    }
+
+    new_suites_spec: List[Dict[str, Any]] = [own_suite]
     if audit_scope in ("frontend", "fullstack"):
         new_suites_spec.extend(
             [
@@ -486,6 +564,7 @@ def generate_workspace_artifacts(
                     "scope": "frontend",
                     "specFile": f"{project_slug}-auth.spec.ts",
                     "description": f"Verifica carga inicial, autenticación, manejo de sesiones y cabeceras de seguridad en {project_name}.",
+                    "implemented": False,
                     "cases": [
                         f"TC-AUTH-01: Carga inicial del punto de entrada ({url}) sin errores en consola (Layer 1)",
                         "TC-AUTH-02: Validación de campos obligatorios y formatos en formulario de acceso",
@@ -498,6 +577,7 @@ def generate_workspace_artifacts(
                     "scope": "frontend",
                     "specFile": f"{project_slug}-journeys.spec.ts",
                     "description": f"Audita los recorridos principales, sincronización reactiva entre vistas y respuestas en {project_name}.",
+                    "implemented": False,
                     "cases": [
                         "TC-FLOW-01: Transición fluida hacia el panel principal sin layout shift ni overflow horizontal",
                         "TC-FLOW-02: Consistencia de estado entre vistas tras mutación de datos (Layer 2 State Divergence)",
@@ -510,6 +590,7 @@ def generate_workspace_artifacts(
                     "scope": "frontend",
                     "specFile": f"{project_slug}-rbac-a11y.spec.ts",
                     "description": f"Evalúa fronteras de permisos, entradas límite, responsive 375px y contraste WCAG en {project_name}.",
+                    "implemented": False,
                     "cases": [
                         "TC-RBAC-01: Bloqueo de acceso no autorizado a rutas protegidas y redirección limpia",
                         "TC-RBAC-02: Sanitización de entradas contra payloads XSS e inyecciones en buscadores",
@@ -527,6 +608,7 @@ def generate_workspace_artifacts(
                 "scope": "backend",
                 "specFile": f"{project_slug}-api.spec.ts",
                 "description": f"Pruebas puras de API con Playwright APIRequestContext ({{ request }}): códigos HTTP, latencia < 3000ms, schemas JSON y RBAC en {project_name}.",
+                "implemented": False,
                 "cases": [
                     f"TC-API-01: GET {url}/api/health responde 200 OK con schema JSON válido y latencia < 500ms",
                     f"TC-API-02: POST {url}/api/antigravity/scope sincroniza auditScope sin abrir navegador",
@@ -542,6 +624,13 @@ def generate_workspace_artifacts(
         lambda s: s.get("specFile"),
     )
 
+    for s in merged_suites_spec:
+        if s.get("specFile") == f"{project_slug}.spec.ts":
+            s["implemented"] = True
+            s["cases"] = generated_spec_cases
+        elif "implemented" not in s:
+            s["implemented"] = False
+
     matrix_data = {
         "schemaVersion": "1.0.0",
         "generatedAt": now_iso,
@@ -555,7 +644,7 @@ def generate_workspace_artifacts(
         "totalTests": sum(len(s.get("cases", [])) for s in merged_suites_spec),
         "suites": merged_suites_spec,
     }
-    matrix_path.write_text(json.dumps(matrix_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    atomic_write_json(matrix_path, matrix_data)
 
     # 2.5. Step 5: Synthesize Physical Playwright Spec on Disk (`specs/<project-slug>.spec.ts`)
     specs_dir = repo_root / "specs"
@@ -563,8 +652,7 @@ def generate_workspace_artifacts(
     target_spec_file = specs_dir / f"{project_slug}.spec.ts"
     custom_spec_file = specs_dir / f"custom-{project_slug}.spec.ts"
 
-    if not target_spec_file.exists() and not custom_spec_file.exists() and project_slug not in ("tobitests", "tobi"):
-        spec_content = f"""import {{ test, expect }} from '@playwright/test';
+    spec_content = f"""import {{ test, expect }} from '@playwright/test';
 
 const TARGET_URL = process.env.TARGET_URL || '{url}';
 
@@ -581,206 +669,146 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
     const res = await page.goto(TARGET_URL, {{ waitUntil: 'domcontentloaded', timeout: 15000 }});
     expect(res ? res.status() : 200).toBeLessThan(400);
     await expect(page.locator('body')).toBeVisible({{ timeout: 10000 }});
-    await page.waitForTimeout(500);
-    await page.screenshot({{ path: 'web/public/evidence/runs/{project_slug}-01-entry.png', fullPage: true }});
   }});
 
   test('TC-02: Runtime Telemetry & Console Health (Layer 1 Oracle)', async ({{ page }}) => {{
     const pageErrors: string[] = [];
     page.on('pageerror', (err) => pageErrors.push(err.message));
     await page.goto(TARGET_URL, {{ waitUntil: 'load', timeout: 15000 }});
-    await page.waitForTimeout(600);
     const bodyText = await page.locator('body').innerText();
     expect(bodyText.trim().length).toBeGreaterThan(0);
-    await page.screenshot({{ path: 'web/public/evidence/runs/{project_slug}-02-telemetry.png' }});
+    expect(pageErrors).toEqual([]);
   }});
 
   test('TC-03: Interactive Surface & Accessibility Tree (Layer 2 Oracle)', async ({{ page }}) => {{
     await page.goto(TARGET_URL, {{ waitUntil: 'domcontentloaded', timeout: 15000 }});
-    await page.waitForTimeout(500);
     const interactive = page.locator('button:visible, a:visible, [role="button"]:visible, input:visible, canvas:visible');
     const count = await interactive.count();
     if (count > 0) {{
       const firstTarget = interactive.first();
       await expect(firstTarget).toBeVisible();
-      try {{
-        await firstTarget.hover({{ timeout: 2000 }});
-      }} catch (e) {{
-        // Safe hover attempt
-      }}
+      await firstTarget.hover({{ timeout: 2000 }});
     }}
-    await page.screenshot({{ path: 'web/public/evidence/runs/{project_slug}-03-interaction.png' }});
   }});
 
   test('TC-04: Viewport Adaptability & Layout Integrity (Layer 3 Oracle)', async ({{ page }}) => {{
     await page.setViewportSize({{ width: 375, height: 812 }});
     await page.goto(TARGET_URL, {{ waitUntil: 'domcontentloaded', timeout: 15000 }});
-    await page.waitForTimeout(400);
     const hasSevereOverflow = await page.evaluate(() => {{
       return document.documentElement.scrollWidth > window.innerWidth + 25;
     }});
-    expect(typeof hasSevereOverflow).toBe('boolean');
-    await page.screenshot({{ path: 'web/public/evidence/runs/{project_slug}-04-responsive.png' }});
+    expect(hasSevereOverflow).toBe(false);
   }});
 }});
 """
+
+    if not target_spec_file.exists() and not custom_spec_file.exists() and project_slug not in ("tobitests", "tobi"):
         target_spec_file.write_text(spec_content, encoding="utf-8")
 
-    # 3. Generate / Merge State JSON for Web UI (`web/public/data/<project-slug>-state.json`)
-    new_run_tests: List[Dict[str, Any]] = []
-    new_suites_ui: List[Dict[str, Any]] = []
-    new_specs_ui: List[Dict[str, Any]] = []
+    # 3. Read real specs from disk (`specs/<slug>*.spec.ts` and `specs/custom-<slug>*.spec.ts`)
+    found_spec_files: List[Path] = []
+    if specs_dir.exists():
+        for f in sorted(specs_dir.iterdir()):
+            if f.is_file() and f.name.endswith(".spec.ts"):
+                if f.name.startswith(f"{project_slug}") or f.name.startswith(f"custom-{project_slug}"):
+                    found_spec_files.append(f)
 
-    for idx, s in enumerate(merged_suites_spec, start=1):
-        is_api_suite = s.get("scope") == "backend" or "api" in s.get("specFile", "").lower()
-        new_suites_ui.append(
+    specs_from_disk: List[Dict[str, Any]] = []
+    for sf in found_spec_files:
+        try:
+            code_content = sf.read_text(encoding="utf-8")
+        except Exception:
+            code_content = ""
+        tests_count = len(re.findall(r"\btest\s*\(", code_content))
+        specs_from_disk.append(
             {
-                "name": f"Suite {idx}: {s['domain']}",
-                "description": s["description"],
-                "tests": len(s["cases"]),
-                "status": "Passed",
-                "passRate": "100%",
-                "duration": "0.6s" if is_api_suite else "1.6s",
-                "lastRun": "#RUN-AUDIT-01",
-                "specFile": s["specFile"],
+                "name": sf.name,
+                "domain": sf.name.replace(".spec.ts", "").replace("-", " ").title(),
+                "status": "Skipped",
+                "testsCount": tests_count,
+                "lastRun": "Pendiente",
+                "code": code_content,
             }
         )
-        if is_api_suite:
-            code_str = (
-                "import { test, expect } from '@playwright/test';\n\n"
-                f"test.describe('{project_name} — {s['domain']}', () => {{\n"
-                + "\n".join(
-                    [
-                        f"  test('{c}', async ({{ request }}) => {{\n"
-                        f"    const started = Date.now();\n"
-                        f"    const res = await request.get('{url}/api/health');\n"
-                        f"    expect(res.status()).toBeLessThan(500);\n"
-                        f"    expect(Date.now() - started).toBeLessThan(3000);\n"
-                        f"  }});"
-                        for c in s["cases"]
-                    ]
-                )
-                + "\n});\n"
-            )
-        else:
-            code_str = (
-                "import { test, expect } from '@playwright/test';\n\n"
-                f"test.describe('{project_name} — {s['domain']}', () => {{\n"
-                + "\n".join(
-                    [
-                        f"  test('{c}', async ({{ page }}) => {{\n"
-                        f"    await page.goto('{url}');\n"
-                        f"    await expect(page.locator('body')).toBeVisible();\n"
-                        f"  }});"
-                        for c in s["cases"]
-                    ]
-                )
-                + "\n});\n"
-            )
-        new_specs_ui.append(
-            {
-                "name": s["specFile"],
-                "domain": s["domain"],
-                "status": "Passed",
-                "testsCount": len(s["cases"]),
-                "lastRun": date_ar,
-                "code": code_str,
-            }
-        )
-        for c_idx, case_title in enumerate(s["cases"], start=1):
-            if is_api_suite:
-                new_run_tests.append(
-                    {
-                        "name": case_title,
-                        "spec": s["specFile"],
-                        "status": "Passed",
-                        "duration": f"0.0{4 + c_idx}s",
-                        "screenshot": "",
-                        "videoUrl": "",
-                        "steps": [
-                            {
-                                "step": 1,
-                                "action": "API Request",
-                                "target": f"request.get('{url}/api/health')",
-                                "status": "Passed",
-                                "duration": "32ms",
-                                "expected": "HTTP 200 OK & latency < 3000ms",
-                                "actual": "HTTP 200 OK (32ms) · Content-Type: application/json",
-                            },
-                            {
-                                "step": 2,
-                                "action": "Assert Schema",
-                                "target": "expect(body).toMatchObject({ ok: true })",
-                                "status": "Passed",
-                                "duration": "8ms",
-                                "expected": "Valid JSON contract without 5xx stacktrace leak",
-                                "actual": "JSON contract verified under Layer 1 & Layer 2 Oracles",
-                            },
-                        ],
-                    }
-                )
-            else:
-                target_route = merged_routes[min(c_idx - 1, len(merged_routes) - 1)]["route"]
-                new_run_tests.append(
-                    {
-                        "name": case_title,
-                        "spec": s["specFile"],
-                        "status": "Passed",
-                        "duration": f"0.{25 + (c_idx * 10)}s",
-                        "screenshot": "/evidence/runs/tobi-02-dashboard.png" if project_name.lower() in ("tobitests", "tobi") else "",
-                        "videoUrl": "/evidence/videos/tobitests-self-audit.webm" if project_name.lower() in ("tobitests", "tobi") else "",
-                        "steps": [
-                            {
-                                "step": 1,
-                                "action": "Navigate",
-                                "target": f"page.goto('{url}')",
-                                "status": "Passed",
-                                "duration": "95ms",
-                                "expected": "HTTP 200 & DOM Ready",
-                                "actual": "HTTP 200 & DOM Ready",
-                            },
-                            {
-                                "step": 2,
-                                "action": "Inspect",
-                                "target": f"Route {target_route} (3-Layer Oracle)",
-                                "status": "Passed",
-                                "duration": "45ms",
-                                "expected": "0 console.error, 0 state divergences, 0 layout overflows",
-                                "actual": "Verified clean under Layer 1, Layer 2, and Layer 3 Oracles",
-                            },
-                            {
-                                "step": 3,
-                                "action": "Assert",
-                                "target": "expect(page.locator('body')).toBeVisible()",
-                                "status": "Passed",
-                                "duration": "30ms",
-                                "expected": "Interactive elements visible and enabled",
-                                "actual": "Interactive elements visible and enabled",
-                            },
-                        ],
-                    }
-                )
 
-    prev_run_tests = (
-        existing_state.get("runs", [{}])[0].get("tests", [])
-        if existing_state.get("runs")
-        else []
-    )
-    merged_run_tests = merge_list_by_key(
-        prev_run_tests,
-        new_run_tests,
-        lambda t: (t.get("spec"), t.get("name")),
-    )
-    merged_suites_ui = merge_list_by_key(
-        existing_state.get("suites", []),
-        new_suites_ui,
-        lambda s: s.get("specFile"),
-    )
-    merged_specs_ui = merge_list_by_key(
-        existing_state.get("specs", []),
-        new_specs_ui,
-        lambda s: s.get("name"),
-    )
+    default_office_agents = [
+        {
+            "id": "orchestrator",
+            "initials": "AG",
+            "name": "Antigravity",
+            "role": "Chief Architect & Telemetry Judge",
+            "employment": "Co-Orquestador Analítico",
+            "status": "idle",
+            "activity": "desk",
+            "bubble": f"PRD y Matriz de {project_name} sincronizados (alcance: {audit_scope}).",
+            "idleBubble": f"En guardia · Workspace {project_name} inicializado",
+            "task": f"Coordinando el Oráculo de 3 Capas sobre {project_name} ({audit_scope})",
+            "mcp": "@playwright/mcp",
+            "tone": "agent",
+            "run": "",
+        },
+        {
+            "id": "explorer",
+            "initials": "EX",
+            "name": "Explorer QA",
+            "role": "Simulador de Recorridos & DOM",
+            "employment": "Exploración de Flujos",
+            "status": "idle",
+            "activity": "desk",
+            "bubble": "Esperando primera ejecución",
+            "idleBubble": "Listo para nueva exploración de rutas",
+            "task": f"Validando estados y accesibilidad en {project_name}",
+            "mcp": "@playwright/mcp",
+            "tone": "success",
+            "run": "",
+        },
+        {
+            "id": "telemetry",
+            "initials": "TL",
+            "name": "Telemetry Auditor",
+            "role": "Inspector CDP & Causa Raíz",
+            "employment": "Auditoría de Consola y Red",
+            "status": "idle",
+            "activity": "server",
+            "bubble": "Esperando primera ejecución",
+            "idleBubble": "Chrome CDP & API Inspector en espera",
+            "task": f"Auditando trazas de red, latencia y schemas de {project_name}",
+            "mcp": "@chromedevtools/chrome-devtools-mcp",
+            "tone": "warning",
+            "run": "",
+        },
+        {
+            "id": "writer",
+            "initials": "SW",
+            "name": "Spec Writer",
+            "role": "Ingeniero de Especificaciones",
+            "employment": "Síntesis de Código E2E & API",
+            "status": "idle",
+            "activity": "desk",
+            "bubble": "Esperando primera ejecución",
+            "idleBubble": "Suites Playwright sincronizadas",
+            "task": f"Escribiendo aserciones semánticas ({audit_scope}) para {project_name}",
+            "mcp": "@playwright/mcp",
+            "tone": "agent",
+            "run": "",
+        },
+        {
+            "id": "opencode",
+            "initials": "OC",
+            "name": "OpenCode (CLI)",
+            "role": "Ejecutor CLI & Auto-Curación AST",
+            "employment": "Brazo Ejecutor & Spec Runner",
+            "status": "idle",
+            "activity": "desk",
+            "bubble": "Esperando primera ejecución",
+            "idleBubble": "Motor CLI en standby",
+            "task": f"Ejecución aislada y self-healing en {project_name}",
+            "mcp": "@opencode/deepseek",
+            "tone": "info",
+            "run": "",
+        },
+    ]
+
     merged_nodes = merge_list_by_key(
         existing_state.get("journeyMap", {}).get("nodes", []),
         nodes,
@@ -792,8 +820,32 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
         lambda e: e.get("id"),
     )
 
-    passed_total = sum(1 for t in merged_run_tests if t.get("status") == "Passed")
-    failed_total = sum(1 for t in merged_run_tests if t.get("status") == "Failed")
+    clean_metrics = {
+        "passRate": "0%",
+        "totalRuns": 0,
+        "failedTests": 0,
+        "openBugs": len(existing_state.get("bugs", [])),
+        "avgDuration": "0.0s",
+        "activeRun": "",
+        "totalTests": 0,
+    }
+
+    if existing_state and not force_clean:
+        runs = existing_state.get("runs", [])
+        suites = existing_state.get("suites", [])
+        metrics = existing_state.get("metrics", clean_metrics)
+        office_agents = existing_state.get("officeAgents", default_office_agents)
+        bugs = existing_state.get("bugs", [])
+        has_live_run = "liveRun" in existing_state
+        live_run = existing_state.get("liveRun")
+    else:
+        runs = []
+        suites = []
+        metrics = clean_metrics
+        office_agents = default_office_agents
+        bugs = []
+        has_live_run = False
+        live_run = None
 
     state_payload: Dict[str, Any] = {
         "auditScope": audit_scope,
@@ -807,199 +859,27 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
             "lastAudit": date_ar,
             "auditScope": audit_scope,
         },
-        "metrics": {
-            "passRate": f"{(passed_total / max(1, len(merged_run_tests))) * 100:.0f}%",
-            "totalRuns": int(existing_state.get("metrics", {}).get("totalRuns", 0)) + 1,
-            "failedTests": failed_total,
-            "openBugs": len(existing_state.get("bugs", [])),
-            "avgDuration": "0.4s",
-            "activeRun": "#RUN-AUDIT-01",
-            "totalTests": len(merged_run_tests),
-        },
+        "metrics": metrics,
         "journeyMap": {
             "nodes": merged_nodes,
             "edges": merged_edges,
         },
-        "runs": [
-            {
-                "id": "#RUN-AUDIT-01",
-                "suite": f"{project_name} — 8-Step Autonomous Multi-Agent Audit ({', '.join(prev_scopes).upper()})",
-                "branch": "main",
-                "status": "Completed" if failed_total == 0 else "Failed",
-                "total": len(merged_run_tests),
-                "passed": passed_total,
-                "failed": failed_total,
-                "skipped": 0,
-                "duration": "4.8s",
-                "date": date_ar,
-                "commit": "HEAD",
-                "tests": merged_run_tests,
-            }
-        ],
-        "officeAgents": [
-            {
-                "id": "orchestrator",
-                "initials": "AG",
-                "name": "Antigravity",
-                "role": "Chief Architect & Telemetry Judge",
-                "employment": "Co-Orquestador Analítico",
-                "status": "idle",
-                "activity": "desk",
-                "bubble": f"PRD y Matriz de {project_name} sincronizados (alcance: {audit_scope}).",
-                "idleBubble": f"En guardia · Workspace {project_name} auditado",
-                "task": f"Coordinando el Oráculo de 3 Capas sobre {project_name} ({audit_scope})",
-                "mcp": "@playwright/mcp",
-                "tone": "agent",
-                "run": "#RUN-AUDIT-01",
-            },
-            {
-                "id": "explorer",
-                "initials": "EX",
-                "name": "Explorer QA",
-                "role": "Simulador de Recorridos & DOM",
-                "employment": "Exploración de Flujos",
-                "status": "idle",
-                "activity": "desk",
-                "bubble": (
-                    f"Standby en modo Backend API puro ({url})"
-                    if audit_scope == "backend"
-                    else f"Recorriendo {len(merged_routes)} rutas descubiertas en {url}"
-                ),
-                "idleBubble": "Listo para nueva exploración de rutas",
-                "task": f"Validando estados y accesibilidad en {project_name}",
-                "mcp": "@playwright/mcp",
-                "tone": "success",
-                "run": "#RUN-AUDIT-01",
-            },
-            {
-                "id": "telemetry",
-                "initials": "TL",
-                "name": "Telemetry Auditor",
-                "role": "Inspector CDP & Causa Raíz",
-                "employment": "Auditoría de Consola y Red",
-                "status": "idle",
-                "activity": "server",
-                "bubble": f"Auditando contratos HTTP y consola de {project_name} (0 errores >= 500)",
-                "idleBubble": "Chrome CDP & API Inspector en espera",
-                "task": f"Auditando trazas de red, latencia y schemas de {project_name}",
-                "mcp": "@chromedevtools/chrome-devtools-mcp",
-                "tone": "warning",
-                "run": "#RUN-AUDIT-01",
-            },
-            {
-                "id": "writer",
-                "initials": "SW",
-                "name": "Spec Writer",
-                "role": "Ingeniero de Especificaciones",
-                "employment": "Síntesis de Código E2E & API",
-                "status": "idle",
-                "activity": "desk",
-                "bubble": f"Compilados {len(merged_specs_ui)} archivos .spec.ts para {project_name}",
-                "idleBubble": "Suites Playwright sincronizadas",
-                "task": f"Escribiendo aserciones semánticas ({audit_scope}) para {project_name}",
-                "mcp": "@playwright/mcp",
-                "tone": "agent",
-                "run": "#RUN-AUDIT-01",
-            },
-            {
-                "id": "opencode",
-                "initials": "OC",
-                "name": "OpenCode (CLI)",
-                "role": "Ejecutor CLI & Auto-Curación AST",
-                "employment": "Brazo Ejecutor & Spec Runner",
-                "status": "idle",
-                "activity": "desk",
-                "bubble": f"Ejecutando suites ({audit_scope}) de {project_name} y fusionando resultados",
-                "idleBubble": "Motor CLI en standby",
-                "task": f"Ejecución aislada y self-healing en {project_name}",
-                "mcp": "@opencode/deepseek",
-                "tone": "info",
-                "run": "#RUN-AUDIT-01",
-            },
-        ],
-        "liveRun": {
-            "id": "#RUN-AUDIT-01",
-            "suite": f"{project_name} — 8-Step Autonomous Audit ({audit_scope.upper()})",
-            "target": url,
-            "status": "Completed",
-            "currentStep": 3,
-            "totalSteps": 4,
-            "elapsedTime": "4.8s",
-            "steps": [
-                {
-                    "index": "01",
-                    "action": "Bootstrap",
-                    "target": url,
-                    "status": "Passed",
-                    "duration": "120ms",
-                    "description": f"Descubrimiento de stack ({stack_info['framework']}) y alcance {audit_scope}",
-                    "screenshot": "/evidence/runs/tobi-01-landing.png" if project_name.lower() in ("tobitests", "tobi") else "",
-                    "agent": "Antigravity",
-                },
-                {
-                    "index": "02",
-                    "action": "API Probe" if audit_scope == "backend" else "Navigate",
-                    "target": merged_routes[0]["route"],
-                    "status": "Passed",
-                    "duration": "180ms",
-                    "description": (
-                        f"Inspección de endpoints REST/GraphQL con APIRequestContext en {project_name}"
-                        if audit_scope == "backend"
-                        else f"Exploración DOM y captura de árbol de accesibilidad en {project_name}"
-                    ),
-                    "screenshot": "/evidence/runs/tobi-02-dashboard.png" if project_name.lower() in ("tobitests", "tobi") else "",
-                    "agent": "Telemetry Auditor" if audit_scope == "backend" else "Explorer QA",
-                },
-                {
-                    "index": "03",
-                    "action": "Audit CDP/HTTP",
-                    "target": "Network & Console Listeners",
-                    "status": "Passed",
-                    "duration": "90ms",
-                    "description": "Verificación del Oráculo de 3 Capas (Implícito, Divergencia de Estado y Contratos)",
-                    "screenshot": "/evidence/runs/tobi-04-office.png" if project_name.lower() in ("tobitests", "tobi") else "",
-                    "agent": "Telemetry Auditor",
-                },
-                {
-                    "index": "04",
-                    "action": "Synthesize & Merge",
-                    "target": f"specs/{project_slug}-*.spec.ts",
-                    "status": "Passed",
-                    "duration": "140ms",
-                    "description": f"Fusión incremental de {len(merged_specs_ui)} suites Playwright ({', '.join(prev_scopes)})",
-                    "screenshot": "/evidence/runs/tobi-05-specs.png" if project_name.lower() in ("tobitests", "tobi") else "",
-                    "agent": "OpenCode (CLI)",
-                },
-            ],
-            "telemetryLogs": [
-                {
-                    "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                    "level": "ACTION",
-                    "message": f"Step 1-3: PRD Ground Truth sincronizado para {project_name} (scope={audit_scope}, {len(merged_routes)} rutas)",
-                    "source": "ANTIGRAVITY",
-                },
-                {
-                    "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                    "level": "INFO",
-                    "message": f"Step 4-5: Matriz fusionada ({len(merged_run_tests)} casos en {len(merged_specs_ui)} archivos .spec.ts)",
-                    "source": "OPENCODE_CLI",
-                },
-                {
-                    "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                    "level": "SUCCESS",
-                    "message": f"Step 6-8: Oráculo de 3 Capas completado en {url} (alcances acumulados: {', '.join(prev_scopes)})",
-                    "source": "DEVTOOLS_CDP",
-                },
-            ],
-        },
-        "bugs": existing_state.get("bugs", []),
-        "specs": merged_specs_ui,
-        "suites": merged_suites_ui,
+        "runs": runs,
+        "officeAgents": office_agents,
+        "bugs": bugs,
+        "specs": specs_from_disk,
+        "suites": suites,
     }
+    if has_live_run and live_run is not None:
+        state_payload["liveRun"] = live_run
 
-    state_path.write_text(json.dumps(state_payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    atomic_write_json(target_state, state_payload)
+    if project_slug in ("tobitests", "tobi"):
+        src_state = repo_root / "web" / "src" / "data" / "tobi-state.json"
+        if src_state.exists():
+            atomic_write_json(src_state, state_payload)
 
-    return prd_path, matrix_path, state_path
+    return prd_path, matrix_path, target_state
 
 
 def detect_environment_agents(repo_root: Path) -> List[str]:
@@ -1039,132 +919,92 @@ def detect_environment_agents(repo_root: Path) -> List[str]:
 
 def update_blackboard(
     repo_root: Path,
-    status: str,
-    orchestrator: str,
-    step: int,
+    status: Optional[str] = None,
+    orchestrator: Optional[str] = None,
+    step: Optional[int] = None,
     project_slug: Optional[str] = None,
     audit_scope: Optional[str] = None,
     primary_agent: Optional[str] = None,
     secondary_agent: Optional[str] = None,
     mode: Optional[str] = None,
     swap_agents: bool = False,
+    url: Optional[str] = None,
 ) -> Path:
     live_path = repo_root / "web" / "public" / "data" / "antigravity-live.json"
-    existing: Dict[str, Any] = {}
-    if live_path.exists():
-        try:
-            existing = json.loads(live_path.read_text(encoding="utf-8"))
-        except Exception:
-            existing = {}
 
-    detected_agents = detect_environment_agents(repo_root)
-    orch_config = existing.get("orchestrationConfig", {}) or {}
-    curr_mode = orch_config.get("mode", "dual")
-    curr_primary = orch_config.get("primaryAgent", existing.get("activeOrchestrator", "antigravity"))
-    curr_secondary = orch_config.get("secondaryAgent", "opencode")
+    def _update_fn(existing: Dict[str, Any]) -> Dict[str, Any]:
+        resolved_status = status or existing.get("blackboardState") or "idle"
+        resolved_step = step if step is not None else (existing.get("currentPipelineStep") or 8)
+        resolved_scope = audit_scope or existing.get("auditScope") or "fullstack"
+        resolved_project = project_slug or existing.get("activeProject") or "tobitests"
+        resolved_url = url or existing.get("targetUrl") or "http://localhost:3000"
 
-    if swap_agents:
-        if curr_secondary:
-            curr_primary, curr_secondary = curr_secondary, curr_primary
+        now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    if mode:
-        curr_mode = mode
-        if mode == "single":
-            curr_secondary = None
-        elif mode == "dual" and not curr_secondary:
-            curr_secondary = "opencode" if curr_primary != "opencode" else "antigravity"
+        prev_orch = existing.get("orchestrationConfig", {})
+        eff_primary = primary_agent or prev_orch.get("primaryAgent") or "antigravity"
+        eff_secondary = secondary_agent or prev_orch.get("secondaryAgent") or "opencode"
+        eff_mode = mode or prev_orch.get("mode") or "dual"
 
-    if primary_agent:
-        curr_primary = primary_agent
-        if curr_secondary == primary_agent:
-            curr_secondary = None if curr_mode == "single" else ("opencode" if primary_agent != "opencode" else "antigravity")
+        if swap_agents:
+            eff_primary, eff_secondary = eff_secondary, eff_primary
 
-    if secondary_agent is not None:
-        if secondary_agent.lower() in ("none", "null", "false", "off"):
-            curr_secondary = None
-            curr_mode = "single"
-        else:
-            curr_secondary = secondary_agent
-            curr_mode = "dual"
+        resolved_orchestrator = orchestrator or existing.get("activeOrchestrator") or eff_primary
 
-    next_orch = {
-        "mode": curr_mode,
-        "primaryAgent": curr_primary,
-        "secondaryAgent": curr_secondary,
-        "detectedAgents": detected_agents,
-    }
+        meta = BLACKBOARD_STATE_META.get(resolved_status, BLACKBOARD_STATE_META["idle"])
+        next_step_idx = int(existing.get("stepIndex", 68)) + 1
 
-    # Resolve active orchestrator based on mode and step
-    resolved_orchestrator = orchestrator
-    if orchestrator == "antigravity":
-        if curr_mode == "single":
-            resolved_orchestrator = curr_primary
-        else:
-            if step in (5, 6, 8) and status == "writing_specs":
-                resolved_orchestrator = curr_secondary or curr_primary
-            else:
-                resolved_orchestrator = curr_primary
+        history: List[Dict[str, Any]] = existing.get("history", [])
+        history.insert(
+            0,
+            {
+                "step": next_step_idx,
+                "type": f"STEP_{resolved_step}_{resolved_status.upper()}",
+                "time": now_iso,
+                "action": f"[{resolved_orchestrator.upper()}] Paso {resolved_step}/8: {PIPELINE_STEPS.get(resolved_step, 'Pipeline')} ({resolved_scope.upper()})",
+                "icon": meta.get("icon", "🤝"),
+            },
+        )
 
-    meta = BLACKBOARD_STATE_META.get(status, BLACKBOARD_STATE_META["idle"])
-    step_clamped = max(1, min(8, step))
-    step_name = PIPELINE_STEPS[step_clamped]
-    next_step_idx = int(existing.get("stepIndex", 66)) + 1
-    now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    active_proj = project_slug or existing.get("activeProject", "tobitests")
-    resolved_scope = audit_scope or existing.get("auditScope", "fullstack")
-
-    history: List[Dict[str, Any]] = existing.get("history", [])
-    history.insert(
-        0,
-        {
-            "step": next_step_idx,
+        payload = dict(existing)
+        payload.update({
+            "conversationId": existing.get("conversationId", "local-agent-session"),
+            "stepIndex": next_step_idx,
             "type": "BLACKBOARD_SYNC",
-            "time": now_iso,
-            "action": f"[{resolved_orchestrator.upper()}] Step {step_clamped}/8 ({step_name}) · scope={resolved_scope} · state={status} · mode={curr_mode}",
+            "source": resolved_orchestrator.upper().replace("-", "_"),
+            "secondsAgo": 1,
+            "isWorking": meta["isWorking"],
+            "action": meta["action"],
+            "detail": f"Proyecto: {resolved_project} ({resolved_scope.upper()}) · Paso {resolved_step}/8: {PIPELINE_STEPS.get(resolved_step, 'Co-Orquestación')}",
             "icon": meta["icon"],
-        },
-    )
-    history = history[:12]
+            "timeLabel": f"{meta['timeLabel']} · Paso {resolved_step}/8",
+            "thoughtSnippet": (
+                f"Dual Co-Orchestration active for '{resolved_project}' (scope='{resolved_scope}', step={resolved_step}/8). "
+                f"Primary Lead: {eff_primary}, Runner: {eff_secondary}, State: {resolved_status}."
+            ),
+            "blackboardState": resolved_status,
+            "activeOrchestrator": resolved_orchestrator,
+            "handoffReady": resolved_status in ("standup_meeting", "writing_specs"),
+            "currentPipelineStep": resolved_step,
+            "pipelineStepName": PIPELINE_STEPS.get(resolved_step, "Co-Orquestación"),
+            "activeProject": resolved_project,
+            "targetUrl": resolved_url,
+            "auditScope": resolved_scope,
+            "orchestrationConfig": {
+                "primaryAgent": eff_primary,
+                "secondaryAgent": eff_secondary,
+                "mode": eff_mode,
+                "detectedAgents": detect_environment_agents(repo_root),
+                "lastRoleSwap": now_iso if swap_agents else prev_orch.get("lastRoleSwap"),
+            },
+            "agentStates": meta.get("agents", {}),
+            "history": history[:12],
+            "updatedAt": now_iso,
+            "ttlSeconds": 300,
+        })
+        return payload
 
-    agent_states = dict(meta["agents"])
-    if resolved_scope == "backend" and status == "exploring":
-        agent_states["explorer"] = "idle"
-        agent_states["telemetry"] = "working"
-
-    if curr_mode == "single":
-        agent_states["opencode"] = "idle"
-        if status in ("writing_specs", "exploring", "auditing_telemetry", "standup_meeting"):
-            agent_states["orchestrator"] = "working"
-
-    payload: Dict[str, Any] = {
-        "conversationId": existing.get("conversationId", "local-agent-session"),
-        "stepIndex": next_step_idx,
-        "type": "BLACKBOARD_SYNC",
-        "source": resolved_orchestrator.upper(),
-        "secondsAgo": 1,
-        "isWorking": meta["isWorking"],
-        "action": meta["action"],
-        "detail": f"Proyecto: {active_proj} ({resolved_scope.upper()}) · Paso {step_clamped}/8: {step_name} [{curr_mode.upper()} MODE]",
-        "icon": meta["icon"],
-        "timeLabel": meta["timeLabel"],
-        "thoughtSnippet": (
-            f"Co-Orchestration Blackboard [{resolved_orchestrator.upper()}] executing Step {step_clamped} "
-            f"({step_name}) in state '{status}' (mode='{curr_mode}', primary='{curr_primary}') for project '{active_proj}'."
-        ),
-        "blackboardState": status,
-        "activeOrchestrator": resolved_orchestrator,
-        "handoffReady": status in ("idle", "writing_specs", "auditing_telemetry") and curr_mode != "single",
-        "currentPipelineStep": step_clamped,
-        "pipelineStepName": step_name,
-        "activeProject": active_proj,
-        "auditScope": resolved_scope,
-        "orchestrationConfig": next_orch,
-        "agentStates": agent_states,
-        "history": history,
-    }
-
-    live_path.parent.mkdir(parents=True, exist_ok=True)
-    live_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    locked_update(live_path, _update_fn)
     return live_path
 
 
@@ -1182,7 +1022,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--url",
         type=str,
-        default="http://localhost:3000",
+        default=None,
         help="Target web application or API base URL (default: http://localhost:3000)",
     )
     parser.add_argument(
@@ -1195,21 +1035,21 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         "--scope",
         type=str,
         choices=["frontend", "backend", "fullstack"],
-        default="fullstack",
+        default=None,
         help="Audit scope: 'frontend' (UI E2E only), 'backend' (pure API HTTP only), or 'fullstack' (combined UI + API). Supports incremental merge across runs.",
     )
     parser.add_argument(
         "--status",
         type=str,
         choices=["idle", "exploring", "writing_specs", "auditing_telemetry", "standup_meeting"],
-        default="idle",
+        default=None,
         help="Shared Blackboard state to broadcast to web/public/data/antigravity-live.json",
     )
     parser.add_argument(
         "--orchestrator",
         type=str,
         choices=["antigravity", "opencode", "claude-code", "cursor", "codex", "windsurf", "custom"],
-        default="antigravity",
+        default=None,
         help="Active co-orchestrator engine owning the current pipeline phase",
     )
     parser.add_argument(
@@ -1242,13 +1082,18 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         "--step",
         type=int,
         choices=range(1, 9),
-        default=8,
+        default=None,
         help="Current step in the 8-Step Local Autonomous QA Pipeline (1..8)",
     )
     parser.add_argument(
         "--force",
         action="store_true",
         help="Force clean regeneration of workspace and UI state JSON from scratch",
+    )
+    parser.add_argument(
+        "--wipe-demo",
+        action="store_true",
+        help="Explicitly allow wiping/regenerating protected demo project states",
     )
     return parser.parse_args(argv)
 
@@ -1258,27 +1103,49 @@ def main(argv: Optional[List[str]] = None) -> int:
     repo_root = Path(__file__).resolve().parent.parent
 
     project_slug: Optional[str] = None
+    resolved_scope = args.scope
+    resolved_url = args.url
+
     if args.project:
         project_slug = slugify(args.project)
-        existing_state = repo_root / "web" / "public" / "data" / f"{project_slug}-state.json"
+        existing_state = state_path(repo_root, project_slug)
+        existing_data: Dict[str, Any] = {}
+        if existing_state.exists():
+            try:
+                existing_data = json.loads(existing_state.read_text(encoding="utf-8"))
+            except Exception:
+                existing_data = {}
+
+        if not resolved_scope:
+            resolved_scope = existing_data.get("auditScope") or "fullstack"
+        if not resolved_url:
+            resolved_url = existing_data.get("project", {}).get("url") or "http://localhost:3000"
+
         is_protected_demo = project_slug in {"tobitests", "tobi", "vetconnect", "vetconnect-demo", "tobitests-self-audit"}
-        should_generate = args.force or not is_protected_demo
+        if is_protected_demo and args.force and not args.wipe_demo:
+            print(
+                f"[TobiTests CLI] ERROR: Refusing to overwrite protected demo '{project_slug}' without --wipe-demo flag.",
+                file=sys.stderr,
+            )
+            return 2
+
+        should_generate = (args.force and args.wipe_demo) if is_protected_demo else True
         if should_generate:
             had_existing = existing_state.exists() and not args.force
-            prd_path, matrix_path, state_path = generate_workspace_artifacts(
+            prd_path, matrix_path, state_file = generate_workspace_artifacts(
                 repo_root=repo_root,
                 project_name=args.project,
                 project_slug=project_slug,
-                url=args.url,
+                url=resolved_url,
                 target_repo=args.repo,
-                audit_scope=args.scope,
+                audit_scope=resolved_scope,
                 force_clean=args.force,
             )
             mode_label = "Incrementally merged" if had_existing else "Initialized"
-            print(f"[TobiTests CLI] Workspace {mode_label} (scope={args.scope}): workspaces/{project_slug}/")
+            print(f"[TobiTests CLI] Workspace {mode_label} (scope={resolved_scope}): workspaces/{project_slug}/")
             print(f"  -> Step 3 Normalized PRD : {prd_path.relative_to(repo_root)}")
             print(f"  -> Step 4 Test Matrix    : {matrix_path.relative_to(repo_root)}")
-            print(f"  -> UI State JSON         : {state_path.relative_to(repo_root)}")
+            print(f"  -> UI State JSON         : {state_file.relative_to(repo_root)}")
         else:
             print(f"[TobiTests CLI] Preserving built-in demo state for '{project_slug}' (use --force to overwrite).")
 
@@ -1288,15 +1155,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         orchestrator=args.orchestrator,
         step=args.step,
         project_slug=project_slug,
-        audit_scope=args.scope,
+        audit_scope=resolved_scope,
         primary_agent=args.primary,
         secondary_agent=args.secondary,
         mode=args.mode,
         swap_agents=args.swap_agents,
+        url=resolved_url,
     )
     print(
         f"[TobiTests CLI] Shared Blackboard synchronized: {live_path.relative_to(repo_root)} "
-        f"(orchestrator={args.orchestrator}, scope={args.scope}, state={args.status}, step={args.step}/8)"
+        f"(orchestrator={args.orchestrator}, scope={resolved_scope}, state={args.status}, step={args.step}/8)"
     )
     return 0
 
