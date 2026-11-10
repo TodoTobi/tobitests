@@ -73,4 +73,16 @@ test.describe('TobiTests — Telemetry Fixture Verification', () => {
     });
     await page.waitForTimeout(100);
   });
+
+  test('T7: evento clock se emite primero con epochMs válido', async ({ page, tobi }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const firstEvent = tobi.events[0];
+    expect(firstEvent).toBeDefined();
+    expect(firstEvent.type).toBe('clock');
+    if (firstEvent.type === 'clock') {
+      expect(firstEvent.t).toBe(0);
+      expect(firstEvent.epochMs).toBeGreaterThan(1700000000000);
+      expect(Math.abs(Date.now() - firstEvent.epochMs)).toBeLessThan(10000);
+    }
+  });
 });

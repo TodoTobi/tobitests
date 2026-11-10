@@ -324,3 +324,48 @@ def test_liveRun_is_truthful(repo):
     ev_log = next(l for l in logs if "Evidencia" in l["message"])
     assert ev_log["source"] == "PLAYWRIGHT"
     assert "0 videos" in ev_log["message"]
+
+
+def test_ingest_preserves_unmanaged_state_keys(repo):
+    """T4: La ingesta preserva claves no gestionadas (bugs, specs, journeyMap, officeAgents, routes)."""
+    prior_bugs = [{"id": "BUG-01", "title": "Divergencia de estado"}]
+    prior_specs = [{"name": "tobitests-smoke.spec.ts"}]
+    prior_journey = {"nodes": [{"id": "n1"}], "edges": []}
+    prior_agents = [{"id": "orchestrator", "status": "idle"}]
+    prior_routes = [{"path": "/office"}]
+
+    state_dir = repo / "web" / "public" / "data"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    state_file = state_dir / "tobitests-state.json"
+    initial_state = {
+        "project": {"name": "TobiTests"},
+        "metrics": {"passRate": "100%", "totalRuns": 1, "failedTests": 0, "openBugs": 1, "avgDuration": "0.1s", "activeRun": "#RUN-OLD"},
+        "runs": [],
+        "bugs": prior_bugs,
+        "specs": prior_specs,
+        "journeyMap": prior_journey,
+        "officeAgents": prior_agents,
+        "routes": prior_routes,
+    }
+    state_file.write_text(json.dumps(initial_state), encoding="utf-8")
+
+    spec = make_spec("Test State Preservation")
+    report_file = repo / "test-results" / "rep.json"
+    report_file.parent.mkdir(parents=True, exist_ok=True)
+    report_file.write_text(json.dumps(make_report([spec])), encoding="utf-8")
+
+    ing.ingest_report_into_state(
+        repo_root=repo,
+        project_slug="tobitests",
+        report_path=report_file,
+        copied_screenshots=[],
+        copied_videos=[],
+    )
+
+    saved_state = json.loads(state_file.read_text(encoding="utf-8"))
+    assert saved_state["bugs"] == prior_bugs
+    assert saved_state["specs"] == prior_specs
+    assert saved_state["journeyMap"] == prior_journey
+    assert saved_state["officeAgents"] == prior_agents
+    assert saved_state["routes"] == prior_routes
+

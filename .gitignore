@@ -12,6 +12,8 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+web/public/evidence/runs/RUN-PW-*/
+web/public/evidence/videos/RUN-PW-*/
 
 # Environment & Secrets
 .env

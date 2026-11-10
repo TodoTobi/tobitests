@@ -2,6 +2,7 @@ import fs from 'fs';
 import { test as baseTest, expect, type Request } from '@playwright/test';
 
 export type TobiEvent =
+  | { t: number; type: 'clock'; epochMs: number }
   | { t: number; type: 'step-start' | 'step-end'; title: string; error?: string }
   | { t: number; type: 'console'; level: string; text: string }
   | { t: number; type: 'pageerror'; message: string; stack?: string }
@@ -24,8 +25,11 @@ export const test = baseTest.extend<{ tobi: Tobi }>({
     async ({ page }, use, testInfo) => {
       const t0 = performance.now();
       const now = () => Math.round(performance.now() - t0);
+      const startEpochMs = Date.now();
 
-      const events: TobiEvent[] = [];
+      const events: TobiEvent[] = [
+        { t: 0, type: 'clock', epochMs: startEpochMs },
+      ];
       let strictPageErrors = true;
       let requestIdCounter = 1;
 

@@ -313,7 +313,7 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi, onO
   const [projectsOpen, setProjectsOpen] = useState(false);
   const activeLabel = resolveActiveNavLabel(activeView);
   const { project, metrics, bugs, officeAgents } = tobi.state;
-  const working = officeAgents.filter((a) => a.status === "working").length;
+  const working = (officeAgents || []).filter((a) => a.status === "working").length;
 
   const item = (it: NavItem) => (
     <button key={it.label} type="button" className={`nav-item ${it.label === activeLabel ? "active" : ""}`} aria-current={it.label === activeLabel ? "page" : undefined} title={compact ? it.label : undefined} aria-label={compact ? it.label : undefined} onClick={() => onNavigate(it.view)}>
@@ -567,8 +567,8 @@ function AppHeader({ title, onMenu, onNotifications, onLive, tobi, onOpenAddProj
         <ScopeSwitcherBar tobi={tobi} compact />
         <span className="env-chip"><span className="connection-dot" />{project.environment} · {project.branch}</span>
         <Button variant="secondary" className="run-chip" onClick={onLive}>
-          <span className="live-pulse" />Run {liveRun.id}
-          <Badge tone="agent">{liveRun.currentStep + 1}/{liveRun.totalSteps}</Badge>
+          <span className="live-pulse" />Run {liveRun?.id || "—"}
+          <Badge tone="agent">{(liveRun?.currentStep ?? 0) + 1}/{liveRun?.totalSteps ?? 4}</Badge>
         </Button>
         <Button variant="icon" className="notify-btn" label="Notificaciones" onClick={onNotifications}><Icon name="bell" /><span className="notification-dot" /></Button>
         <div className="profile"><span>TB</span><div><strong>todotobi</strong><small>Lead Architect</small></div></div>
@@ -607,7 +607,7 @@ function RunsTable({ tobi, onOpen }: { tobi: Tobi; onOpen: () => void }) {
 function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: Tobi }) {
   const { project, metrics, runs, officeAgents, bugs, liveRun } = tobi.state;
   const run = runs[0];
-  const working = officeAgents.filter((a) => a.status === "working").length;
+  const working = (officeAgents || []).filter((a) => a.status === "working").length;
   const activeScope = tobi.auditScope || "fullstack";
   const allTests = (run?.tests || []) as unknown as TestItem[];
   const scopedTests = allTests.filter((t) => {
@@ -726,14 +726,14 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
             <h2 className="heading-sm">Actividad reciente</h2>
             <Button variant="ghost" small onClick={() => navigate("live-run")}>Live Run<Icon name="arrow" size="sm" /></Button>
           </div>
-          <LogList logs={liveRun.telemetryLogs.slice(0, 5)} compact />
+          <LogList logs={(liveRun?.telemetryLogs || []).slice(0, 5)} compact />
         </section>
       </div>
     </div>
   </>;
 }
 
-function LogList({ logs, compact = false }: { logs: Tobi["state"]["liveRun"]["telemetryLogs"]; compact?: boolean }) {
+function LogList({ logs = [], compact = false }: { logs?: Tobi["state"]["liveRun"]["telemetryLogs"]; compact?: boolean }) {
   const tone = (l: string): Tone => (l === "SUCCESS" ? "success" : l === "WARN" ? "warning" : l === "ACTION" ? "agent" : "info");
   if (logs.length === 0) return <div className="empty"><strong>Sin eventos</strong><span>No hay eventos para este filtro.</span></div>;
   return (
@@ -836,8 +836,19 @@ function StepList({ steps }: { steps: StepItem[] }) {
 }
 
 function RunDetailPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppView) => void; tobi: Tobi; onInspectTest?: (test: any) => void }) {
-  const run = tobi.state.runs[0];
-  const allTests = run.tests as unknown as TestItem[];
+  const run = tobi.state.runs?.[0];
+  if (!run) {
+    return (
+      <div className="panel" style={{ padding: 32, textAlign: "center" }}>
+        <h2 className="heading-sm">Sin runs registrados</h2>
+        <p className="t-muted">No se encontraron ejecuciones para este proyecto.</p>
+        <div style={{ marginTop: 16 }}>
+          <Button variant="secondary" onClick={() => navigate("test-runs")}>Volver a Test Runs</Button>
+        </div>
+      </div>
+    );
+  }
+  const allTests = (run.tests || []) as unknown as TestItem[];
   const activeScope = tobi.auditScope || "fullstack";
   const tests = allTests.filter((t) => {
     if (activeScope === "frontend") return !isApiSpecOrTest(t.spec, t.name);
@@ -849,7 +860,8 @@ function RunDetailPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppVie
     if (activeScope === "backend") return isApiSpecOrTest(file);
     return true;
   });
-  const [filter, setFilter] = useState<"all" | "failed" | "passed">(run.failed > 0 ? "failed" : "all");
+  const hasFailuresInScope = tests.some((t) => t.status === "Failed");
+  const [filter, setFilter] = useState<"all" | "failed" | "passed">(hasFailuresInScope ? "failed" : "all");
   const [query, setQuery] = useState("");
   const [suite, setSuite] = useState("all");
   const [page, setPage] = useState(1);
@@ -920,6 +932,11 @@ function RunDetailPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppVie
             { id: "passed", label: "Aprobados", count: tests.filter((t) => t.status === "Passed").length },
           ]} />
         </div>
+        {allTests.length > tests.length && (
+          <div data-testid="scope-hidden-notice" className="scope-hidden-notice" style={{ padding: "8px 12px", background: "rgba(56, 189, 248, 0.1)", borderBottom: "1px solid rgba(56, 189, 248, 0.2)", fontSize: 11, color: "var(--accent)" }}>
+            Hay {allTests.length - tests.length} tests fuera del alcance activo ({activeScope}).
+          </div>
+        )}
         <div className="toolbar">
           <div className="grow"><SearchField placeholder="Buscar test o spec" value={query} onChange={reset(setQuery)} /></div>
           <select className="select" aria-label="Filtrar por suite" value={suite} onChange={(e) => reset(setSuite)(e.target.value)}>

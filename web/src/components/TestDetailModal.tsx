@@ -9,6 +9,9 @@ export interface TestStep {
   actual?: string;
   status: "Passed" | "Failed";
   duration: string;
+  t?: number;
+  category?: string;
+  screenshot?: string;
 }
 
 export interface TestCaseItem {
@@ -19,12 +22,27 @@ export interface TestCaseItem {
   screenshot?: string;
   videoUrl?: string;
   steps?: TestStep[];
+  stepsMissing?: boolean;
   goal?: string;
   priority?: "Alta" | "Media" | "Baja";
   observations?: string[];
   diagnostic?: {
     cause?: string;
     fix?: string;
+  };
+  evidence?: {
+    missing?: string[];
+    console_log?: string[];
+    network_trace?: string[];
+    console_stats?: {
+      total: number;
+      by_level?: Record<string, number>;
+    };
+    network_stats?: {
+      total: number;
+      by_status_group?: Record<string, number>;
+      failed_count?: number;
+    };
   };
 }
 
@@ -82,17 +100,12 @@ export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, a
 
   if (!currentTest) return null;
 
-  const steps: TestStep[] = currentTest.steps && currentTest.steps.length > 0 ? currentTest.steps : [
-    { step: 1, action: "Navegar", target: "page.goto('http://localhost:5173/')", status: "Passed", duration: "120ms" },
-    { step: 2, action: "Inspeccionar", target: "expect(page.locator('body')).toBeVisible()", status: "Passed", duration: "35ms" },
-    { step: 3, action: "Interactuar", target: "page.click('button:visible')", status: "Passed", duration: "60ms" },
-    { step: 4, action: "Verificar", target: "expect(page).toHaveURL(/.*\\/dashboard/)", status: currentTest.status === "Failed" ? "Failed" : "Passed", duration: "40ms" }
-  ];
+  const steps: TestStep[] = currentTest.steps && currentTest.steps.length > 0 ? currentTest.steps : [];
 
   const failedStepIdx = steps.findIndex((s) => s.status === "Failed");
   const failedStep = failedStepIdx >= 0 ? steps[failedStepIdx] : null;
   const isFailed = currentTest.status === "Failed" || failedStep !== null;
-  const activeStep = steps[currentStepIdx] || steps[0];
+  const activeStep = steps.length > 0 ? (steps[currentStepIdx] || steps[0]) : null;
 
   // Correlation with existing bugs in the tracker
   const existingBug = bugs?.find(
@@ -156,8 +169,8 @@ Definir el Escenario (Gherkin/BDD):
 Nombre y sección (${currentTest.name}, seccion: ${moduleLabel}).
 Pasos para reproducir:
 Dado que el operador navega a la suite ${currentTest.spec} de ${projectName}.
-Cuando ejecuta la secuencia: ${targetStep.action} -> ${targetStep.target}.
-Entonces ${targetStep.actual || "divergencia de estado obtenida"} frente a ${targetStep.expected || "comportamiento esperado"}.
+Cuando ejecuta la secuencia: ${targetStep?.action || "Acción"} -> ${targetStep?.target || "Paso"}.
+Entonces ${targetStep?.actual || "divergencia de estado obtenida"} frente a ${targetStep?.expected || "comportamiento esperado"}.
 
 Protocolo Anti-Regresiones con Blindaje (Quirófano de Código):
 Fase 1: Identificar el escenario & Aislamiento en Capas
@@ -289,41 +302,47 @@ Fase 5: Validación
               <div className="steps-timeline-container">
                 <div className="timeline-header">Pasos secuenciales</div>
                 <div className="steps-timeline">
-                  {steps.map((st, idx) => {
-                    const isSelected = idx === currentStepIdx;
-                    return (
-                      <div
-                        key={idx}
-                        className={`timeline-step-row ${isSelected ? "active" : ""} ${st.status === "Failed" ? "step-failed" : ""}`}
-                        onClick={() => setCurrentStepIdx(idx)}
-                      >
-                        <div className="step-node-col">
-                          <div className="step-circle">
-                            {st.status === "Failed" ? (
-                              "✕"
-                            ) : st.action === "Navegar" || st.action === "Navigate" ? (
-                              "↗"
-                            ) : st.action === "Verificar" || st.action === "Assert" ? (
-                              "✓"
-                            ) : (
-                              idx + 1
-                            )}
+                  {steps.length === 0 ? (
+                    <div data-testid="steps-empty" className="steps-empty" style={{ padding: "16px 8px", textAlign: "center", color: "#94a3b8", fontSize: 12 }}>
+                      Sin pasos registrados para este test.
+                    </div>
+                  ) : (
+                    steps.map((st, idx) => {
+                      const isSelected = idx === currentStepIdx;
+                      return (
+                        <div
+                          key={idx}
+                          className={`timeline-step-row ${isSelected ? "active" : ""} ${st.status === "Failed" ? "step-failed" : ""}`}
+                          onClick={() => setCurrentStepIdx(idx)}
+                        >
+                          <div className="step-node-col">
+                            <div className="step-circle">
+                              {st.status === "Failed" ? (
+                                "✕"
+                              ) : st.action === "Navegar" || st.action === "Navigate" ? (
+                                "↗"
+                              ) : st.action === "Verificar" || st.action === "Assert" ? (
+                                "✓"
+                              ) : (
+                                idx + 1
+                              )}
+                            </div>
+                            {idx < steps.length - 1 && <div className="step-connecting-line" />}
                           </div>
-                          {idx < steps.length - 1 && <div className="step-connecting-line" />}
-                        </div>
 
-                        <div className="step-content">
-                          <div className="step-title">
-                            {st.action}: {st.target.length > 38 ? st.target.slice(0, 36) + "..." : st.target}
-                          </div>
-                          <div className="step-meta">
-                            <span>{st.duration}</span>
-                            <span className="step-status-tag">{st.status === "Failed" ? "Fallo" : "OK"}</span>
+                          <div className="step-content">
+                            <div className="step-title">
+                              {st.action}: {st.target.length > 38 ? st.target.slice(0, 36) + "..." : st.target}
+                            </div>
+                            <div className="step-meta">
+                              <span>{st.t !== undefined ? `+${st.t}ms` : st.duration}</span>
+                              <span className="step-status-tag">{st.status === "Failed" ? "Fallo" : "OK"}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
@@ -510,22 +529,29 @@ Fase 5: Validación
                         <div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", marginBottom: 6, textTransform: "uppercase" }}>
                           Network Trace (`network_trace`) &amp; Console / Server Stream (`console_log`)
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11 }}>
-                          {(((existingBug as any)?.evidence?.network_trace as string[]) || [
-                            `${activeStep?.action || "HTTP"} ${activeStep?.target || "/api/health"} -> ${isFailed ? "500 Internal Error / State Divergence" : "200 OK"} (${activeStep?.duration || "38ms"})`,
-                          ]).map((traceLine: string, idx: number) => (
-                            <div key={`net-${idx}`} style={{ color: "#38bdf8" }}>
-                              🌐 [NET] {traceLine}
-                            </div>
-                          ))}
-                          {(((existingBug as any)?.evidence?.console_log as string[]) || [
-                            `[APIRequestContext] Step #${currentStepIdx + 1} (${activeStep?.status || "Passed"}) — ${currentTest.name}`,
-                          ]).map((logLine: string, idx: number) => (
-                            <div key={`log-${idx}`} style={{ color: isFailed ? "#fca5a5" : "#a7f3d0" }}>
-                              🖥 [LOG] {logLine}
-                            </div>
-                          ))}
-                        </div>
+                        {((currentTest.evidence?.console_log && currentTest.evidence.console_log.length === 0) &&
+                          (currentTest.evidence?.network_trace && currentTest.evidence.network_trace.length === 0)) ? (
+                          <div data-testid="telemetry-empty" className="telemetry-empty" style={{ padding: "16px 8px", textAlign: "center", color: "#94a3b8", fontSize: 12 }}>
+                            Sin errores de consola ni de red ({currentTest.evidence?.network_stats?.total ?? 0} requests)
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11 }}>
+                            {(((currentTest.evidence?.network_trace?.length ? currentTest.evidence.network_trace : (existingBug as any)?.evidence?.network_trace) as string[]) || [
+                              `${activeStep?.action || "HTTP"} ${activeStep?.target || "/api/health"} -> ${isFailed ? "500 Internal Error / State Divergence" : "200 OK"} (${activeStep?.duration || "38ms"})`,
+                            ]).map((traceLine: string, idx: number) => (
+                              <div key={`net-${idx}`} style={{ color: "#38bdf8" }}>
+                                🌐 [NET] {traceLine}
+                              </div>
+                            ))}
+                            {(((currentTest.evidence?.console_log?.length ? currentTest.evidence.console_log : (existingBug as any)?.evidence?.console_log) as string[]) || [
+                              `[APIRequestContext] Step #${currentStepIdx + 1} (${activeStep?.status || "Passed"}) — ${currentTest.name}`,
+                            ]).map((logLine: string, idx: number) => (
+                              <div key={`log-${idx}`} style={{ color: isFailed ? "#fca5a5" : "#a7f3d0" }}>
+                                🖥 [LOG] {logLine}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -687,9 +713,9 @@ Nombre y sección: (${currentTest.name}, sección: ${moduleLabel})
 
 Escenario Gherkin (Given / When / Then / But):
 - Given (Dado que): ${existingBug?.gherkin?.given || existingBug?.dadoQue || `el operador navega a la suite ${currentTest.spec} de ${projectName}.`}
-- When (Cuando): ${existingBug?.gherkin?.when || existingBug?.cuando || `ejecuta la secuencia: ${(failedStep || activeStep).action} -> ${(failedStep || activeStep).target}.`}
-- Then (Entonces): ${existingBug?.gherkin?.then || (failedStep || activeStep).expected || "el estado del DOM y caché reactiva se mantienen sincronizados."}
-- But (Pero): ${existingBug?.gherkin?.but || existingBug?.entonces || (failedStep || activeStep).actual || "Aprobado sin divergencias."}
+- When (Cuando): ${existingBug?.gherkin?.when || existingBug?.cuando || `ejecuta la secuencia: ${(failedStep || activeStep)?.action || "Acción"} -> ${(failedStep || activeStep)?.target || "Paso"}.`}
+- Then (Entonces): ${existingBug?.gherkin?.then || (failedStep || activeStep)?.expected || "el estado del DOM y caché reactiva se mantienen sincronizados."}
+- But (Pero): ${existingBug?.gherkin?.but || existingBug?.entonces || (failedStep || activeStep)?.actual || "Aprobado sin divergencias."}
 
 Evidencia Multi-Modal Vinculada:
 - Screenshot: ${(activeStep as any)?.screenshot || currentTest.screenshot || existingBug?.screenshot || "/evidence/runs/tobi-04-office.png"}
@@ -766,11 +792,11 @@ Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode)
                       </strong>
                       <p>
                         {isFailed
-                          ? (activeStep.status === "Failed"
-                              ? `Al ejecutar el paso #${activeStep.step || currentStepIdx + 1} (${activeStep.target}), el resultado obtenido difiere del comportamiento esperado en la interfaz.`
+                          ? (activeStep?.status === "Failed"
+                              ? `Al ejecutar el paso #${activeStep?.step || currentStepIdx + 1} (${activeStep?.target || "Paso"}), el resultado obtenido difiere del comportamiento esperado en la interfaz.`
                               : failedStep
-                                ? `Paso #${currentStepIdx + 1} (${activeStep.target}) se ejecutó correctamente en ${activeStep.duration}. La discrepancia de la prueba ocurrió en el Paso #${failedStep.step || failedStepIdx + 1} (${failedStep.target}).`
-                                : `Al ejecutar el paso #${currentStepIdx + 1} (${activeStep.target}), el resultado obtenido difiere del comportamiento esperado en la interfaz.`)
+                                ? `Paso #${currentStepIdx + 1} (${activeStep?.target || "Paso"}) se ejecutó correctamente en ${activeStep?.duration || "0ms"}. La discrepancia de la prueba ocurrió en el Paso #${failedStep.step || failedStepIdx + 1} (${failedStep.target}).`
+                                : `Al ejecutar el paso #${currentStepIdx + 1} (${activeStep?.target || "Paso"}), el resultado obtenido difiere del comportamiento esperado en la interfaz.`)
                           : "Todas las aserciones de interfaz, tiempos de respuesta y visibilidad de componentes superaron los umbrales de aceptación."}
                       </p>
                     </div>
@@ -782,7 +808,7 @@ Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode)
                           <strong>Given (Dado que):</strong> {existingBug?.gherkin?.given || existingBug?.dadoQue || `Operador autenticado en módulo ${moduleLabel} (${currentTest.spec}).`}
                         </li>
                         <li>
-                          <strong>When (Cuando):</strong> {existingBug?.gherkin?.when || existingBug?.cuando || `${activeStep.action} sobre selector ${activeStep.target} (${activeStep.duration}).`}
+                          <strong>When (Cuando):</strong> {existingBug?.gherkin?.when || existingBug?.cuando || `${activeStep?.action || "Acción"} sobre selector ${activeStep?.target || "elemento"} (${activeStep?.duration || "0ms"}).`}
                         </li>
                         <li>
                           <strong>Then (Entonces):</strong> {existingBug?.gherkin?.then || failedStep?.expected || "Sincronización de estado y respuesta visual sin errores."}

@@ -220,3 +220,94 @@ def test_error_context_attachment_is_copied(repo):
     rel_path = t["evidence"]["errorContext"].lstrip("/")
     assert (repo / "web" / "public" / rel_path).exists()
     assert (repo / "web" / "public" / rel_path).read_text(encoding="utf-8").startswith("# Failure Diagnosis")
+
+
+@pytest.mark.parametrize(
+    "title,category,expected_action",
+    [
+        ("Expect \"toBeVisible\"", None, "Assert"),
+        ("Expect \"toBeVisible\"", "expect", "Assert"),
+        ("expect.toBeVisible", None, "Assert"),
+        ("Navigate", None, "Navigate"),
+        ("Click", None, "Click"),
+        ("Double click", None, "Click"),
+        ("Fill \"Divergencia\"", None, "Fill"),
+        ("Press \"Tab\"", None, "Fill"),
+        ("Hover", None, "Hover"),
+        ("Check", None, "Check"),
+        ("Uncheck", None, "Check"),
+        ("Wait for selector", None, "Wait"),
+        ("GET", None, "Request"),
+        ("POST", None, "Request"),
+        ("Evaluate", None, "Action"),
+        ("Query count", None, "Action"),
+        # Legacy cases
+        ("page.goto('http://localhost:5173')", None, "Navigate"),
+        ("locator.click()", None, "Click"),
+        ("locator.fill('admin')", None, "Fill"),
+        ("expect(page)", None, "Assert"),
+    ],
+)
+def test_classify_real_playwright_titles(title, category, expected_action):
+    """T1: _classify_step clasifica según la tabla completa del contrato."""
+    assert ing._classify_step(title, category=category) == expected_action
+
+
+def test_noise_titles_are_filtered_and_numbering_is_contiguous(repo):
+    """T2: Ruido de fixtures se descarta y los 3 pasos reales quedan numerados 1, 2, 3."""
+    raw_steps = [
+        {"title": "Create context", "duration": 5},
+        {"title": "Create page", "duration": 10},
+        {"title": "Navigate to http://localhost:5173", "duration": 40},
+        {"title": "Attach \"tobi-telemetry\"", "duration": 2},
+        {"title": "Click", "duration": 15},
+        {"title": "Launch browser", "duration": 80},
+        {"title": "Expect \"toBeVisible\"", "duration": 20},
+        {"title": "Close page", "duration": 3},
+        {"title": "Close context", "duration": 4},
+    ]
+    spec = make_spec("Test With Noise", steps=raw_steps)
+    suite = {
+        "title": "noise.spec.ts",
+        "file": "noise.spec.ts",
+        "specs": [spec],
+        "suites": [],
+    }
+    extracted = ing.extract_tests_from_suite(
+        suite=suite,
+        default_spec="noise.spec.ts",
+        default_screenshot="",
+        default_video="",
+        repo_root=repo,
+    )
+    steps = extracted[0]["steps"]
+    assert len(steps) == 3
+    assert [s["step"] for s in steps] == [1, 2, 3]
+    assert steps[0]["action"] == "Navigate"
+    assert steps[1]["action"] == "Click"
+    assert steps[2]["action"] == "Assert"
+
+
+def test_target_keeps_full_title(repo):
+    """T3: target conserva el título completo incluyendo argumentos."""
+    raw_steps = [
+        {"title": "Fill \"Divergencia\"", "duration": 25},
+    ]
+    spec = make_spec("Test Target Full Title", steps=raw_steps)
+    suite = {
+        "title": "target.spec.ts",
+        "file": "target.spec.ts",
+        "specs": [spec],
+        "suites": [],
+    }
+    extracted = ing.extract_tests_from_suite(
+        suite=suite,
+        default_spec="target.spec.ts",
+        default_screenshot="",
+        default_video="",
+        repo_root=repo,
+    )
+    steps = extracted[0]["steps"]
+    assert len(steps) == 1
+    assert steps[0]["target"] == "Fill \"Divergencia\""
+

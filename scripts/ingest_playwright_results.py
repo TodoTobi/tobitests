@@ -124,23 +124,54 @@ def _strip_ansi(text: str) -> str:
     return re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text)
 
 
-def _classify_step(title: str) -> str:
-    clean_title = _strip_ansi(title)
-    if clean_title.startswith("expect"):
+RE_ASSERT = re.compile(r"^(?:expect\b)", re.IGNORECASE)
+RE_NAVIGATE = re.compile(r"^(?:navigate\b)|(?:\.goto\(|go\s+back|go\s+forward|reload)", re.IGNORECASE)
+RE_CLICK = re.compile(r"^(?:click\b|double\s+click\b|tap\b)|(?:\.click\(|\.dblclick\()", re.IGNORECASE)
+RE_FILL = re.compile(r"^(?:fill\b|type\b|press\b|select\s+option\b|set\s+input\s+files\b)|(?:\.fill\(|\.type\(|\.press\()", re.IGNORECASE)
+RE_HOVER = re.compile(r"^(?:hover\b)", re.IGNORECASE)
+RE_CHECK = re.compile(r"^(?:check\b|uncheck\b)", re.IGNORECASE)
+RE_WAIT = re.compile(r"^(?:wait\b)|(?:waitfor)", re.IGNORECASE)
+RE_REQUEST = re.compile(r"^(?:GET|POST|PUT|PATCH|DELETE|HEAD)(?:\s|$|/|:|\?)", re.IGNORECASE)
+
+RE_NOISE = re.compile(
+    r"^(?:create\s+context|create\s+page|create\s+request\s+context|"
+    r"close\s+context|close\s+page|close\s+browser|dispose\s+request\s+context|"
+    r"launch\s+browser|attach|before\s+hooks|after\s+hooks|beforeall|afterall|fixture|worker\s+cleanup)",
+    re.IGNORECASE,
+)
+
+
+def _classify_step(title: str, category: Optional[str] = None) -> str:
+    clean_title = _strip_ansi(title).strip()
+    if category == "expect" or clean_title.lower().startswith("expect") or RE_ASSERT.search(clean_title):
         return "Assert"
-    if ".goto(" in clean_title:
+    if RE_NAVIGATE.search(clean_title):
         return "Navigate"
-    if ".click(" in clean_title or ".dblclick(" in clean_title:
+    if RE_CLICK.search(clean_title):
         return "Click"
-    if ".fill(" in clean_title or ".type(" in clean_title or ".press(" in clean_title:
+    if RE_FILL.search(clean_title):
         return "Fill"
+    if RE_HOVER.search(clean_title):
+        return "Hover"
+    if RE_CHECK.search(clean_title):
+        return "Check"
+    if "waitfortimeout" in clean_title.lower():
+        return "Action"
+    if RE_WAIT.search(clean_title):
+        return "Wait"
+    if RE_REQUEST.match(clean_title):
+        return "Request"
     return "Action"
 
 
+def _is_noise_step(title: str) -> bool:
+    clean_title = _strip_ansi(title).strip()
+    return bool(RE_NOISE.match(clean_title))
+
+
 def _is_internal_step(title: str) -> bool:
-    clean_title = _strip_ansi(title)
-    prefixes = ("Before Hooks", "After Hooks", "Fixture", "Worker Cleanup", "beforeAll", "afterAll", "Attach")
-    return clean_title.startswith(prefixes)
+    return _is_noise_step(title)
+
 
 
 def _new_run_id(now: datetime.datetime) -> str:
@@ -302,6 +333,8 @@ def _nearby(events: List[Dict[str, Any]], window_start: int, window_end: int) ->
     lines: List[str] = []
 
     for e in events:
+        if e.get("type") == "clock":
+            continue
         t = e.get("t", 0)
         if low <= t <= high:
             etype = e.get("type", "")
@@ -334,6 +367,21 @@ def _nearby(events: List[Dict[str, Any]], window_start: int, window_end: int) ->
     return lines[:50]
 
 
+def _load_steps_file(repo_root: Optional[Path]) -> Dict[str, Any]:
+    if not repo_root:
+        return {}
+    steps_path = repo_root / "test-results" / "tobi-steps.json"
+    if not steps_path.exists():
+        return {}
+    try:
+        data = json.loads(steps_path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+    return {}
+
+
 def extract_tests_from_suite(
     suite: Dict[str, Any],
     default_spec: str,
@@ -341,12 +389,15 @@ def extract_tests_from_suite(
     default_video: str,
     repo_root: Optional[Path] = None,
     run_folder: Optional[str] = None,
+    steps_data: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     extracted: List[Dict[str, Any]] = []
     suite_file_raw = str(suite.get("file", default_spec))
     spec_file = Path(suite_file_raw).name if suite_file_raw else default_spec
 
     active_run_folder = run_folder or _new_run_id(datetime.datetime.now()).lstrip("#")
+    if steps_data is None and repo_root:
+        steps_data = _load_steps_file(repo_root)
 
     for spec in suite.get("specs", []):
         title = spec.get("title", "Unnamed Test")
@@ -449,38 +500,105 @@ def extract_tests_from_suite(
                             if _safe_copy(p, dest_p):
                                 error_context_url = f"/evidence/runs/{active_run_folder}/{dest_name}"
 
-                step_idx = 1
-                for st in r0.get("steps", []):
-                    st_title = st.get("title", "Step")
-                    if _is_internal_step(st_title):
-                        continue
-                    st_dur = int(st.get("duration", 25))
-                    st_err = st.get("error")
-                    if st_err:
-                        st_actual = _strip_ansi(st_err.get("message", "Failed"))[:2000]
-                        st_expected = ""
-                        st_status = "Failed"
-                    else:
-                        st_actual = ""
-                        st_expected = ""
-                        st_status = "Passed"
-
-                    steps_out.append(
-                        {
-                            "step": step_idx,
-                            "action": _classify_step(st_title),
-                            "target": st_title,
-                            "status": st_status,
-                            "duration": f"{st_dur}ms",
-                            "expected": st_expected,
-                            "actual": st_actual,
-                        }
-                    )
-                    step_idx += 1
-
                 if telemetry_file:
                     telemetry_events = _load_telemetry(telemetry_file)
 
+                clock_epoch = None
+                if telemetry_events:
+                    clock_epoch = next((e.get("epochMs") for e in telemetry_events if e.get("type") == "clock" and e.get("epochMs")), None)
+
+                recorded_test = None
+                if steps_data:
+                    keys_to_try = [
+                        f"{spec_file}::{title}",
+                        f"{Path(suite_file_raw).name}::{title}",
+                        f"{suite_file_raw}::{title}",
+                        title,
+                    ]
+                    for k in keys_to_try:
+                        if k in steps_data:
+                            recorded_test = steps_data[k]
+                            break
+
+                step_idx = 1
+                if recorded_test and recorded_test.get("steps"):
+                    test_start_epoch = recorded_test.get("startEpochMs") or (clock_epoch or 0)
+                    base_epoch = clock_epoch if clock_epoch is not None else test_start_epoch
+
+                    for st in recorded_test.get("steps", []):
+                        st_title = st.get("title", "Step")
+                        if _is_noise_step(st_title):
+                            continue
+                        st_cat = st.get("category", "")
+                        st_start = st.get("startEpochMs", base_epoch)
+                        st_dur = int(st.get("durationMs", 25))
+                        st_err = st.get("error")
+                        st_t = max(0, st_start - base_epoch)
+
+                        action_name = _classify_step(st_title, st_cat)
+
+                        if st_err:
+                            err_msg = _strip_ansi(str(st_err))[:2000]
+                            st_actual = err_msg
+                            st_expected = ""
+                            st_status = "Failed"
+                            if failed_step_window is None:
+                                failed_step_window = (st_t, st_t + st_dur)
+                            if test_error is None:
+                                test_error = {"message": err_msg, "stack": ""}
+                            else:
+                                if not test_error.get("message") or test_error.get("message") == "Test execution failed":
+                                    test_error["message"] = err_msg
+                                test_error["actual"] = err_msg
+                        else:
+                            st_actual = ""
+                            st_expected = ""
+                            st_status = "Passed"
+
+                        steps_out.append(
+                            {
+                                "step": step_idx,
+                                "action": action_name,
+                                "target": st_title,
+                                "status": st_status,
+                                "duration": f"{st_dur}ms",
+                                "expected": st_expected,
+                                "actual": st_actual,
+                                "t": st_t,
+                                "category": action_name,
+                            }
+                        )
+                        step_idx += 1
+                else:
+                    for st in r0.get("steps", []):
+                        st_title = st.get("title", "Step")
+                        if _is_internal_step(st_title):
+                            continue
+                        st_dur = int(st.get("duration", 25))
+                        st_err = st.get("error")
+                        if st_err:
+                            st_actual = _strip_ansi(st_err.get("message", "Failed"))[:2000]
+                            st_expected = ""
+                            st_status = "Failed"
+                        else:
+                            st_actual = ""
+                            st_expected = ""
+                            st_status = "Passed"
+
+                        steps_out.append(
+                            {
+                                "step": step_idx,
+                                "action": _classify_step(st_title),
+                                "target": st_title,
+                                "status": st_status,
+                                "duration": f"{st_dur}ms",
+                                "expected": st_expected,
+                                "actual": st_actual,
+                            }
+                        )
+                        step_idx += 1
+
+                if telemetry_events:
                     # Correlacionar step-start y step-end
                     step_event_windows: List[Dict[str, Any]] = []
                     current_starts: Dict[str, int] = {}
@@ -500,8 +618,13 @@ def extract_tests_from_suite(
 
                     for idx, st_dict in enumerate(steps_out):
                         w = step_event_windows[idx] if idx < len(step_event_windows) else None
-                        st_start = w["start"] if w else 0
-                        st_end = w["end"] if w else duration_ms
+                        if "t" in st_dict:
+                            st_start = st_dict["t"]
+                            dur_num = int(re.sub(r"\D", "", st_dict.get("duration", "0")) or 0)
+                            st_end = st_start + dur_num
+                        else:
+                            st_start = w["start"] if w else 0
+                            st_end = w["end"] if w else duration_ms
 
                         if st_dict.get("status") == "Failed" and failed_step_window is None:
                             failed_step_window = (st_start, st_end)
@@ -573,10 +696,42 @@ def extract_tests_from_suite(
             network_trace = _format_network(telemetry_events)
             page_errors = [e.get("message", "") for e in telemetry_events if e.get("type") == "pageerror" and e.get("message")]
 
+            console_events = [e for e in telemetry_events if e.get("type") == "console"]
+            console_by_level: Dict[str, int] = {}
+            for e in console_events:
+                lvl = str(e.get("level", "log")).lower()
+                console_by_level[lvl] = console_by_level.get(lvl, 0) + 1
+            console_stats = {
+                "total": len(console_events),
+                "by_level": console_by_level,
+            }
+
+            resp_events = [e for e in telemetry_events if e.get("type") in ("response", "requestfailed", "hung")]
+            net_by_group: Dict[str, int] = {}
+            failed_count = 0
+            for e in resp_events:
+                etype = e.get("type")
+                if etype == "response":
+                    status = int(e.get("status", 0))
+                    grp = f"{status // 100}xx" if 100 <= status <= 599 else "other"
+                    net_by_group[grp] = net_by_group.get(grp, 0) + 1
+                    if status >= 400:
+                        failed_count += 1
+                else:
+                    net_by_group["other"] = net_by_group.get("other", 0) + 1
+                    failed_count += 1
+            network_stats = {
+                "total": len(resp_events),
+                "by_status_group": net_by_group,
+                "failed_count": failed_count,
+            }
+
             if "evidence" not in test_data:
                 test_data["evidence"] = {"missing": missing_evidence}
             test_data["evidence"]["console_log"] = console_log
             test_data["evidence"]["network_trace"] = network_trace
+            test_data["evidence"]["console_stats"] = console_stats
+            test_data["evidence"]["network_stats"] = network_stats
 
             if page_errors:
                 test_data["pageErrors"] = page_errors
@@ -599,6 +754,7 @@ def extract_tests_from_suite(
                 default_video=default_video,
                 repo_root=repo_root,
                 run_folder=active_run_folder,
+                steps_data=steps_data,
             )
         )
 

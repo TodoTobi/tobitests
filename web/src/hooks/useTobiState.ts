@@ -156,12 +156,45 @@ export interface OfficeAgent {
   run: string;
 }
 
+export interface StepItem {
+  step?: number;
+  action: string;
+  target: string;
+  status: string;
+  duration: string;
+  expected?: string;
+  actual?: string;
+  t?: number;
+  category?: string;
+  screenshot?: string;
+}
+
 export interface RunTestItem {
   name: string;
   spec: string;
   status: string;
   duration: string;
-  steps?: any[];
+  steps?: StepItem[];
+  stepsMissing?: boolean;
+  screenshot?: string;
+  videoUrl?: string;
+  evidence?: {
+    missing?: string[];
+    screenshot?: string;
+    video?: string;
+    errorContext?: string;
+    console_log?: string[];
+    network_trace?: string[];
+    console_stats?: {
+      total: number;
+      by_level?: Record<string, number>;
+    };
+    network_stats?: {
+      total: number;
+      by_status_group?: Record<string, number>;
+      failed_count?: number;
+    };
+  };
 }
 
 export interface RunItem {
@@ -180,13 +213,14 @@ export interface RunItem {
 }
 
 export interface LiveStep {
-  index: string;
+  index: string | number;
   action: string;
   target: string;
   status: string;
-  duration: string;
+  duration?: string;
   description: string;
   screenshot?: string;
+  videoUrl?: string;
   agent?: string;
 }
 
@@ -227,6 +261,15 @@ export interface BugItem {
     video?: string;
     console_log?: string[];
     network_trace?: string[];
+    console_stats?: {
+      total: number;
+      by_level?: Record<string, number>;
+    };
+    network_stats?: {
+      total: number;
+      by_status_group?: Record<string, number>;
+      failed_count?: number;
+    };
   };
   root_cause_file?: string;
   root_cause_line?: number;
@@ -282,6 +325,7 @@ export interface TobiState {
     openBugs: number;
     avgDuration: string;
     activeRun: string;
+    totalTests?: number;
   };
   runs: RunItem[];
   officeAgents: OfficeAgent[];
@@ -295,6 +339,7 @@ export interface TobiState {
     elapsedTime: string;
     steps: LiveStep[];
     telemetryLogs: TelemetryLog[];
+    videoUrl?: string;
   };
   bugs: BugItem[];
   specs: SpecItem[];
@@ -711,22 +756,20 @@ export function useTobiState() {
     const savedScopes = getSavedScopeMap();
     const resolvedScope: AuditScope = savedScopes[saved] || "fullstack";
 
-    // Check if custom project state exists
-    if (saved.startsWith("custom-")) {
-      try {
-        const cached = localStorage.getItem(`tobitests_state_${saved}`);
-        if (cached) {
-          const rawParsed = JSON.parse(cached);
-          const parsed = sanitizeCustomStateIfLegacy(rawParsed, saved);
-          const sc = savedScopes[saved] || parsed.auditScope || parsed.project?.auditScope || "fullstack";
-          return {
-            ...parsed,
-            auditScope: sc,
-            project: { ...parsed.project, auditScope: sc },
-          };
-        }
-      } catch (e) {}
-    }
+    // Check if project state exists in localStorage
+    try {
+      const cached = localStorage.getItem(`tobitests_state_${saved}`);
+      if (cached) {
+        const rawParsed = JSON.parse(cached);
+        const parsed = saved.startsWith("custom-") ? sanitizeCustomStateIfLegacy(rawParsed, saved) : rawParsed;
+        const sc = savedScopes[saved] || parsed.auditScope || parsed.project?.auditScope || "fullstack";
+        return {
+          ...parsed,
+          auditScope: sc,
+          project: { ...parsed.project, auditScope: sc },
+        };
+      }
+    } catch (e) {}
 
     const raw = tobiData as unknown as TobiState;
     const enriched = ensureBuiltInDualScopeData(raw, "tobitests", resolvedScope);
@@ -1180,6 +1223,7 @@ export function useTobiState() {
               if (fresh && Array.isArray(fresh.runs) && fresh.runs.length > 0) {
                 setState((prev) => ({
                   ...fresh,
+                  liveRun: fresh.liveRun || prev.liveRun,
                   auditScope: prev.auditScope || fresh.auditScope || "fullstack",
                   project: { ...fresh.project, auditScope: prev.auditScope || fresh.auditScope || "fullstack" },
                 }));

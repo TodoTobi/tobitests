@@ -35,6 +35,7 @@ export default defineConfig({
     ['list'],
     ['html', { open: 'never' }],
     ['json', { outputFile: 'test-results/report.json' }],
+    ['./reporters/tobi-steps-reporter.ts'],
   ],
   use: {
     baseURL: targetUrl,
