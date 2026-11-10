@@ -1208,28 +1208,47 @@ export function useTobiState() {
 
     // Check if active project has completed runs on disk to hydrate immediately on mount
     const currentActive = localStorage.getItem("tobitests_active_project") || activeProjectId;
-    if (currentActive && currentActive.startsWith("custom-")) {
+    if (currentActive) {
+      const isCustom = currentActive.startsWith("custom-");
       const cleanSlug = currentActive.replace(/^custom-/, "");
-      const candidates = [
-        `/api/state?project=${encodeURIComponent(currentActive)}`,
-        `/data/${currentActive}-state.json`,
-        `/data/${cleanSlug}-state.json`,
-      ];
+      const candidates = isCustom
+        ? [
+            `/api/state?project=${encodeURIComponent(currentActive)}`,
+            `/data/${currentActive}-state.json`,
+            `/data/${cleanSlug}-state.json`,
+          ]
+        : [
+            `/api/state?project=${encodeURIComponent(currentActive)}`,
+            `/data/${currentActive}-state.json`,
+          ];
       candidates.forEach((url) => {
         fetch(url)
           .then(async (res) => {
             if (res.ok) {
               const fresh = await res.json();
               if (fresh && Array.isArray(fresh.runs) && fresh.runs.length > 0) {
-                setState((prev) => ({
-                  ...fresh,
-                  liveRun: fresh.liveRun || prev.liveRun,
-                  auditScope: prev.auditScope || fresh.auditScope || "fullstack",
-                  project: { ...fresh.project, auditScope: prev.auditScope || fresh.auditScope || "fullstack" },
-                }));
+                let isMockLocked = false;
                 try {
-                  localStorage.setItem(`tobitests_state_${currentActive}`, JSON.stringify(fresh));
+                  const cachedStr = localStorage.getItem(`tobitests_state_${currentActive}`);
+                  if (cachedStr) {
+                    const parsedCached = JSON.parse(cachedStr);
+                    if (parsedCached.__lockMock || parsedCached.__mockedByTest) {
+                      isMockLocked = true;
+                    }
+                  }
                 } catch (e) {}
+
+                if (!isMockLocked) {
+                  setState((prev) => ({
+                    ...fresh,
+                    liveRun: fresh.liveRun || prev.liveRun,
+                    auditScope: prev.auditScope || fresh.auditScope || "fullstack",
+                    project: { ...fresh.project, auditScope: prev.auditScope || fresh.auditScope || "fullstack" },
+                  }));
+                  try {
+                    localStorage.setItem(`tobitests_state_${currentActive}`, JSON.stringify(fresh));
+                  } catch (e) {}
+                }
               }
             }
           })
