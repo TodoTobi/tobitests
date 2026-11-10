@@ -53,9 +53,11 @@ interface TestDetailModalProps {
   onCreateBug?: (test: TestCaseItem) => void;
   bugs?: any[];
   auditScope?: AuditScope;
+  runs?: any[];
+  projectUrl?: string;
 }
 
-export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, auditScope }: TestDetailModalProps) {
+export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, auditScope, runs = [], projectUrl }: TestDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"preview" | "code" | "log" | "history" | "plantillas">("preview");
   const [diagTab, setDiagTab] = useState<"error" | "cause" | "fix">("error");
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
@@ -120,6 +122,11 @@ export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, a
   const moduleLabel = currentTest.spec.replace("vetconnect-", "").replace("tobitests-", "").replace(".spec.ts", "").toUpperCase();
   const projectName = isTobi ? "TobiTests" : "VetConnect";
 
+  const historyRuns = (runs || []).filter((r: any) =>
+    (r.tests || []).some((t: any) => t.name === currentTest.name || t.spec === currentTest.spec) || runs.length <= 1
+  );
+  const displayRuns = historyRuns.length > 0 ? historyRuns : (runs || []);
+
   const handleNextStep = () => {
     setCurrentStepIdx((prev) => (prev + 1 < steps.length ? prev + 1 : 0));
   };
@@ -130,21 +137,12 @@ export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, a
 
   const handleRunTest = () => {
     setIsRunning(true);
+    if (onRunTest && currentTest) {
+      onRunTest(currentTest);
+    }
     setTimeout(() => {
       setIsRunning(false);
-      const passedSteps = steps.map((s) => ({
-        ...s,
-        status: "Passed" as const,
-        actual: s.expected || "Aprobado sin divergencias"
-      }));
-      const passedTest: TestCaseItem = {
-        ...currentTest,
-        status: "Passed",
-        steps: passedSteps
-      };
-      setCurrentTest(passedTest);
-      if (onRunTest) onRunTest(passedTest);
-    }, 450);
+    }, 800);
   };
 
   const handleCopyFixPrompt = () => {
@@ -205,7 +203,7 @@ Fase 5: Validación
 
   return (
     <div className="test-modal-overlay" onClick={onClose}>
-      <div className="test-modal-card" onClick={(e) => e.stopPropagation()}>
+      <div className="test-modal-card test-detail-modal" onClick={(e) => e.stopPropagation()}>
         {/* Top Header Bar */}
         <header className="test-modal-header">
           <div className="test-modal-header-left">
@@ -383,7 +381,7 @@ Fase 5: Validación
                   onClick={() => setActiveTab("history")}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Historial (4)
+                  Historial ({displayRuns.length})
                 </button>
                 <button
                   type="button"
@@ -429,17 +427,17 @@ Fase 5: Validación
                   <span />
                 </div>
                 <div className="chrome-address-bar">
-                  {projectName} · http://localhost:5173 · {currentTest.spec}
+                  {projectName} · {projectUrl || "http://localhost:5180"} · {currentTest.spec}
                 </div>
               </div>
 
               {activeTab === "preview" ? (
                 <div className="viewport-stage">
                   {viewMode === "video" ? (
-                    currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : null) ? (
+                    currentTest.videoUrl ? (
                       <video
-                        key={currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "")}
-                        src={currentTest.videoUrl || (isTobi ? "/evidence/videos/tobitests-self-audit.webm" : "")}
+                        key={currentTest.videoUrl}
+                        src={currentTest.videoUrl}
                         controls
                         autoPlay
                         loop
@@ -448,7 +446,7 @@ Fase 5: Validación
                         className="stage-video"
                       />
                     ) : (
-                      <div className="stage-placeholder" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--muted)", gap: 8, padding: 32 }}>
+                      <div data-testid="video-empty" className="stage-placeholder" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--muted)", gap: 8, padding: 32 }}>
                         <span style={{ fontSize: 36 }}>🎬</span>
                         <strong style={{ fontSize: 13, color: "var(--fg)" }}>Sin video registrado para este test</strong>
                         <span style={{ fontSize: 11 }}>Las grabaciones .webm se generan al ejecutar las pruebas de Playwright con captura de video activa.</span>
@@ -555,11 +553,11 @@ Fase 5: Validación
                       </div>
                     </div>
                   ) : (
-                    ((activeStep as any)?.screenshot || currentTest.screenshot || (isTobi ? "/evidence/runs/tobi-04-office.png" : null)) ? (
+                    ((activeStep as any)?.screenshot || currentTest.screenshot) ? (
                       <div className="stage-image-wrap">
                         <img
                           key={(activeStep as any)?.screenshot || currentTest.screenshot}
-                          src={(activeStep as any)?.screenshot || currentTest.screenshot || (isTobi ? "/evidence/runs/tobi-04-office.png" : "")}
+                          src={(activeStep as any)?.screenshot || currentTest.screenshot}
                           alt={currentTest.name}
                           className="stage-image"
                         />
@@ -572,7 +570,7 @@ Fase 5: Validación
                         </div>
                       </div>
                     ) : (
-                      <div className="stage-placeholder" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--muted)", gap: 8, padding: 32 }}>
+                      <div data-testid="screenshot-empty" className="stage-placeholder" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--muted)", gap: 8, padding: 32 }}>
                         <span style={{ fontSize: 36 }}>📸</span>
                         <strong style={{ fontSize: 13, color: "var(--fg)" }}>Sin captura registrada para este paso</strong>
                         <span style={{ fontSize: 11 }}>Las capturas visuales se graban automáticamente con @playwright/mcp durante la ejecución.</span>
@@ -678,21 +676,27 @@ ${steps.map((s, idx) => `    // Paso ${idx + 1}: ${s.action} (${s.duration})
                 </div>
               ) : activeTab === "history" ? (
                 <div className="viewport-history-panel">
-                  <div className="history-item">
-                    <span className="history-dot passed" />
-                    <div><strong>#RUN-04 (Actual)</strong><small>Hoy · 100% de aserciones validadas</small></div>
-                    <span className="history-duration">{currentTest.duration}</span>
-                  </div>
-                  <div className="history-item">
-                    <span className="history-dot passed" />
-                    <div><strong>#RUN-03</strong><small>Ayer · Duración óptima</small></div>
-                    <span className="history-duration">{currentTest.duration}</span>
-                  </div>
-                  <div className="history-item">
-                    <span className={`history-dot ${isFailed ? "failed" : "passed"}`} />
-                    <div><strong>#RUN-02</strong><small>2 días atrás</small></div>
-                    <span className="history-duration">1.2s</span>
-                  </div>
+                  {displayRuns.length === 0 ? (
+                    <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                      Sin historial previo registrado
+                    </div>
+                  ) : (
+                    displayRuns.map((r: any, idx: number) => {
+                      const testInRun = (r.tests || []).find((t: any) => t.name === currentTest.name);
+                      const isRunFailed = testInRun ? testInRun.status === "Failed" : (r.status === "Failed" || (r.failed || 0) > 0);
+                      const isActual = idx === 0;
+                      return (
+                        <div key={r.id || idx} className="history-item">
+                          <span className={`history-dot ${isRunFailed ? "failed" : "passed"}`} />
+                          <div>
+                            <strong>{r.id}{isActual ? " (Actual)" : ""}</strong>
+                            <small>{r.date || "Fecha registrada"} · {r.suite || "Suite Playwright"}</small>
+                          </div>
+                          <span className="history-duration">{testInRun?.duration || r.duration || "—"}</span>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               ) : (
                 <div className="viewport-code-panel" style={{ padding: 16 }}>
@@ -718,8 +722,8 @@ Escenario Gherkin (Given / When / Then / But):
 - But (Pero): ${existingBug?.gherkin?.but || existingBug?.entonces || (failedStep || activeStep)?.actual || "Aprobado sin divergencias."}
 
 Evidencia Multi-Modal Vinculada:
-- Screenshot: ${(activeStep as any)?.screenshot || currentTest.screenshot || existingBug?.screenshot || "/evidence/runs/tobi-04-office.png"}
-- Video (.webm): ${currentTest.videoUrl || existingBug?.videoUrl || "/evidence/videos/tobitests-self-audit.webm"}
+- Screenshot: ${(activeStep as any)?.screenshot || currentTest.screenshot || existingBug?.screenshot || "(sin captura registrada)"}
+- Video (.webm): ${currentTest.videoUrl || existingBug?.videoUrl || "(sin video registrado)"}
 - Console Log: ${existingBug?.evidence?.console_log?.[0] || "[CDP Console] 0 unhandled pageerror / console.error"}
 - Network Trace: ${existingBug?.evidence?.network_trace?.[0] || "[CDP Network] HTTP 200 OK (< 250ms)"}
 
@@ -819,7 +823,7 @@ Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode)
                           </li>
                         )}
                         <li>
-                          <strong>Evidencia Vinculada:</strong> Captura (<code>{currentTest.screenshot || "/evidence/runs/tobi-04-office.png"}</code>) · Video (<code>{currentTest.videoUrl || "/evidence/videos/tobitests-self-audit.webm"}</code>) · Red/Consola verificadas por CDP.
+                          <strong>Evidencia Vinculada:</strong> Captura (<code>{currentTest.screenshot || "(sin captura registrada)"}</code>) · Video (<code>{currentTest.videoUrl || "(sin video registrado)"}</code>) · Red/Consola verificadas por CDP.
                         </li>
                       </ul>
                     </div>

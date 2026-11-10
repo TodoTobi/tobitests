@@ -269,7 +269,7 @@ const navGroups: { title: string; items: NavItem[] }[] = [
 ];
 const settingsItem: NavItem = { label: "Settings", view: "settings", icon: "settings" };
 
-export function resolveActiveNavLabel(view: AppView): string {
+function resolveActiveNavLabel(view: AppView): string {
   switch (view) {
     case "dashboard": return "Dashboard";
     case "journey": return "Mapa de Flujos";
@@ -461,105 +461,14 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi, onO
   );
 }
 
-function AppHeader({ title, onMenu, onNotifications, onLive, tobi, onOpenAddProject }: { title: string; onMenu: () => void; onNotifications: () => void; onLive: () => void; tobi: Tobi; onOpenAddProject?: () => void; }) {
+function AppHeader({ title, onMenu, onNotifications, onLive, tobi }: { title: string; onMenu: () => void; onNotifications: () => void; onLive: () => void; tobi: Tobi; onOpenAddProject?: () => void; }) {
   const { project, liveRun } = tobi.state;
-  const [headerProjOpen, setHeaderProjOpen] = useState(false);
 
   return (
     <header className="app-header">
       <Button variant="icon" className="app-mobile-menu" label="Abrir navegación" onClick={onMenu}><Icon name="menu" /></Button>
-      <nav className="breadcrumbs" aria-label="Ubicación" style={{ position: "relative" }}>
-        <button
-          type="button"
-          onClick={() => setHeaderProjOpen(!headerProjOpen)}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            background: "transparent",
-            border: "none",
-            color: "var(--fg)",
-            cursor: "pointer",
-            padding: "2px 6px",
-            borderRadius: "var(--radius-sm)",
-            font: "inherit"
-          }}
-          title="Cambiar proyecto"
-        >
-          <span>{project.name}</span>
-          <Icon name="chevron" size="sm" />
-        </button>
-        {headerProjOpen && (
-          <div
-            className="project-popover"
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              zIndex: 100,
-              minWidth: 260,
-              marginTop: 4,
-              boxShadow: "var(--shadow-md)"
-            }}
-          >
-            <div style={{ padding: "4px 6px 6px", borderBottom: "1px solid var(--border)", marginBottom: 4 }}>
-              <span className="mono t-muted" style={{ fontSize: 10, textTransform: "uppercase" }}>Seleccionar Proyecto</span>
-            </div>
-            {tobi.availableProjects.map((p) => (
-              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                <button
-                  type="button"
-                  className={`button ${tobi.activeProjectId === p.id ? "button-primary" : "button-ghost"}`}
-                  style={{ flex: 1, justifyContent: "flex-start", padding: "6px 8px", fontSize: 12 }}
-                  onClick={() => {
-                    tobi.switchProject(p.id);
-                    setHeaderProjOpen(false);
-                  }}
-                >
-                  <span className="project-avatar" style={{ width: 18, height: 18, fontSize: 10, marginRight: 6 }}>{p.name.charAt(0)}</span>
-                  <span style={{ flex: 1, textAlign: "left" }}>{p.name}</span>
-                  {tobi.activeProjectId === p.id && <Icon name="check" size="sm" />}
-                </button>
-                {tobi.availableProjects.length > 1 && (
-                  <button
-                    type="button"
-                    style={{ padding: "4px 6px", background: "transparent", border: "none", color: "var(--danger)", cursor: "pointer" }}
-                    title={`Eliminar ${p.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      tobi.removeProject(p.id);
-                    }}
-                  >
-                    <Icon name="x" size="sm" />
-                  </button>
-                )}
-              </div>
-            ))}
-            {/* Botón Agregar Proyecto en Header */}
-            <button
-              type="button"
-              className="button button-ghost"
-              style={{
-                width: "100%",
-                justifyContent: "center",
-                padding: "6px 8px",
-                border: "1px dashed var(--border)",
-                borderRadius: "var(--radius-sm)",
-                fontSize: 11.5,
-                fontWeight: 600,
-                color: "var(--primary)",
-                marginTop: 4,
-                gap: 4
-              }}
-              onClick={() => {
-                setHeaderProjOpen(false);
-                onOpenAddProject?.();
-              }}
-            >
-              <span>+ Agregar Proyecto</span>
-            </button>
-          </div>
-        )}
+      <nav className="breadcrumbs" aria-label="Ubicación">
+        <span className="crumb-project">{project.name}</span>
         <Icon name="chevron" size="sm" />
         <strong>{title}</strong>
       </nav>
@@ -618,7 +527,6 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
 
   return <>
     <PageHeading title="Dashboard" subtitle={`${project.name} · Rama ${project.branch} · Alcance ${activeScope.toUpperCase()}`}>
-      <ScopeSwitcherBar tobi={tobi} />
       <Button variant="secondary" onClick={() => navigate("office")}><Icon name="spark" size="sm" />La Oficina ({working} activos)</Button>
       <Button data-testid="shell-primary-btn" onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ver ejecución en vivo</Button>
     </PageHeading>
@@ -756,9 +664,7 @@ function TestRunsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi
   const { runs, project } = tobi.state;
   return <>
     <PageHeading title="Test Runs" subtitle={`${runs.length} ejecuciones registradas en ${project.name}`}>
-      <ScopeSwitcherBar tobi={tobi} />
       <Button variant="secondary" onClick={() => navigate("specs")}><Icon name="file" size="sm" />Ver specs</Button>
-      <Button onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ejecución activa</Button>
     </PageHeading>
     <section className="panel">
       <div className="table-wrap">
@@ -894,9 +800,7 @@ function RunDetailPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppVie
   return <>
     <div className="detail-back"><Button variant="ghost" onClick={() => navigate("test-runs")}><Icon name="chevron" size="sm" />Test Runs</Button></div>
     <PageHeading title={`Run ${run.id}`} subtitle={`${run.suite} · Alcance ${activeScope.toUpperCase()}`}>
-      <ScopeSwitcherBar tobi={tobi} />
       <Button variant="secondary" onClick={() => tobi.downloadMasterBugReport()}><Icon name="download" size="sm" />Bug report (.md)</Button>
-      <Button onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Abrir Live Run</Button>
     </PageHeading>
 
     <section className="panel">
@@ -1044,7 +948,6 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
 
   return <>
     <PageHeading title={`Live Run ${liveRun.id}`} subtitle={liveRun.suite}>
-      <ScopeSwitcherBar tobi={tobi} />
       <Badge tone="agent"><span className="live-pulse" />{liveRun.status}</Badge>
     </PageHeading>
 
@@ -1092,10 +995,10 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
               </div>
             )
           ) : (
-            (liveRun.videoUrl || step?.videoUrl || tobi.state.runs[0]?.tests?.find(t => t.videoUrl)?.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : null)) ? (
+            (liveRun.videoUrl || step?.videoUrl || tobi.state.runs[0]?.tests?.find(t => t.videoUrl)?.videoUrl) ? (
               <video
                 key={step?.videoUrl || liveRun.videoUrl || tobi.activeProjectId}
-                src={step?.videoUrl || liveRun.videoUrl || tobi.state.runs[0]?.tests?.find(t => t.videoUrl)?.videoUrl || (tobi.activeProjectId === "tobitests" ? "/evidence/videos/tobitests-self-audit.webm" : "")}
+                src={step?.videoUrl || liveRun.videoUrl || tobi.state.runs[0]?.tests?.find(t => t.videoUrl)?.videoUrl || ""}
                 controls
                 autoPlay
                 loop
@@ -1151,7 +1054,6 @@ function BugTrackerPage({ navigate, tobi, onSelectBug }: { navigate: (v: AppView
 
   return <>
     <PageHeading title="Bug Tracker" subtitle={`${list.length} incidentes documentados · Alcance ${activeScope.toUpperCase()}`}>
-      <ScopeSwitcherBar tobi={tobi} />
       <Button variant="secondary" onClick={() => setReportOpen(true)}><Icon name="eye" size="sm" />Vista previa</Button>
       <Button onClick={() => tobi.downloadMasterBugReport()}><Icon name="download" size="sm" />Descargar reporte (.md)</Button>
     </PageHeading>
@@ -1404,9 +1306,7 @@ function SpecsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: T
 
   return <>
     <PageHeading title="Test Specs" subtitle={`${specs.length} archivos Playwright (${activeScope.toUpperCase()})`}>
-      <ScopeSwitcherBar tobi={tobi} />
       <Button variant="secondary" onClick={copy}><Icon name={copied ? "check" : "copy"} size="sm" />{copied ? "Copiado" : "Copiar código"}</Button>
-      <Button onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ejecutar</Button>
     </PageHeading>
     <div className="stat-row">
       <Stat label="Specs" value={String(specs.length)} meta={`Alcance ${activeScope}`} />
@@ -1474,7 +1374,6 @@ function SuitesPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppView) 
 
   return <>
     <PageHeading title="Suites" subtitle={`${suites.length} suites automatizadas (${activeScope.toUpperCase()})`}>
-      <ScopeSwitcherBar tobi={tobi} />
       <Button onClick={() => navigate("specs")}><Icon name="file" size="sm" />Ver specs</Button>
     </PageHeading>
     <div className="suite-layout">
@@ -2127,6 +2026,8 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
       <NotificationPanel open={notifications} onClose={() => setNotifications(false)} navigate={go} tobi={tobi} />
       <TestDetailModal
         test={inspectedTest}
+        runs={tobi.state.runs}
+        projectUrl={tobi.state.project.url}
         bugs={tobi.state.bugs}
         auditScope={tobi.auditScope}
         onClose={() => setInspectedTest(null)}
@@ -2140,8 +2041,8 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
           setInspectedTest(null);
           go("bug-detail");
         }}
-        onRunTest={(passedTest) => {
-          tobi.rerunTest(passedTest.name);
+        onRunTest={(_passedTest) => {
+          tobi.runLiveAudit(tobi.auditScope);
         }}
       />
       <AddProjectModal

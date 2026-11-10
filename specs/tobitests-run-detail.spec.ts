@@ -463,4 +463,62 @@ test.describe('TobiTests — RunDetailPage & Front Compatibility', () => {
     await expect(settingsNode).toContainText('0 blocked here');
     await expect(settingsNode.locator('.rm-label-badge.ok')).toBeVisible();
   });
+
+  test('TC-RUN-09: UI presenta un único ScopeSwitcherBar global y el modal de detalle no inyecta screenshots ni videos falsos cuando el test no los tiene', async ({ page }) => {
+    const mockState = createMockState({
+      auditScope: 'fullstack',
+      tests: [
+        {
+          name: 'TC-CLEAN-01: Clean Test Without Fake Evidence',
+          spec: 'tobitests-clean.spec.ts',
+          status: 'Passed',
+          duration: '45ms',
+          screenshot: '',
+          videoUrl: '',
+          steps: [
+            {
+              step: 1,
+              action: 'Render Clean Component',
+              target: 'button[data-testid="clean"]',
+              status: 'Passed',
+              duration: '15ms',
+              screenshot: '',
+            },
+          ],
+        },
+      ],
+    });
+
+    await page.route('**/api/state*', (route) => route.fulfill({ json: mockState }));
+    await page.route('**/data/*state.json', (route) => route.fulfill({ json: mockState }));
+
+    await page.addInitScript((stateJson) => {
+      window.localStorage.setItem('tobitests_current_view', 'run-detail');
+      window.localStorage.setItem('tobitests_active_project', 'tobitests');
+      window.localStorage.setItem('tobitests_state_tobitests', stateJson);
+      window.localStorage.setItem('__lockMock', 'true');
+    }, JSON.stringify(mockState));
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+    // 1. Verificar un único ScopeSwitcherBar y reaudit-scope-btn en toda la vista
+    expect(await page.getByTestId('audit-scope-switcher').count()).toBe(1);
+    expect(await page.getByTestId('reaudit-scope-btn').count()).toBe(1);
+
+    // 2. Abrir TestDetailModal
+    const inspectBtn = page.getByRole('button', { name: /Ver Detalle Studio/i });
+    await expect(inspectBtn).toBeVisible();
+    await inspectBtn.click();
+
+    // 3. Verificar que el modal esté visible
+    const modal = page.locator('.test-detail-modal');
+    await expect(modal).toBeVisible();
+
+    // 4. Verificar que NO existen imágenes ni videos hardcodeados/falsos
+    await expect(page.locator('img[src*="tobi-04-office.png"]')).toHaveCount(0);
+    await expect(page.locator('video[src*="tobitests-self-audit.webm"]')).toHaveCount(0);
+
+    // 5. Verificar placeholder honesto con data-testid="screenshot-empty"
+    await expect(page.getByTestId('screenshot-empty')).toBeVisible();
+  });
 });
