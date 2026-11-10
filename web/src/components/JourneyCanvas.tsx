@@ -29,7 +29,7 @@ export interface JourneyEdge {
   actionCode: string;
   humanExplanation: string;
   duration: string;
-  status: "Passed" | "Failed";
+  status: "Passed" | "Failed" | "Skipped" | string;
   verb: string;
 }
 
@@ -60,8 +60,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 310,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 84,
-    touches: 84,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "auth",
@@ -78,8 +78,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 80,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 84,
-    touches: 84,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "workspace",
@@ -94,8 +94,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 310,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 16,
-    touches: 16,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "workspace",
@@ -110,8 +110,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 540,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 18,
-    touches: 18,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "workspace",
@@ -128,8 +128,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 80,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 16,
-    touches: 16,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "diagnostics",
@@ -144,8 +144,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 310,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 84,
-    touches: 84,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "diagnostics",
@@ -160,8 +160,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 540,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 4,
-    touches: 12,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "diagnostics",
@@ -178,8 +178,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 80,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 84,
-    touches: 84,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "execution",
@@ -194,8 +194,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 310,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 16,
-    touches: 16,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "execution",
@@ -210,8 +210,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 540,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 4,
-    touches: 12,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "API",
@@ -226,8 +226,8 @@ const TOBI_NODES: JourneyNode[] = [
     y: 540,
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
-    testsCount: 4,
-    touches: 12,
+    testsCount: 0,
+    touches: 0,
     failedCount: 0,
     blockedCount: 0,
     category: "API",
@@ -576,23 +576,42 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
       });
     }
 
-    const mapped = TOBI_NODES.map((node) => {
-      let failedCount = node.failedCount || 0;
-      if (node.id === "office") failedCount = failedOffice;
-      else if (node.id === "bug-tracker") failedCount = failedBugs;
-      else if (node.id === "bug-detail") failedCount = openBugs;
+    const stateJourneyNodes = tobi.state.journeyMap?.nodes;
+    const hasStateNodes = Boolean(stateJourneyNodes && stateJourneyNodes.length > 0);
 
-      let blockedCount = node.blockedCount || 0;
-      if (node.id === "bug-detail" && (failedOffice > 0 || failedBugs > 0)) {
-        blockedCount = Math.max(1, failedOffice + failedBugs);
-      } else if (node.id === "live-run" && (failedOffice > 0 || failedBugs > 0 || openBugs > 0)) {
-        blockedCount = Math.max(1, skippedOrBlocked || 1);
+    const mapped = TOBI_NODES.map((node) => {
+      if (hasStateNodes) {
+        const hom = stateJourneyNodes!.find(
+          (n: any) => n.id === node.id || n.route === node.route
+        );
+        if (hom) {
+          return {
+            ...node,
+            testsCount: typeof hom.testsCount === "number" ? hom.testsCount : 0,
+            touches: typeof hom.touches === "number" ? hom.touches : 0,
+            failedCount: typeof hom.failedCount === "number" ? hom.failedCount : 0,
+            blockedCount: typeof hom.blockedCount === "number" ? hom.blockedCount : 0,
+          };
+        }
       }
+
+      const matchingTests = allTestsList.filter((t) =>
+        getTestTouchedNodeIds(t).includes(node.id)
+      );
+      const executed = matchingTests.filter(
+        (t) => t.status === "Passed" || t.status === "Failed"
+      );
+      const failed = matchingTests.filter((t) => t.status === "Failed");
+      const unrun = matchingTests.filter(
+        (t) => t.status === "Skipped" || t.status === "notRun" || t.status === "Blocked"
+      );
 
       return {
         ...node,
-        failedCount,
-        blockedCount,
+        testsCount: executed.length,
+        touches: executed.length,
+        failedCount: failed.length,
+        blockedCount: unrun.length,
       };
     });
 
@@ -605,7 +624,7 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
       );
     }
     return mapped;
-  }, [testsList, tobi.state.bugs, run, activeScope, tobi.activeProjectId, tobi.state.project]);
+  }, [testsList, allTestsList, tobi.state.bugs, tobi.state.journeyMap?.nodes, run, activeScope, tobi.activeProjectId, tobi.state.project]);
 
   const nodeMap = useMemo(() => {
     const map: Record<string, JourneyNode> = {};
@@ -631,31 +650,40 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
           actionCode: `await page.goto('${target.route}');`,
           humanExplanation: `Transición explorada: ${prev.title} › ${target.title}.`,
           duration: `${80 + idx * 25}ms`,
-          status: (target.failedCount && target.failedCount > 0 ? "Failed" : "Passed") as "Passed" | "Failed",
+          status: (target.failedCount && target.failedCount > 0 ? "Failed" : "Passed") as any,
         };
       });
     }
 
-    const failedOffice = testsList.filter(
-      (t) => (t.spec?.includes("office") || t.name?.includes("TC-OFFICE")) && t.status === "Failed"
-    ).length;
-    const openBugs = (tobi.state.bugs || []).filter(
-      (b) => b.status !== "Resolved" && b.status !== "Closed"
-    ).length;
+    const stateJourneyEdges = tobi.state.journeyMap?.edges;
+    if (stateJourneyEdges && stateJourneyEdges.length > 0) {
+      return TOBI_EDGES.map((edge) => {
+        const hom = stateJourneyEdges.find((e: any) => e.id === edge.id);
+        const status = (hom?.status || edge.status) as any;
+        return {
+          ...edge,
+          status,
+        };
+      }).filter((edge) => Boolean(nodeMap[edge.from] && nodeMap[edge.to]));
+    }
 
     return TOBI_EDGES.map((edge) => {
-      let status: "Passed" | "Failed" = edge.status;
-      if (edge.id === "e-office-bugdetail") {
-        status = failedOffice > 0 ? "Failed" : "Passed";
-      } else if (edge.id === "e-bugtracker-bugdetail") {
-        status = openBugs > 0 ? "Failed" : "Passed";
+      const srcNode = nodeMap[edge.from];
+      const dstNode = nodeMap[edge.to];
+      let status: "Passed" | "Failed" | "Skipped" = "Passed";
+      if (dstNode && dstNode.testsCount === 0) {
+        status = "Skipped";
+      } else if ((dstNode && dstNode.failedCount > 0) || (srcNode && srcNode.failedCount > 0)) {
+        status = "Failed";
+      } else {
+        status = "Passed";
       }
       return {
         ...edge,
         status,
       };
     }).filter((edge) => Boolean(nodeMap[edge.from] && nodeMap[edge.to]));
-  }, [testsList, tobi.state.bugs, nodeMap, tobi.activeProjectId, dynamicNodes]);
+  }, [testsList, tobi.state.bugs, tobi.state.journeyMap?.edges, nodeMap, tobi.activeProjectId, dynamicNodes]);
 
   // Determine which node hosts the live floating agent thought HUD (div.rm-cap.rm-cap-think)
   const liveFocusedNode = useMemo(() => {

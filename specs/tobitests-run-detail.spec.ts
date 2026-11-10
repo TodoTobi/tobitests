@@ -4,6 +4,7 @@ function createMockState(options: {
   auditScope: 'frontend' | 'backend' | 'fullstack';
   tests: any[];
   bugs?: any[];
+  journeyMap?: any;
 }) {
   const failedCount = options.tests.filter((t: any) => t.status === 'Failed').length;
   const passedCount = options.tests.filter((t: any) => t.status === 'Passed').length;
@@ -28,7 +29,7 @@ function createMockState(options: {
       activeRun: '#RUN-TEST-01',
       totalTests: options.tests.length,
     },
-    journeyMap: { nodes: [], edges: [] },
+    journeyMap: options.journeyMap || { nodes: [], edges: [] },
     runs: [
       {
         id: '#RUN-TEST-01',
@@ -364,5 +365,102 @@ test.describe('TobiTests — RunDetailPage & Front Compatibility', () => {
     // La UI debe actualizarse mostrando #RUN-NEW-99 en el chip de ejecución
     await expect(page.locator('.run-chip')).toContainText('#RUN-NEW-99');
     await expect(page.locator('.app')).toContainText('#RUN-NEW-99');
+  });
+
+  test('TC-RUN-08: Journey Canvas muestra contadores reales del state (testsCount, failedCount y blockedCount sin fabricar bloqueados)', async ({ page }) => {
+    const mockState = createMockState({
+      auditScope: 'fullstack',
+      tests: [
+        {
+          name: 'TC-OFFICE-01',
+          spec: 'tobitests-office.spec.ts',
+          status: 'Failed',
+          duration: '100ms',
+          steps: [],
+        },
+        {
+          name: 'TC-SPECS-01',
+          spec: 'tobitests-specs.spec.ts',
+          status: 'Skipped',
+          duration: '0ms',
+          steps: [],
+        },
+        {
+          name: 'TC-SETTINGS-01',
+          spec: 'tobitests-settings.spec.ts',
+          status: 'Passed',
+          duration: '50ms',
+          steps: [],
+        },
+      ],
+      journeyMap: {
+        nodes: [
+          {
+            id: 'office',
+            title: '/office · La Oficina 2.5D',
+            subtitle: 'Simulación isométrica',
+            route: '/office',
+            testsCount: 1,
+            touches: 1,
+            failedCount: 1,
+            blockedCount: 0,
+            category: 'workspace',
+          },
+          {
+            id: 'specs',
+            title: '/specs · Test Specs Playwright',
+            subtitle: 'Editor y sintaxis TypeScript',
+            route: '/specs',
+            testsCount: 0,
+            touches: 0,
+            failedCount: 0,
+            blockedCount: 1,
+            category: 'diagnostics',
+          },
+          {
+            id: 'settings',
+            title: '/settings · Servidores MCP',
+            subtitle: 'Servidores Playwright y Chrome CDP',
+            route: '/settings',
+            testsCount: 1,
+            touches: 1,
+            failedCount: 0,
+            blockedCount: 0,
+            category: 'execution',
+          },
+        ],
+        edges: [],
+      },
+    });
+
+    await page.route('**/api/state*', (route) => route.fulfill({ json: mockState }));
+    await page.route('**/data/*state.json', (route) => route.fulfill({ json: mockState }));
+
+    await page.addInitScript((stateJson) => {
+      window.localStorage.setItem('tobitests_current_view', 'journey');
+      window.localStorage.setItem('tobitests_active_project', 'tobitests');
+      window.localStorage.setItem('tobitests_state_tobitests', stateJson);
+      window.localStorage.setItem('__lockMock', 'true');
+    }, JSON.stringify(mockState));
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+    // Verificar nodo office con 1 falla / 1 failed here
+    const officeNode = page.locator('.journey-node-card').filter({ hasText: /office/i });
+    await expect(officeNode).toBeVisible();
+    await expect(officeNode).toContainText('1 failed here');
+    await expect(officeNode).toContainText('1 falla');
+
+    // Verificar nodo specs con 1 bloq / 1 blocked here
+    const specsNode = page.locator('.journey-node-card').filter({ hasText: /specs/i });
+    await expect(specsNode).toBeVisible();
+    await expect(specsNode).toContainText('1 blocked here');
+    await expect(specsNode).toContainText('1 bloq');
+
+    // Verificar nodo settings sin fallos ni bloqueados (0 blocked here y badge OK)
+    const settingsNode = page.locator('.journey-node-card').filter({ hasText: /settings/i });
+    await expect(settingsNode).toBeVisible();
+    await expect(settingsNode).toContainText('0 blocked here');
+    await expect(settingsNode.locator('.rm-label-badge.ok')).toBeVisible();
   });
 });
