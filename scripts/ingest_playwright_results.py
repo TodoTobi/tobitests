@@ -120,6 +120,221 @@ def locked_update(path: Path, fn: Callable[[Dict[str, Any]], Dict[str, Any]]) ->
                 pass
 
 
+ALLOWED_SEVERITIES = {
+    "critical",
+    "high",
+    "medium",
+    "low",
+    "Critical",
+    "High",
+    "Medium",
+    "Low",
+    "Crítica",
+    "Alta",
+    "Media",
+    "Baja",
+}
+
+ALLOWED_STATUSES = {"Confirmed", "Resolved", "Closed"}
+
+
+def validate_bug_report(
+    bug: Dict[str, Any],
+    repo_root: Optional[Path] = None,
+) -> Tuple[bool, List[str]]:
+    """Valida que un reporte de bug cumpla con el contrato canónico BugItem."""
+    errors: List[str] = []
+    if not isinstance(bug, dict):
+        return False, ["Bug report must be a dictionary"]
+
+    mandatory_str_keys = [
+        "id",
+        "title",
+        "severity",
+        "status",
+        "section",
+        "runId",
+        "agent",
+        "dadoQue",
+        "cuando",
+        "entonces",
+    ]
+    for key in mandatory_str_keys:
+        if key not in bug:
+            errors.append(f"Missing mandatory field: '{key}'")
+        else:
+            val = bug[key]
+            if not isinstance(val, str) or not val.strip():
+                errors.append(f"Field '{key}' must be a non-empty string")
+
+    sev = bug.get("severity")
+    if sev is not None and sev not in ALLOWED_SEVERITIES:
+        errors.append(f"Invalid severity '{sev}'. Allowed: {sorted(ALLOWED_SEVERITIES)}")
+
+    st = bug.get("status")
+    if st is not None and st not in ALLOWED_STATUSES:
+        errors.append(f"Invalid status '{st}'. Allowed: {sorted(ALLOWED_STATUSES)}")
+
+    if "gherkin" in bug and bug["gherkin"] is not None:
+        gh = bug["gherkin"]
+        if not isinstance(gh, dict):
+            errors.append("Field 'gherkin' must be a dictionary")
+        else:
+            for g_key in ("given", "when", "then"):
+                g_val = gh.get(g_key)
+                if not isinstance(g_val, str) or not g_val.strip():
+                    errors.append(f"Field 'gherkin.{g_key}' must be a non-empty string")
+
+    if "diagnostic" in bug and bug["diagnostic"] is not None:
+        diag = bug["diagnostic"]
+        if not isinstance(diag, dict):
+            errors.append("Field 'diagnostic' must be a dictionary")
+        else:
+            for d_key in ("observedFact", "whiteBoxHypothesis", "reproductionSpec", "affectedFile"):
+                d_val = diag.get(d_key)
+                if not isinstance(d_val, str):
+                    errors.append(f"Field 'diagnostic.{d_key}' must be a string")
+
+    # White-Box Validation (Hallazgo C7)
+    line_val = bug.get("root_cause_line")
+    if line_val is not None:
+        if not isinstance(line_val, int) or isinstance(line_val, bool):
+            errors.append("Field 'root_cause_line' must be an integer")
+        elif line_val < 0:
+            errors.append(f"Field 'root_cause_line' must be >= 0 (got {line_val})")
+
+    rc_file = bug.get("root_cause_file")
+    if repo_root is not None and rc_file and isinstance(rc_file, str) and rc_file.strip():
+        target_path = Path(repo_root) / rc_file
+        if target_path.is_file():
+            try:
+                total_lines = len(target_path.read_text(encoding="utf-8", errors="replace").splitlines())
+            except Exception:
+                total_lines = 0
+
+            if line_val is not None and isinstance(line_val, int) and not isinstance(line_val, bool):
+                if line_val < 1 or line_val > total_lines:
+                    errors.append(
+                        f"root_cause_line {line_val} is out of range for existing file '{rc_file}' (1-{total_lines})"
+                    )
+
+    return (len(errors) == 0, errors)
+
+
+def synthesize_draft_bug(
+    test_item: Dict[str, Any],
+    run_id: str,
+    bug_id: str,
+    repo_root: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """Sintetiza un bug borrador auto-generado a partir de un test fallido."""
+    t = test_item
+    t_name = str(t.get("name", "Unnamed Test"))
+    spec_name = str(t.get("spec", "Playwright Suite"))
+
+    ev = t.get("evidence") or {}
+    page_errors = t.get("pageErrors") or []
+    console_log = ev.get("console_log") or []
+    network_trace = ev.get("network_trace") or []
+    has_layer1 = bool(page_errors) or any("error" in str(x).lower() for x in console_log) or any(
+        "500" in str(x) or "400" in str(x) for x in network_trace
+    )
+    oracle_layer = "Layer 1: Implicit" if has_layer1 else "Layer 2: State Divergence"
+
+    steps = t.get("steps") or []
+    failed_step = next((s for s in steps if isinstance(s, dict) and s.get("status") == "Failed"), None)
+    if failed_step:
+        st_num = failed_step.get("step", 1)
+        st_act = failed_step.get("action", "Action")
+        st_tgt = failed_step.get("target", "Target")
+        cuando = f"ejecuta el paso #{st_num}: {st_act} ({st_tgt})"
+    else:
+        cuando = "ejecuta las aserciones del test"
+
+    error_obj = t.get("error")
+    error_msg = ""
+    if isinstance(error_obj, dict):
+        error_msg = error_obj.get("message", "")
+    elif isinstance(error_obj, str):
+        error_msg = error_obj
+
+    if error_msg and error_msg.strip():
+        entonces = error_msg.strip()[:300]
+    elif failed_step and failed_step.get("actual"):
+        entonces = str(failed_step.get("actual")).strip()[:300]
+    else:
+        entonces = "el test falló durante la ejecución"
+
+    dado_que = f"el suite Playwright ejecuta la especificación {spec_name}"
+
+    err_loc = error_obj.get("location", {}) if isinstance(error_obj, dict) else {}
+    rc_file = err_loc.get("file", "") or f"specs/{spec_name}"
+    raw_line = err_loc.get("line", 1)
+    try:
+        rc_line = int(raw_line) if raw_line is not None else 1
+    except (ValueError, TypeError):
+        rc_line = 1
+    if rc_line <= 0:
+        rc_line = 1
+
+    nearby = error_obj.get("nearby", []) if isinstance(error_obj, dict) else []
+    if nearby and isinstance(nearby, list):
+        wb_hyp = "; ".join(str(x) for x in nearby[:3])
+    else:
+        wb_hyp = "Fallo de aserción o timeout detectado por el runner de Playwright."
+
+    diag = {
+        "observedFact": entonces,
+        "whiteBoxHypothesis": wb_hyp,
+        "reproductionSpec": f"specs/{spec_name} ({t_name})",
+        "affectedFile": f"{rc_file}:{rc_line}",
+        "recommendedFix": "Inspeccionar el error y la traza cercana en el modal de diagnóstico para corregir la divergencia.",
+        "scopeIn": [f"specs/{spec_name}"],
+        "scopeOut": ["package.json", "playwright.config.ts"],
+    }
+
+    now_date = datetime.datetime.now().strftime("%d/%m/%Y")
+    test_key = f"{spec_name}::{t_name}"
+
+    draft_bug = {
+        "id": bug_id,
+        "title": f"Fallo en {t_name}",
+        "severity": "high",
+        "priority": "P1",
+        "oracle_layer": oracle_layer,
+        "status": "Confirmed",
+        "section": spec_name,
+        "runId": run_id,
+        "agent": "Telemetry Auditor",
+        "assignee": "Unassigned",
+        "date": now_date,
+        "scenario": f"{bug_id}: Fallo en {t_name}, seccion: {spec_name}",
+        "dadoQue": dado_que,
+        "cuando": cuando,
+        "entonces": entonces,
+        "gherkin": {
+            "given": dado_que,
+            "when": cuando,
+            "then": "la aserción debería cumplirse sin errores",
+            "but": entonces,
+        },
+        "screenshot": t.get("screenshot", ""),
+        "videoUrl": t.get("videoUrl", ""),
+        "evidence": {
+            "screenshot": t.get("screenshot", ""),
+            "video": t.get("videoUrl", ""),
+            "console_log": ev.get("console_log", []),
+            "network_trace": ev.get("network_trace", []),
+        },
+        "root_cause_file": rc_file,
+        "root_cause_line": rc_line,
+        "diagnostic": diag,
+        "autoGenerated": True,
+        "testKey": test_key,
+    }
+    return draft_bug
+
+
 def _strip_ansi(text: str) -> str:
     return re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text)
 
@@ -988,6 +1203,54 @@ def ingest_report_into_state(
                 {"time": now_ar, "level": "ACTION", "message": evidence_msg, "source": "PLAYWRIGHT"},
             ] + state.get("liveRun", {}).get("telemetryLogs", []),
         }
+
+        # Auto-generación / actualización de bugs borrador para tests fallidos
+        existing_bugs = state.get("bugs", [])
+        if not isinstance(existing_bugs, list):
+            existing_bugs = []
+
+        auto_numbers = []
+        for b in existing_bugs:
+            if isinstance(b, dict):
+                m = re.match(r"^BUG-AUTO-(\d+)$", str(b.get("id", "")))
+                if m:
+                    auto_numbers.append(int(m.group(1)))
+        next_auto_num = max(auto_numbers, default=0) + 1
+
+        failed_tests = [t for t in parsed_tests if t.get("status") == "Failed"]
+        for t in failed_tests:
+            spec_name = str(t.get("spec", ""))
+            t_name = str(t.get("name", ""))
+            test_key = f"{spec_name}::{t_name}"
+            expected_title = f"Fallo en {t_name}"
+
+            found_idx = -1
+            for idx, b in enumerate(existing_bugs):
+                if not isinstance(b, dict):
+                    continue
+                if b.get("autoGenerated") and b.get("testKey") == test_key:
+                    found_idx = idx
+                    break
+                if b.get("title") == expected_title and b.get("section") == spec_name:
+                    found_idx = idx
+                    break
+
+            if found_idx >= 0:
+                existing_id = existing_bugs[found_idx].get("id") or f"BUG-AUTO-{next_auto_num:02d}"
+                updated_bug = synthesize_draft_bug(t, run_id, existing_id, repo_root=repo_root)
+                existing_bugs[found_idx] = updated_bug
+            else:
+                new_id = f"BUG-AUTO-{next_auto_num:02d}"
+                next_auto_num += 1
+                new_bug = synthesize_draft_bug(t, run_id, new_id, repo_root=repo_root)
+                existing_bugs.append(new_bug)
+
+        state["bugs"] = existing_bugs
+
+    if "bugs" in state and isinstance(state["bugs"], list) and "metrics" in state and isinstance(state["metrics"], dict):
+        state["metrics"]["openBugs"] = len([
+            b for b in state["bugs"] if isinstance(b, dict) and b.get("status") not in ("Resolved", "Closed")
+        ])
 
     atomic_write_json(state_file, state)
 

@@ -51,6 +51,108 @@ def resolve_fastest_url(url_str: str) -> str:
         pass
     return url_str
 
+
+ALLOWED_SEVERITIES = {
+    "critical",
+    "high",
+    "medium",
+    "low",
+    "Critical",
+    "High",
+    "Medium",
+    "Low",
+    "Crítica",
+    "Alta",
+    "Media",
+    "Baja",
+}
+
+ALLOWED_STATUSES = {"Confirmed", "Resolved", "Closed"}
+
+
+def validate_bug_report(
+    bug: Dict[str, Any],
+    repo_root: Optional[Path] = None,
+) -> Tuple[bool, List[str]]:
+    """Valida que un reporte de bug cumpla con el contrato canónico BugItem."""
+    errors: List[str] = []
+    if not isinstance(bug, dict):
+        return False, ["Bug report must be a dictionary"]
+
+    mandatory_str_keys = [
+        "id",
+        "title",
+        "severity",
+        "status",
+        "section",
+        "runId",
+        "agent",
+        "dadoQue",
+        "cuando",
+        "entonces",
+    ]
+    for key in mandatory_str_keys:
+        if key not in bug:
+            errors.append(f"Missing mandatory field: '{key}'")
+        else:
+            val = bug[key]
+            if not isinstance(val, str) or not val.strip():
+                errors.append(f"Field '{key}' must be a non-empty string")
+
+    sev = bug.get("severity")
+    if sev is not None and sev not in ALLOWED_SEVERITIES:
+        errors.append(f"Invalid severity '{sev}'. Allowed: {sorted(ALLOWED_SEVERITIES)}")
+
+    st = bug.get("status")
+    if st is not None and st not in ALLOWED_STATUSES:
+        errors.append(f"Invalid status '{st}'. Allowed: {sorted(ALLOWED_STATUSES)}")
+
+    if "gherkin" in bug and bug["gherkin"] is not None:
+        gh = bug["gherkin"]
+        if not isinstance(gh, dict):
+            errors.append("Field 'gherkin' must be a dictionary")
+        else:
+            for g_key in ("given", "when", "then"):
+                g_val = gh.get(g_key)
+                if not isinstance(g_val, str) or not g_val.strip():
+                    errors.append(f"Field 'gherkin.{g_key}' must be a non-empty string")
+
+    if "diagnostic" in bug and bug["diagnostic"] is not None:
+        diag = bug["diagnostic"]
+        if not isinstance(diag, dict):
+            errors.append("Field 'diagnostic' must be a dictionary")
+        else:
+            for d_key in ("observedFact", "whiteBoxHypothesis", "reproductionSpec", "affectedFile"):
+                d_val = diag.get(d_key)
+                if not isinstance(d_val, str):
+                    errors.append(f"Field 'diagnostic.{d_key}' must be a string")
+
+    # White-Box Validation (Hallazgo C7)
+    line_val = bug.get("root_cause_line")
+    if line_val is not None:
+        if not isinstance(line_val, int) or isinstance(line_val, bool):
+            errors.append("Field 'root_cause_line' must be an integer")
+        elif line_val < 0:
+            errors.append(f"Field 'root_cause_line' must be >= 0 (got {line_val})")
+
+    rc_file = bug.get("root_cause_file")
+    if repo_root is not None and rc_file and isinstance(rc_file, str) and rc_file.strip():
+        target_path = Path(repo_root) / rc_file
+        if target_path.is_file():
+            try:
+                total_lines = len(target_path.read_text(encoding="utf-8", errors="replace").splitlines())
+            except Exception:
+                total_lines = 0
+
+            if line_val is not None and isinstance(line_val, int) and not isinstance(line_val, bool):
+                if line_val < 1 or line_val > total_lines:
+                    errors.append(
+                        f"root_cause_line {line_val} is out of range for existing file '{rc_file}' (1-{total_lines})"
+                    )
+
+    return (len(errors) == 0, errors)
+
+
 PIPELINE_STEPS: Dict[int, str] = {
     1: "Bootstrap & Port/Stack Discovery",
     2: "Source Code & Route Analysis",
@@ -824,7 +926,7 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
         "passRate": "0%",
         "totalRuns": 0,
         "failedTests": 0,
-        "openBugs": len(existing_state.get("bugs", [])),
+        "openBugs": len([b for b in existing_state.get("bugs", []) if isinstance(b, dict) and b.get("status") not in ("Resolved", "Closed")]),
         "avgDuration": "0.0s",
         "activeRun": "",
         "totalTests": 0,
@@ -836,6 +938,7 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
         metrics = existing_state.get("metrics", clean_metrics)
         office_agents = existing_state.get("officeAgents", default_office_agents)
         bugs = existing_state.get("bugs", [])
+        metrics["openBugs"] = len([b for b in bugs if isinstance(b, dict) and b.get("status") not in ("Resolved", "Closed")])
         has_live_run = "liveRun" in existing_state
         live_run = existing_state.get("liveRun")
     else:
