@@ -31,22 +31,35 @@ def resolve_fastest_url(url_str: str) -> str:
         parsed = urllib.parse.urlparse(url_str)
         if parsed.hostname == "localhost":
             port = parsed.port or 80
+            chosen_host: Optional[str] = None
+
             s4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s4.settimeout(0.15)
             try:
                 s4.connect(("127.0.0.1", port))
+                chosen_host = "127.0.0.1"
+            except Exception:
+                pass
+            finally:
                 s4.close()
-                return url_str.replace("localhost", "127.0.0.1")
-            except Exception:
-                pass
-            s6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            s6.settimeout(0.15)
-            try:
-                s6.connect(("::1", port))
-                s6.close()
-                return url_str.replace("localhost", "[::1]")
-            except Exception:
-                pass
+
+            if not chosen_host:
+                s6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                s6.settimeout(0.15)
+                try:
+                    s6.connect(("::1", port))
+                    chosen_host = "[::1]"
+                except Exception:
+                    pass
+                finally:
+                    s6.close()
+
+            if chosen_host:
+                new_netloc = f"{chosen_host}:{port}" if parsed.port else chosen_host
+                if parsed.username or parsed.password:
+                    auth = f"{parsed.username or ''}{(':' + parsed.password) if parsed.password else ''}@"
+                    new_netloc = auth + new_netloc
+                return urllib.parse.urlunparse(parsed._replace(netloc=new_netloc))
     except Exception:
         pass
     return url_str
@@ -247,12 +260,19 @@ def state_path(repo_root: Path, slug: str) -> Path:
     """Devuelve la ruta canónica del archivo de estado según el Paso 0."""
     return repo_root / "web" / "public" / "data" / f"{slug}-state.json"
 
-def atomic_write_json(path: Path, payload: Dict[str, Any]) -> None:
+def atomic_write_json(path: Path, payload: Dict[str, Any], retries: int = 6, delay: float = 0.05) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = path.parent / f".{path.name}.{os.getpid()}.{time.time_ns()}.tmp"
     try:
         tmp_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        os.replace(tmp_path, path)
+        for attempt in range(retries):
+            try:
+                os.replace(tmp_path, path)
+                break
+            except PermissionError:
+                if attempt == retries - 1:
+                    raise
+                time.sleep(delay * (attempt + 1))
     except Exception:
         if tmp_path.exists():
             try:
@@ -327,7 +347,7 @@ def detect_stack_and_routes(
     ]
     default_api_routes: List[Dict[str, str]] = [
         {"id": "api-health", "route": "GET /api/health", "title": "GET /api/health · API", "category": "API"},
-        {"id": "api-state-rbac", "route": "POST /api/antigravity/scope", "title": "POST /api/antigravity/scope · API", "category": "API"},
+        {"id": "api-status", "route": "GET /api/status", "title": "GET /api/status · API", "category": "API"},
         {"id": "api-auth-session", "route": "POST /api/auth/session", "title": "POST /api/auth/session · API", "category": "API"},
     ]
 
@@ -380,7 +400,16 @@ def detect_stack_and_routes(
 
     stack_info["hasPlaywright"] = "@playwright/test" in dep_names or "playwright" in dep_names
 
-    # 2. Scan source files for UI route paths AND Backend API endpoints (Express, Fastify, NestJS, FastAPI)
+    # 2. Inspect Python dependency manifests
+    py_deps_text = ""
+    for py_manifest in [root / "requirements.txt", root / "pyproject.toml", root / "Pipfile"]:
+        if py_manifest.exists():
+            try:
+                py_deps_text += " " + py_manifest.read_text(encoding="utf-8", errors="ignore").lower()
+            except Exception:
+                pass
+
+    # 3. Scan source files for UI route paths AND Backend API endpoints (Express, Fastify, NestJS, FastAPI, Flask)
     route_set: List[str] = []
     api_route_set: List[Tuple[str, str]] = []
     route_regex = re.compile(r"""(?:path|to|href)\s*[:=]\s*["'](/[a-zA-Z0-9_\-/:\*]*)["']""")
@@ -409,9 +438,17 @@ def detect_stack_and_routes(
                 break
             try:
                 content = fpath.read_text(encoding="utf-8", errors="ignore")
-                if fname.endswith(".py") and ("FastAPI" in content or "@app." in content or "@router." in content):
-                    stack_info["framework"] = "FastAPI / Python Backend"
-                    stack_info["language"] = "Python"
+                if fname.endswith(".py"):
+                    content_lower = content.lower()
+                    if "fastapi" in content_lower or "fastapi" in py_deps_text:
+                        stack_info["framework"] = "FastAPI / Python Backend"
+                        stack_info["language"] = "Python"
+                    elif "flask" in content_lower or "flask" in py_deps_text or "@app.route" in content:
+                        stack_info["framework"] = "Flask / Python Backend"
+                        stack_info["language"] = "Python"
+                    elif ("@app." in content or "@router." in content) and stack_info["framework"].startswith("Web Application"):
+                        stack_info["framework"] = "Python Backend API"
+                        stack_info["language"] = "Python"
 
                 for match in route_regex.findall(content):
                     clean_r = match.strip()
@@ -446,6 +483,46 @@ def detect_stack_and_routes(
                 pass
         if scanned_files > 250:
             break
+
+    # 4. Next.js file-based route detection (App Router and Pages Router)
+    next_app_candidates = [
+        root / "app",
+        root / "src" / "app",
+        root / "web" / "app",
+        root / "web" / "src" / "app",
+        root / "frontend" / "app",
+        root / "frontend" / "src" / "app",
+    ]
+    for app_dir in next_app_candidates:
+        if app_dir.exists() and app_dir.is_dir():
+            for p in app_dir.rglob("page.*"):
+                if p.suffix in (".tsx", ".ts", ".jsx", ".js"):
+                    rel = p.parent.relative_to(app_dir).as_posix()
+                    route = "/" if rel == "." else f"/{rel}"
+                    parts = [part for part in route.split("/") if not (part.startswith("(") and part.endswith(")")) and not part.startswith("_")]
+                    clean_route = "/" + "/".join(filter(None, parts))
+                    if clean_route not in route_set and len(clean_route) <= 42:
+                        route_set.append(clean_route)
+
+    next_pages_candidates = [
+        root / "pages",
+        root / "src" / "pages",
+        root / "web" / "pages",
+        root / "web" / "src" / "pages",
+        root / "frontend" / "pages",
+        root / "frontend" / "src" / "pages",
+    ]
+    for pages_dir in next_pages_candidates:
+        if pages_dir.exists() and pages_dir.is_dir():
+            for p in pages_dir.rglob("*.*"):
+                if p.suffix in (".tsx", ".ts", ".jsx", ".js") and not p.name.startswith(("_", ".")):
+                    rel = p.relative_to(pages_dir).as_posix()
+                    rel_no_ext = re.sub(r"\.[^.]+$", "", rel)
+                    if rel_no_ext.startswith("api/"):
+                        continue
+                    route = "/" if rel_no_ext == "index" else f"/{re.sub(r'/index$', '', rel_no_ext)}"
+                    if route not in route_set and len(route) <= 42:
+                        route_set.append(route)
 
     custom_ui_routes: List[Dict[str, str]] = []
     custom_api_routes: List[Dict[str, str]] = []
@@ -987,36 +1064,56 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
 
 def detect_environment_agents(repo_root: Path) -> List[str]:
     import shutil
+    if os.environ.get("TOBI_DETECTED_AGENTS"):
+        custom_agents = [a.strip() for a in os.environ["TOBI_DETECTED_AGENTS"].split(",") if a.strip()]
+        if custom_agents:
+            if "custom" not in custom_agents:
+                custom_agents.append("custom")
+            return custom_agents
+
     detected: List[str] = []
     home = Path(os.environ.get("USERPROFILE") or os.environ.get("HOME") or Path.home())
 
-    # 1. Antigravity: ~/.gemini/antigravity or AGY env
+    is_tobitests_repo = (
+        repo_root.resolve() == Path(__file__).resolve().parent.parent
+        or ((repo_root / "package.json").exists()
+            and "tobitests" in (repo_root / "package.json").read_text(encoding="utf-8", errors="ignore").lower())
+    )
+
+    # 1. Antigravity: ~/.gemini/antigravity or AGY env or PATH
     agy_dir = home / ".gemini" / "antigravity"
-    if agy_dir.exists() or os.environ.get("ANTIGRAVITY") or os.environ.get("AGY_VERSION"):
+    if agy_dir.exists() or os.environ.get("ANTIGRAVITY") or os.environ.get("AGY_VERSION") or shutil.which("agy") or shutil.which("antigravity"):
         detected.append("antigravity")
 
-    # 2. OpenCode: opencode.json in repo or ~/.opencode
-    if (repo_root / "opencode.json").exists() or (home / ".opencode").exists() or shutil.which("opencode"):
+    # 2. OpenCode: opencode binary in PATH or ~/.opencode or ~/.config/opencode, or opencode.json in external repo
+    if shutil.which("opencode") or (home / ".opencode").exists() or (home / ".config" / "opencode").exists() or (not is_tobitests_repo and (repo_root / "opencode.json").exists()):
         detected.append("opencode")
 
-    # 3. Claude Code: CLAUDE.md in repo or ~/.claude
-    if (repo_root / "CLAUDE.md").exists() or (home / ".claude").exists() or shutil.which("claude"):
+    # 3. Claude Code: claude binary in PATH or ~/.claude, or CLAUDE.md in external repo
+    if shutil.which("claude") or (home / ".claude").exists() or (not is_tobitests_repo and (repo_root / "CLAUDE.md").exists()):
         detected.append("claude-code")
 
-    # 4. Cursor: .cursorrules or .cursor in repo or home
-    if (repo_root / ".cursorrules").exists() or (repo_root / ".cursor").exists() or shutil.which("cursor"):
+    # 4. Cursor: cursor binary in PATH or ~/.cursor, or .cursorrules/.cursor in external repo
+    if shutil.which("cursor") or (home / ".cursor").exists() or (not is_tobitests_repo and ((repo_root / ".cursorrules").exists() or (repo_root / ".cursor").exists())):
         detected.append("cursor")
 
-    # 5. Codex: CODEX.md or .codex
-    if (repo_root / "CODEX.md").exists() or (repo_root / ".codex").exists() or shutil.which("codex"):
+    # 5. Codex: codex binary in PATH, or CODEX.md/.codex in external repo
+    if shutil.which("codex") or (not is_tobitests_repo and ((repo_root / "CODEX.md").exists() or (repo_root / ".codex").exists())):
         detected.append("codex")
 
-    # 6. Windsurf: .windsurfrules or .codeium
-    if (repo_root / ".windsurfrules").exists() or (home / ".codeium").exists() or shutil.which("windsurf"):
+    # 6. Windsurf: windsurf binary in PATH or ~/.codeium, or .windsurfrules in external repo
+    if shutil.which("windsurf") or (home / ".codeium").exists() or (not is_tobitests_repo and (repo_root / ".windsurfrules").exists()):
         detected.append("windsurf")
 
-    # 7. Custom agent engine
-    detected.append("custom")
+    # Baseline guarantees: always provide at least antigravity and opencode as base runners
+    for baseline in ["antigravity", "opencode"]:
+        if baseline not in detected:
+            detected.append(baseline)
+
+    # 7. Custom agent engine is always supported
+    if "custom" not in detected:
+        detected.append("custom")
+
     return detected
 
 

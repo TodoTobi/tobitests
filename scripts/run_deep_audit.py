@@ -1,143 +1,216 @@
+"""Multi-Oracle Deep Audit Runner y Telemetry Synthesizer para TobiTests.
+
+Ejecuta auditorÃ­as profundas agnÃ³sticas con captura de video y telemetrÃ­a.
+"""
+
+from __future__ import annotations
+
+import argparse
 import asyncio
+import json
 import os
+from pathlib import Path
 import shutil
-from playwright.async_api import async_playwright
+import sys
+from typing import Any, Dict, List, Optional
+import urllib.parse
 
-async def audit_flows():
-    results = {
-        "doctor_flows": [],
-        "tutor_flows": [],
-        "bugs": []
+
+def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="TobiTests Universal Deep Audit Runner")
+    parser.add_argument("--project", default="tobitests", help="Project slug to audit")
+    parser.add_argument("--url", default=None, help="Target URL (defaults to state or PRD)")
+    parser.add_argument("--timeout", type=int, default=15000, help="Per-action timeout in ms")
+    parser.add_argument("--repo-root", default=None, help="Repository root directory")
+    parser.add_argument("--dry-run", action="store_true", help="Validate config without launching browser")
+    return parser.parse_args(argv)
+
+
+async def execute_deep_audit(
+    project: str,
+    target_url: str,
+    timeout_ms: int,
+    repo_root: Path,
+    routes_to_visit: List[str],
+) -> Dict[str, Any]:
+    from playwright.async_api import async_playwright
+
+    workspace_dir = repo_root / "workspaces" / project
+    evidence_dir = repo_root / "web" / "public" / "evidence" / "videos"
+    temp_dir = evidence_dir / f"temp_{project}_{os.getpid()}"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+
+    console_errors: List[str] = []
+    network_failures: List[str] = []
+    visited: List[str] = []
+
+    browser = None
+    ctx = None
+
+    # Credenciales opcionales vÃ­a variables de entorno seguras
+    audit_user = os.environ.get("TOBI_AUDIT_USER")
+    audit_password = os.environ.get("TOBI_AUDIT_PASSWORD")
+
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            ctx = await browser.new_context(
+                record_video_dir=str(temp_dir),
+                record_video_size={"width": 1280, "height": 720},
+                viewport={"width": 1280, "height": 720},
+            )
+            page = await ctx.new_page()
+            page.set_default_timeout(timeout_ms)
+
+            page.on("console", lambda m: console_errors.append(f"[{m.type}] {m.text}") if m.type in ("error", "warning") else None)
+            page.on("requestfailed", lambda r: network_failures.append(f"{r.method} {r.url} -> {r.failure}"))
+
+            base_parsed = urllib.parse.urlparse(target_url)
+
+            # Visitar landing inicial
+            await page.goto(target_url, wait_until="domcontentloaded")
+            visited.append(target_url)
+
+            # Aceptar cookies / consent si existe
+            consent = page.locator('button:has-text("Aceptar"), button:has-text("Solo Necesarias"), button:has-text("Accept")').first
+            if await consent.count() > 0:
+                try:
+                    await consent.click(timeout=1500)
+                except Exception:
+                    pass
+
+            # Si hay credenciales y pantalla de login, autenticar de forma genÃ©rica
+            if audit_user and audit_password:
+                user_input = page.locator('input[type="email"], input[name="username"], input[name="email"]').first
+                pass_input = page.locator('input[type="password"]').first
+                submit_btn = page.locator('button[type="submit"], button:has-text("Iniciar"), button:has-text("Login")').first
+
+                if await user_input.count() > 0 and await pass_input.count() > 0:
+                    try:
+                        await user_input.fill(audit_user)
+                        await pass_input.fill(audit_password)
+                        if await submit_btn.count() > 0:
+                            await submit_btn.click()
+                            await page.wait_for_timeout(2000)
+                    except Exception:
+                        pass
+
+            # Recorrer rutas del PRD
+            for r in routes_to_visit:
+                if r == "/" or r.startswith(("GET ", "POST ", "PUT ", "DELETE ")):
+                    continue
+                full_url = urllib.parse.urljoin(target_url, r)
+                try:
+                    await page.goto(full_url, wait_until="domcontentloaded")
+                    visited.append(full_url)
+                    await page.wait_for_timeout(500)
+                except Exception as e:
+                    network_failures.append(f"GET {full_url} -> {e}")
+
+            screenshot_path = repo_root / "web" / "public" / "evidence" / "runs" / f"{project}-deep-audit.png"
+            screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+            await page.screenshot(path=str(screenshot_path))
+    finally:
+        if ctx:
+            try:
+                await ctx.close()
+            except Exception:
+                pass
+        if browser:
+            try:
+                await browser.close()
+            except Exception:
+                pass
+
+        # Mover video final
+        if temp_dir.exists():
+            vfiles = [f for f in os.listdir(temp_dir) if f.endswith(".webm")]
+            if vfiles:
+                dest_video = evidence_dir / f"{project}-deep-audit.webm"
+                try:
+                    shutil.move(str(temp_dir / vfiles[0]), str(dest_video))
+                except Exception:
+                    pass
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+    return {
+        "project": project,
+        "target_url": target_url,
+        "visited_routes": visited,
+        "console_errors": console_errors,
+        "network_failures": network_failures,
     }
-    
-    videos_dir = "./web/public/evidence/videos"
-    temp_dir = os.path.join(videos_dir, "temp_audit")
-    os.makedirs(temp_dir, exist_ok=True)
 
-    async with async_playwright() as p:
-        # 1. AUDIT DOCTOR PORTAL
-        print("=== 1. AUDITING DOCTOR PORTAL (doctor@vetconnect.demo) ===")
-        browser = await p.chromium.launch(headless=True)
-        ctx = await browser.new_context(
-            record_video_dir=temp_dir,
-            record_video_size={"width": 1280, "height": 720},
-            viewport={"width": 1280, "height": 720}
+
+def main(argv: Optional[List[str]] = None) -> int:
+    args = parse_args(argv)
+    repo_root = Path(args.repo_root).resolve() if args.repo_root else Path(__file__).resolve().parent.parent
+    workspace_dir = repo_root / "workspaces" / args.project
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+    telemetry_path = workspace_dir / "deep-audit-telemetry.json"
+
+    # Determinar URL objetivo
+    target_url = args.url
+    if not target_url:
+        state_file = repo_root / "web" / "public" / "data" / f"{args.project}-state.json"
+        if state_file.exists():
+            try:
+                state_data = json.loads(state_file.read_text(encoding="utf-8"))
+                target_url = state_data.get("project", {}).get("url")
+            except Exception:
+                pass
+        if not target_url:
+            prd_file = workspace_dir / "prd-ground-truth.json"
+            if prd_file.exists():
+                try:
+                    prd_data = json.loads(prd_file.read_text(encoding="utf-8"))
+                    target_url = prd_data.get("baseUrl")
+                except Exception:
+                    pass
+        if not target_url:
+            target_url = "http://localhost:5173"
+
+    # Rutas a visitar desde el PRD
+    routes_to_visit: List[str] = []
+    prd_path = workspace_dir / "prd-ground-truth.json"
+    if prd_path.exists():
+        try:
+            prd_data = json.loads(prd_path.read_text(encoding="utf-8"))
+            for r in prd_data.get("routes", []):
+                route = r.get("route")
+                if route and not route.startswith(("GET ", "POST ", "PUT ", "DELETE ")):
+                    routes_to_visit.append(route)
+        except Exception:
+            pass
+    if not routes_to_visit:
+        routes_to_visit = ["/"]
+
+    if args.dry_run:
+        telemetry = {
+            "project": args.project,
+            "target_url": target_url,
+            "visited_routes": routes_to_visit,
+            "console_errors": [],
+            "network_failures": [],
+            "dry_run": True,
+        }
+        telemetry_path.write_text(json.dumps(telemetry, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        return 0
+
+    results = asyncio.run(
+        execute_deep_audit(
+            project=args.project,
+            target_url=target_url,
+            timeout_ms=args.timeout,
+            repo_root=repo_root,
+            routes_to_visit=routes_to_visit,
         )
-        page = await ctx.new_page()
+    )
 
-        console_logs = []
-        page.on("console", lambda m: console_logs.append(f"[{m.type}] {m.text}"))
-        failed_reqs = []
-        page.on("requestfailed", lambda r: failed_reqs.append(f"{r.method} {r.url} -> {r.failure}"))
+    telemetry_path.write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return 0
 
-        await page.goto("http://localhost:5173/login", wait_until="domcontentloaded")
-        await page.wait_for_timeout(1000)
-
-        # Cookie consent
-        consent = page.locator('button:has-text("Aceptar"), button:has-text("Solo Necesarias")').first
-        if await consent.count() > 0:
-            await consent.click()
-            await page.wait_for_timeout(500)
-
-        await page.fill('input[type="email"]', "doctor@vetconnect.demo")
-        await page.fill('input[type="password"]', "Doctor 123+")
-        await page.click('button[type="submit"]')
-        await page.wait_for_timeout(2000)
-
-        continuar = page.locator('button:has-text("Continuar")').first
-        if await continuar.count() > 0:
-            await continuar.click()
-            await page.wait_for_timeout(3000)
-
-        print(f"Doctor logged in URL: {page.url}")
-        results["doctor_flows"].append(f"Login URL: {page.url}")
-
-        # Check Vet Dashboard links
-        nav_links = await page.locator('nav a, aside a, .sidebar a').all_text_contents()
-        print("Doctor navigation options:", [n.strip() for n in nav_links if n.strip()])
-
-        # Try clicking Consultas / Pacientes / Agenda
-        for text in ["Consultas", "Pacientes", "Agenda", "Prescripciones"]:
-            link = page.locator(f'a:has-text("{text}"), button:has-text("{text}")').first
-            if await link.count() > 0:
-                print(f"Doctor clicking: {text}...")
-                await link.click()
-                await page.wait_for_timeout(2000)
-                print(f"Navigated to: {page.url}")
-
-        await page.screenshot(path="web/public/evidence/runs/04-doctor-portal-deep.png")
-        print("Captured doctor portal screenshot")
-
-        await ctx.close()
-
-        # Rename doctor video
-        vfiles = [f for f in os.listdir(temp_dir) if f.endswith(".webm")]
-        if vfiles:
-            latest = os.path.join(temp_dir, vfiles[0])
-            dest = os.path.join(videos_dir, "doctor-portal-audit.webm")
-            shutil.move(latest, dest)
-            print(f"Saved doctor replay to: {dest}")
-
-        # 2. AUDIT TUTOR PETS & CANCELLATION SYNC
-        print("\n=== 2. AUDITING TUTOR PORTAL (tutor@vetconnect.demo) ===")
-        ctx2 = await browser.new_context(
-            record_video_dir=temp_dir,
-            record_video_size={"width": 1280, "height": 720},
-            viewport={"width": 1280, "height": 720}
-        )
-        page2 = await ctx2.new_page()
-
-        await page2.goto("http://localhost:5173/login", wait_until="domcontentloaded")
-        await page2.wait_for_timeout(800)
-
-        consent2 = page2.locator('button:has-text("Aceptar"), button:has-text("Solo Necesarias")').first
-        if await consent2.count() > 0:
-            await consent2.click()
-            await page2.wait_for_timeout(400)
-
-        await page2.fill('input[type="email"]', "tutor@vetconnect.demo")
-        await page2.fill('input[type="password"]', "demo_password_123")
-        await page2.click('button[type="submit"]')
-        await page2.wait_for_timeout(2000)
-
-        cont2 = page2.locator('button:has-text("Continuar")').first
-        if await cont2.count() > 0:
-            await cont2.click()
-            await page2.wait_for_timeout(2500)
-
-        print(f"Tutor logged in URL: {page2.url}")
-
-        # Explore Mis mascotas
-        mascotas_btn = page2.locator('a:has-text("Mis mascotas")').first
-        if await mascotas_btn.count() > 0:
-            print("Tutor navigating to Mis mascotas...")
-            await mascotas_btn.click()
-            await page2.wait_for_timeout(2500)
-            print(f"Mis mascotas URL: {page2.url}")
-            await page2.screenshot(path="web/public/evidence/runs/05-tutor-pets-audit.png")
-
-        # Explore Mensajes
-        mensajes_btn = page2.locator('a:has-text("Mensajes")').first
-        if await mensajes_btn.count() > 0:
-            print("Tutor navigating to Mensajes...")
-            await mensajes_btn.click()
-            await page2.wait_for_timeout(2500)
-            print(f"Mensajes URL: {page2.url}")
-            await page2.screenshot(path="web/public/evidence/runs/06-tutor-messages-audit.png")
-
-        await ctx2.close()
-        await browser.close()
-
-        # Rename tutor video
-        vfiles2 = [f for f in os.listdir(temp_dir) if f.endswith(".webm")]
-        if vfiles2:
-            latest2 = os.path.join(temp_dir, vfiles2[0])
-            dest2 = os.path.join(videos_dir, "bug-01-cancellation-replay.webm")
-            shutil.move(latest2, dest2)
-            print(f"Saved tutor replay to: {dest2}")
-
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        print("\nAll deep audit flows executed with Playwright successfully!")
 
 if __name__ == "__main__":
-    asyncio.run(audit_flows())
+    sys.exit(main())

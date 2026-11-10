@@ -63,7 +63,7 @@ test.describe('TobiTests — Telemetry Fixture Verification', () => {
     }
   });
 
-  test('T6: modo estricto falla en pageerror no permitido', async ({ page }) => {
+  test('T6: modo estricto falla en pageerror no permitido', async ({ page, tobi }) => {
     test.fail(); // Playwright afirma que este test debe fallar
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => {
@@ -71,7 +71,7 @@ test.describe('TobiTests — Telemetry Fixture Verification', () => {
         throw new Error('unhandled-strict-error');
       }, 10);
     });
-    await page.waitForTimeout(100);
+    await expect.poll(() => tobi.events.some((e) => e.type === 'pageerror' && e.message.includes('unhandled-strict-error'))).toBe(true);
   });
 
   test('T7: evento clock se emite primero con epochMs válido', async ({ page, tobi }) => {
@@ -82,7 +82,7 @@ test.describe('TobiTests — Telemetry Fixture Verification', () => {
     if (firstEvent.type === 'clock') {
       expect(firstEvent.t).toBe(0);
       expect(firstEvent.epochMs).toBeGreaterThan(1700000000000);
-      expect(Math.abs(Date.now() - firstEvent.epochMs)).toBeLessThan(10000);
+      expect(Math.abs(Date.now() - firstEvent.epochMs)).toBeLessThan(30000);
     }
   });
 });

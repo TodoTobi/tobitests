@@ -14,6 +14,23 @@ blob-report/
 playwright/.cache/
 web/public/evidence/runs/RUN-PW-*/
 web/public/evidence/videos/RUN-PW-*/
+web/public/evidence/runs/custom-*
+web/public/evidence/runs/pw-*
+web/public/evidence/runs/ritmo-caldera-*
+web/public/evidence/videos/pw-*
+web/public/evidence/videos/ritmo-caldera-*
+
+# Dynamic Workspaces & Generated States
+workspaces/custom-*/
+workspaces/ritmo-caldera/
+web/public/data/custom-*-state.json
+web/public/data/ritmo-caldera-state.json
+web/public/data/the-ten-thrones-state.json
+
+# Local Agent & Harness Logs
+.ai/
+gentle-ai-harness/
+TOBITESTS_*.md
 
 # Environment & Secrets
 .env
