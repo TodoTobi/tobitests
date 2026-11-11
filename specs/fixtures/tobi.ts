@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { test as baseTest, expect, type Request } from '@playwright/test';
+import { test as baseTest, expect, type Request, type Locator } from '@playwright/test';
 
 export type TobiEvent =
   | { t: number; type: 'clock'; epochMs: number }
@@ -21,6 +21,9 @@ export interface Tobi {
   snap(name: string): Promise<void>;
   touch: (target: string) => void;
   allowPageErrors(): void;
+  humanMove(x: number, y: number, steps?: number): Promise<void>;
+  humanClick(target: Locator | string, options?: { delayBefore?: number; delayAfter?: number }): Promise<void>;
+  humanType(target: Locator | string, text: string, options?: { delayPerChar?: number }): Promise<void>;
 }
 
 export const test = baseTest.extend<{ tobi: Tobi }>({
@@ -43,6 +46,91 @@ export const test = baseTest.extend<{ tobi: Tobi }>({
       await page.route('**/api/stream*', (route) => route.abort());
       await page.route('**/api/antigravity/live', (route) => route.abort());
       await page.route('**/data/antigravity-live.json', (route) => route.abort());
+
+      // Inyección del Virtual Ghost Cursor (simulación de usuario humano en DOM y videos E2E)
+      await page.addInitScript(() => {
+        if ((window as any).__tobiCursorInstalled) return;
+        (window as any).__tobiCursorInstalled = true;
+
+        const installCursor = () => {
+          if (document.getElementById('tobi-virtual-cursor')) return;
+
+          const style = document.createElement('style');
+          style.id = 'tobi-cursor-styles';
+          style.textContent = `
+            #tobi-virtual-cursor {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 24px;
+              height: 24px;
+              pointer-events: none !important;
+              user-select: none !important;
+              z-index: 2147483647;
+              transform: translate(-100px, -100px);
+              transition: transform 0.04s ease-out, opacity 0.2s ease;
+              opacity: 0;
+            }
+            #tobi-virtual-cursor.active {
+              opacity: 1;
+            }
+            #tobi-virtual-cursor svg {
+              display: block;
+              width: 22px;
+              height: 22px;
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+            }
+            .tobi-click-ripple {
+              position: fixed;
+              width: 22px;
+              height: 22px;
+              border-radius: 50%;
+              border: 2px solid #246a48;
+              background: rgba(36, 106, 72, 0.25);
+              pointer-events: none !important;
+              user-select: none !important;
+              z-index: 2147483646;
+              transform: translate(-50%, -50%) scale(0.4);
+              animation: tobiRippleAnim 0.4s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            }
+            @keyframes tobiRippleAnim {
+              0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+              100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+            }
+          `;
+          document.head.appendChild(style);
+
+          const cursor = document.createElement('div');
+          cursor.id = 'tobi-virtual-cursor';
+          cursor.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 3.5L10 20.5L13 13.5L20 10.5L4 3.5Z" fill="#246a48" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>
+              <circle cx="13" cy="13.5" r="1.5" fill="#ffffff" />
+            </svg>
+          `;
+          document.documentElement.appendChild(cursor);
+
+          window.addEventListener('mousemove', (e) => {
+            cursor.classList.add('active');
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+          }, { passive: true, capture: true });
+
+          window.addEventListener('mousedown', (e) => {
+            const ripple = document.createElement('div');
+            ripple.className = 'tobi-click-ripple';
+            ripple.style.left = `${e.clientX}px`;
+            ripple.style.top = `${e.clientY}px`;
+            document.documentElement.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 400);
+          }, { passive: true, capture: true });
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', installCursor);
+        } else {
+          installCursor();
+        }
+      });
 
       page.on('framenavigated', (frame) => {
         if (frame === page.mainFrame()) {
@@ -190,6 +278,32 @@ export const test = baseTest.extend<{ tobi: Tobi }>({
         },
         allowPageErrors: () => {
           strictPageErrors = false;
+        },
+        humanMove: async (x: number, y: number, steps = 10) => {
+          await page.mouse.move(x, y, { steps });
+        },
+        humanClick: async (target: Locator | string, options?: { delayBefore?: number; delayAfter?: number }) => {
+          const loc = typeof target === 'string' ? page.locator(target).first() : target.first();
+          await loc.waitFor({ state: 'visible', timeout: 8000 });
+          const box = await loc.boundingBox();
+          if (box) {
+            const targetX = box.x + box.width * (0.45 + Math.random() * 0.1);
+            const targetY = box.y + box.height * (0.45 + Math.random() * 0.1);
+            await page.mouse.move(targetX, targetY, { steps: 8 });
+            await page.waitForTimeout(options?.delayBefore ?? 60);
+            await page.mouse.down();
+            await page.waitForTimeout(40);
+            await page.mouse.up();
+            await page.waitForTimeout(options?.delayAfter ?? 40);
+          } else {
+            await loc.click();
+          }
+        },
+        humanType: async (target: Locator | string, text: string, options?: { delayPerChar?: number }) => {
+          const loc = typeof target === 'string' ? page.locator(target).first() : target.first();
+          await loc.waitFor({ state: 'visible', timeout: 8000 });
+          await tobiInstance.humanClick(loc);
+          await loc.pressSequentially(text, { delay: options?.delayPerChar ?? 50 });
         },
       };
 

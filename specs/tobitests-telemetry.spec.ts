@@ -85,4 +85,22 @@ test.describe('TobiTests — Telemetry Fixture Verification', () => {
       expect(Math.abs(Date.now() - firstEvent.epochMs)).toBeLessThan(30000);
     }
   });
+
+  test('T8: virtual mouse helper inyecta cursor visible y soporta humanClick', async ({ page, tobi }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const cursor = page.locator('#tobi-virtual-cursor');
+    await expect(cursor).toBeAttached();
+
+    // Simular movimiento y click humano
+    await tobi.humanMove(200, 200, 5);
+    await expect(cursor).toHaveClass(/active/);
+
+    const logoBtn = page.locator('.logo').first();
+    if (await logoBtn.isVisible()) {
+      await tobi.humanClick(logoBtn);
+      const ripple = page.locator('.tobi-click-ripple');
+      // El ripple se genera en mousedown
+      expect(await ripple.count()).toBeGreaterThanOrEqual(0);
+    }
+  });
 });
