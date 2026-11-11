@@ -12,8 +12,31 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import time
 from typing import Any, Dict, List, Optional
 import urllib.parse
+
+
+def atomic_write_json(path: Path, payload: Dict[str, Any], retries: int = 6, delay: float = 0.05) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.parent / f".{path.name}.{os.getpid()}.{time.time_ns()}.tmp"
+    try:
+        tmp_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        for attempt in range(retries):
+            try:
+                os.replace(tmp_path, path)
+                break
+            except PermissionError:
+                if attempt == retries - 1:
+                    raise
+                time.sleep(delay * (attempt + 1))
+    except Exception:
+        if tmp_path.exists():
+            try:
+                tmp_path.unlink()
+            except Exception:
+                pass
+        raise
 
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -195,7 +218,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             "network_failures": [],
             "dry_run": True,
         }
-        telemetry_path.write_text(json.dumps(telemetry, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        atomic_write_json(telemetry_path, telemetry)
         return 0
 
     results = asyncio.run(
@@ -208,7 +231,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         )
     )
 
-    telemetry_path.write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    atomic_write_json(telemetry_path, results)
     return 0
 
 

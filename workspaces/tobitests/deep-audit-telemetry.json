@@ -1,0 +1,10 @@
+{
+  "project": "tobitests",
+  "target_url": "http://localhost:5180",
+  "visited_routes": [
+    "/"
+  ],
+  "console_errors": [],
+  "network_failures": [],
+  "dry_run": true
+}

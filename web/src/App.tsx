@@ -3,6 +3,7 @@ import { useTobiState, type BugItem, type AuditScope } from "./hooks/useTobiStat
 import { OfficeView } from "./components/OfficeView";
 import { JourneyCanvas } from "./components/JourneyCanvas";
 import { TestDetailModal, type TestCaseItem } from "./components/TestDetailModal";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 type Tobi = ReturnType<typeof useTobiState>;
 
@@ -2065,7 +2066,11 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
           tobi={tobi}
           onOpenAddProject={() => setIsAddProjectOpen(true)}
         />
-        <main className="workspace">{content}</main>
+        <main className="workspace">
+          <ErrorBoundary key={view} fallbackTitle={`Error aislado en ${labels[view] || view}`}>
+            {content}
+          </ErrorBoundary>
+        </main>
       </div>
       <NotificationPanel open={notifications} onClose={() => setNotifications(false)} navigate={go} tobi={tobi} />
       <TestDetailModal
