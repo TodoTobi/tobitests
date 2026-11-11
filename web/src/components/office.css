@@ -318,7 +318,7 @@
   border-bottom-width: 7px;
   border-radius: 5px;
   overflow: hidden;
-  background: #1c1b18;
+  background: #090d16;
   box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -904,7 +904,7 @@
 /* --- Operations terminal ------------------------------------------- */
 .iso-terminal {
   border-top: 1px solid var(--border);
-  background: #1c1b18;
+  background: #090d16;
 }
 .iso-terminal-header {
   display: flex;
@@ -1002,7 +1002,7 @@
   margin: 0;
   padding: 20px;
   border-radius: 10px;
-  background: #1c1b18;
+  background: #090d16;
   color: #c9dccd;
   font-family: var(--font-mono, monospace);
   font-size: 12.5px;
@@ -1064,11 +1064,11 @@
   font-size: 11px;
 }
 .iso-inspector-thinking-feed .trace-thinking-box {
-  background: rgba(255, 255, 255, 0.04);
-  border-left: 2px solid #a78bfa;
-  border-radius: 4px;
-  padding: 7px 10px;
-  margin: 4px 0;
+  background: rgba(167, 139, 250, 0.05);
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 6px 0;
 }
 .iso-inspector-thinking-feed .thinking-title {
   color: #a78bfa;

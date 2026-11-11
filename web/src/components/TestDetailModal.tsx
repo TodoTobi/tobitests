@@ -58,13 +58,12 @@ interface TestDetailModalProps {
 }
 
 export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, auditScope, runs = [], projectUrl }: TestDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<"preview" | "code" | "log" | "history" | "plantillas">("preview");
+  const [activeTab, setActiveTab] = useState<"preview" | "code" | "log" | "history">("preview");
   const [diagTab, setDiagTab] = useState<"error" | "cause" | "fix">("error");
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
-  const [copiedPlantillas, setCopiedPlantillas] = useState(false);
   const [viewMode, setViewMode] = useState<"screenshot" | "video" | "http">("screenshot");
   const [priority, setPriority] = useState<"Alta" | "Media" | "Baja">("Media");
   const [currentTest, setCurrentTest] = useState<TestCaseItem | null>(test);
@@ -158,47 +157,6 @@ Proponé el cambio de código exacto respetando la arquitectura del proyecto.`;
     navigator.clipboard.writeText(promptText);
     setCopiedPrompt(true);
     setTimeout(() => setCopiedPrompt(false), 2200);
-  };
-
-  const handleCopyBddPlantillas = () => {
-    const targetStep = failedStep || activeStep;
-    const templateText = `Esquema de Plantilla Estandarizado:
-Definir el Escenario (Gherkin/BDD):
-Nombre y sección (${currentTest.name}, seccion: ${moduleLabel}).
-Pasos para reproducir:
-Dado que el operador navega a la suite ${currentTest.spec} de ${projectName}.
-Cuando ejecuta la secuencia: ${targetStep?.action || "Acción"} -> ${targetStep?.target || "Paso"}.
-Entonces ${targetStep?.actual || "divergencia de estado obtenida"} frente a ${targetStep?.expected || "comportamiento esperado"}.
-
-Protocolo Anti-Regresiones con Blindaje (Quirófano de Código):
-Fase 1: Identificar el escenario & Aislamiento en Capas
-- Capa UI/Vista: specs/${currentTest.spec}
-- Capa Hooks/Estado: Aislamiento por agente y sincronización reactiva
-- Capa Red/Request: Verificado con DevTools CDP y Playwright MCP
-- Capa Backend/API: Preservación de contratos retrocompatibles
-- Capa Base de Datos: Persistencia validada
-
-Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode)
-1. ARCHIVOS DENTRO DEL ALCANCE: [specs/${currentTest.spec}]
-2. ARCHIVOS FUERA DEL ALCANCE: [Archivos de configuración global, middlewares de autenticación]
-3. EVALUACIÓN DE RIESGOS: Cero roturas en componentes externos dependientes
-4. ESTRATEGIA DE FIX: Minimal Fix estricto respetando la arquitectura
-
-Fase 3: Análisis de Impacto Global
-- Rastreo de Referencias Cruzadas (Find-All-References)
-- Preservación de Contratos y Retrocompatibilidad
-
-Fase 4: El Quirófano
-- Rama: bugfix/cerco-${moduleLabel.toLowerCase()}-fix
-- Minimal fix estricto sin dependencias no medidas
-
-Fase 5: Validación
-- Testing de Tres Capas (Unitario, Regresión e Integración)
-- Verificación estricta del compilador (tsc --noEmit)`;
-
-    navigator.clipboard.writeText(templateText);
-    setCopiedPlantillas(true);
-    setTimeout(() => setCopiedPlantillas(false), 2200);
   };
 
   return (
@@ -382,14 +340,6 @@ Fase 5: Validación
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   Historial ({displayRuns.length})
-                </button>
-                <button
-                  type="button"
-                  className={`tab-btn ${activeTab === "plantillas" ? "active" : ""}`}
-                  onClick={() => setActiveTab("plantillas")}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Plantillas BDD & Cerco
                 </button>
               </div>
 
@@ -698,56 +648,7 @@ ${steps.map((s, idx) => `    // Paso ${idx + 1}: ${s.action} (${s.duration})
                     })
                   )}
                 </div>
-              ) : (
-                <div className="viewport-code-panel" style={{ padding: 16 }}>
-                  <div className="code-header" style={{ marginBottom: 10 }}>
-                    <span>Esquema Estandarizado (Gherkin/BDD) & Quirófano de Código</span>
-                    <button
-                      type="button"
-                      className="btn-copy-code"
-                      onClick={handleCopyBddPlantillas}
-                    >
-                      {copiedPlantillas ? "✓ ¡Plantillas copiadas!" : "Copiar Plantillas BDD & Cerco"}
-                    </button>
-                  </div>
-                  <pre className="code-block" style={{ maxHeight: 360, overflowY: "auto", fontSize: 11, lineHeight: 1.45 }}>
-                    <code>
-{`Esquema de Plantilla Estandarizado (Gherkin / BDD + 3-Layer Oracle):
-Nombre y sección: (${currentTest.name}, sección: ${moduleLabel})
-
-Escenario Gherkin (Given / When / Then / But):
-- Given (Dado que): ${existingBug?.gherkin?.given || existingBug?.dadoQue || `el operador navega a la suite ${currentTest.spec} de ${projectName}.`}
-- When (Cuando): ${existingBug?.gherkin?.when || existingBug?.cuando || `ejecuta la secuencia: ${(failedStep || activeStep)?.action || "Acción"} -> ${(failedStep || activeStep)?.target || "Paso"}.`}
-- Then (Entonces): ${existingBug?.gherkin?.then || (failedStep || activeStep)?.expected || "el estado del DOM y caché reactiva se mantienen sincronizados."}
-- But (Pero): ${existingBug?.gherkin?.but || existingBug?.entonces || (failedStep || activeStep)?.actual || "Aprobado sin divergencias."}
-
-Evidencia Multi-Modal Vinculada:
-- Screenshot: ${(activeStep as any)?.screenshot || currentTest.screenshot || existingBug?.screenshot || "(sin captura registrada)"}
-- Video (.webm): ${currentTest.videoUrl || existingBug?.videoUrl || "(sin video registrado)"}
-- Console Log: ${existingBug?.evidence?.console_log?.[0] || "[CDP Console] 0 unhandled pageerror / console.error"}
-- Network Trace: ${existingBug?.evidence?.network_trace?.[0] || "[CDP Network] HTTP 200 OK (< 250ms)"}
-
-Causa Raíz White-Box:
-- root_cause_file: ${existingBug?.root_cause_file || existingBug?.diagnostic?.affectedFile?.split(":")[0] || `web/src/pages/${moduleLabel.toLowerCase()}/Component.tsx`}
-- root_cause_line: ${existingBug?.root_cause_line || existingBug?.diagnostic?.affectedFile?.split(":")[1] || 142}
-
-Protocolo Anti-Regresiones con Blindaje (Quirófano de Código):
-Fase 1: Identificar el escenario & Aislamiento en Capas
-- Capa UI/Vista: specs/${currentTest.spec}
-- Capa Hooks/Estado: Aislamiento por agente y sincronización reactiva
-- Capa Red/Request: Verificado con DevTools CDP y Playwright MCP
-- Capa Backend/API: Preservación de contratos retrocompatibles
-- Capa Base de Datos: Persistencia validada
-
-Fase 2: Diseño del "Cerco de Seguridad" (Plan Mode)
-1. ARCHIVOS DENTRO DEL ALCANCE: [specs/${currentTest.spec}]
-2. ARCHIVOS FUERA DEL ALCANCE: [Archivos de configuración global, middlewares de autenticación]
-3. EVALUACIÓN DE RIESGOS: Cero roturas en componentes externos dependientes
-4. ESTRATEGIA DE FIX: Minimal Fix estricto respetando la arquitectura`}
-                    </code>
-                  </pre>
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* Bottom Diagnostic / Error Section */}
