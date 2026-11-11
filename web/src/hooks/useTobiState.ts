@@ -1258,12 +1258,23 @@ export function useTobiState() {
 
       if (live) {
         setAntigravityLive(live);
+        let isMockLocked = false;
+        try {
+          if (localStorage.getItem("__lockMock") === "true") {
+            isMockLocked = true;
+          }
+        } catch (e) {}
+
+        if (isMockLocked) {
+          return;
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const urlProject = urlParams.get("project");
         const storedActive = localStorage.getItem("tobitests_active_project");
         const effectiveProject = urlProject || storedActive;
 
-        if (effectiveProject && effectiveProject !== "tobitests") {
+        if (effectiveProject) {
           if (activeProjectId !== effectiveProject) {
             setActiveProjectId(effectiveProject);
             fetch(`/api/state?project=${encodeURIComponent(effectiveProject)}`)
@@ -1282,27 +1293,29 @@ export function useTobiState() {
               })
               .catch(() => {});
           }
-        } else if (live.activeProject && (!storedActive || live.activeProject !== currentActive)) {
+        } else if (live.activeProject) {
           const liveProj = live.activeProject;
-          setActiveProjectId(liveProj);
-          try {
-            localStorage.setItem("tobitests_active_project", liveProj);
-          } catch (e) {}
-          fetch(`/api/state?project=${encodeURIComponent(liveProj)}`)
-            .then(async (r) => {
-              if (r.ok) {
-                const freshData = await r.json();
-                if (freshData && freshData.project) {
-                  setState((prev) => ({
-                    ...freshData,
-                    liveRun: freshData.liveRun || prev.liveRun,
-                    auditScope: prev.auditScope || freshData.auditScope || "fullstack",
-                    project: { ...freshData.project, auditScope: prev.auditScope || freshData.auditScope || "fullstack" },
-                  }));
+          if (activeProjectId !== liveProj) {
+            setActiveProjectId(liveProj);
+            try {
+              localStorage.setItem("tobitests_active_project", liveProj);
+            } catch (e) {}
+            fetch(`/api/state?project=${encodeURIComponent(liveProj)}`)
+              .then(async (r) => {
+                if (r.ok) {
+                  const freshData = await r.json();
+                  if (freshData && freshData.project) {
+                    setState((prev) => ({
+                      ...freshData,
+                      liveRun: freshData.liveRun || prev.liveRun,
+                      auditScope: prev.auditScope || freshData.auditScope || "fullstack",
+                      project: { ...freshData.project, auditScope: prev.auditScope || freshData.auditScope || "fullstack" },
+                    }));
+                  }
                 }
-              }
-            })
-            .catch(() => {});
+              })
+              .catch(() => {});
+          }
         }
       }
     };
@@ -1332,6 +1345,9 @@ export function useTobiState() {
               if (fresh && (fresh.project || (Array.isArray(fresh.runs) && fresh.runs.length > 0))) {
                 let isMockLocked = false;
                 try {
+                  if (localStorage.getItem("__lockMock") === "true") {
+                    isMockLocked = true;
+                  }
                   const cachedStr = localStorage.getItem(`tobitests_state_${currentActive}`);
                   if (cachedStr) {
                     const parsedCached = JSON.parse(cachedStr);

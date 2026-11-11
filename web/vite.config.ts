@@ -7,7 +7,9 @@ import os from 'node:os'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
 
-import siteConfiguration from './.figma/make/site.json'
+import siteConfiguration from './.figma/make/site.json' with { type: 'json' }
+
+const __dirname = import.meta.dirname;
 
 function sanitizeTelemetryText(input: string | null | undefined): string {
   if (!input) return '';
@@ -880,6 +882,16 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
     build: {
       sourcemap: emitSourcemaps ? 'inline' : false,
       minify: !emitSourcemaps,
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+              return 'vendor-react';
+            }
+          },
+        },
+      },
     },
     plugins: [
       react(),
