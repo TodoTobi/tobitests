@@ -341,7 +341,7 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi, onO
     <aside className={`sidebar ${compact ? "compact" : ""}`}>
       <div className="sidebar-head">
         <Logo compact={compact} projectName={project.name} />
-        <Button variant="icon" className="sidebar-collapse" label="Contraer navegación" onClick={onCompact}><Icon name="chevron" /></Button>
+        <Button variant="icon" className="sidebar-collapse" label={compact ? "Expandir barra lateral" : "Contraer navegación"} title={compact ? "Expandir barra lateral" : "Contraer navegación"} onClick={onCompact}><Icon name="chevron" /></Button>
       </div>
       <div className="project-select-wrap">
         <button type="button" className="project-select" aria-expanded={projectsOpen} onClick={() => setProjectsOpen(!projectsOpen)} title={compact ? project.name : undefined}>

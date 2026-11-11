@@ -1,51 +1,51 @@
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap");
 @import "tailwindcss";
 
 /* ==========================================================================
    TobiTests · design system
-   Light workspace, strong 1px borders, one accent (blue) and one for agents
-   (violet). Status always uses color + icon/text, never color alone.
+   Warm beige workspace, crisp 1px borders, organic forest green accent.
+   Status always uses color + icon/text, never color alone.
    ========================================================================== */
 :root {
   /* surfaces */
-  --bg: #ffffff;
-  --bg-alt: #f8fafc;
-  --workspace: #f8fafc;
-  --surface-secondary: #f1f5f9;
-  --sky-surface: #f0fdf4;
-  --selection: #e2e8f0;
-  --nav-selected: #f1f5f9;
+  --bg: #fdfcfa;
+  --bg-alt: #f5f4ef;
+  --workspace: #f6f5ef;
+  --surface-secondary: #ece9de;
+  --sky-surface: #f2f7ed;
+  --selection: #e6e2d4;
+  --nav-selected: #ede9de;
 
   /* lines */
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border: #e2ded2;
+  --border-strong: #cfcbbe;
 
   /* brand */
-  --brand: #4f46e5;
-  --brand-soft: #e0e7ff;
-  --link: #4f46e5;
-  --primary: #0f172a;
-  --primary-hover: #1e293b;
+  --brand: #246a48;
+  --brand-soft: #e3efe7;
+  --link: #246a48;
+  --primary: #1c1b18;
+  --primary-hover: #2e2c26;
 
   /* text */
-  --text: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --placeholder: #64748b;
+  --text: #1c1b18;
+  --text-secondary: #4a473f;
+  --text-muted: #68645b;
+  --placeholder: #68645b;
 
   /* status */
-  --success: #059669;
-  --success-bg: #ecfdf5;
-  --success-line: #a7f3d0;
-  --warning: #d97706;
-  --warning-bg: #fffbeb;
-  --warning-line: #fde68a;
-  --danger: #e11d48;
-  --danger-bg: #fff1f2;
-  --danger-line: #fecdd3;
-  --agent: #6366f1;
-  --agent-bg: #eef2ff;
-  --agent-line: #c7d2fe;
+  --success: #246a48;
+  --success-bg: #e3efe7;
+  --success-line: #aed1bd;
+  --warning: #92660a;
+  --warning-bg: #fbf6e5;
+  --warning-line: #ebdcb0;
+  --danger: #b8312b;
+  --danger-bg: #fbeae8;
+  --danger-line: #f2bfb9;
+  --agent: #246a48;
+  --agent-bg: #e3efe7;
+  --agent-line: #aed1bd;
 
   /* shape */
   --radius-sm: 6px;
@@ -54,12 +54,12 @@
   --radius-xl: 16px;
 
   /* type */
-  --font-display: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
   --font-body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(28, 27, 24, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(28, 27, 24, 0.07), 0 2px 4px -2px rgba(28, 27, 24, 0.04);
 
   --sidebar-w: 256px;
   --sidebar-w-compact: 64px;
@@ -835,17 +835,42 @@ video {
   gap: 0;
 }
 
-.sidebar.compact .sidebar-head .button-icon {
-  display: none;
+.sidebar.compact .sidebar-head {
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sidebar.compact .sidebar-head .button-icon.sidebar-collapse {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.sidebar.compact .sidebar-head .button-icon.sidebar-collapse:hover {
+  background: var(--nav-selected);
+  border-color: var(--border-strong);
 }
 
 .sidebar-collapse .icon {
-  transition: transform .2s;
+  transition: transform .2s ease;
   transform: rotate(180deg);
 }
 
 .sidebar.compact .sidebar-collapse .icon {
-  transform: none;
+  transform: rotate(0deg);
 }
 
 .project-select-wrap {
@@ -4333,13 +4358,13 @@ h1, h2, .heading-xl, .heading-lg, .heading-md,
   height: 7px;
   border-radius: 50%;
   background: var(--agent);
-  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  box-shadow: 0 0 0 0 rgba(36, 106, 72, 0.7);
   animation: pulse-ring 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-  70% { box-shadow: 0 0 0 7px rgba(99, 102, 241, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(36, 106, 72, 0.7); }
+  70% { box-shadow: 0 0 0 7px rgba(36, 106, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(36, 106, 72, 0); }
 }
 
 /* Smooth modal pop-in with backdrop blur */

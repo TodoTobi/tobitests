@@ -99,6 +99,14 @@ test.describe('TobiTests — Shell, Navigation & Responsive Layout', () => {
     const reloadBox = await sidebar.boundingBox();
     const reloadWidth = reloadBox?.width ?? 0;
     expect(reloadWidth).toBeLessThan(beforeWidth);
+
+    // Re-expandir la barra lateral con el botón persistente y accesible
+    const expandBtn = sidebar.locator('button.sidebar-collapse').first();
+    await expect(expandBtn).toBeVisible();
+    await expandBtn.click();
+    await expect(sidebar).not.toHaveClass(/compact/);
+    const expandedBox = await sidebar.boundingBox();
+    expect(expandedBox?.width ?? 0).toBeGreaterThanOrEqual(beforeWidth - 10);
   });
 
   test('TC-SHELL-04: Apertura y cierre del drawer de notificaciones desde el botón de cabecera', async ({ page }) => {
