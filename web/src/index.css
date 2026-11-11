@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap");
 @import "tailwindcss";
 
 /* ==========================================================================
@@ -8,60 +8,60 @@
    ========================================================================== */
 :root {
   /* surfaces */
-  --bg: #fdfcfa;
-  --bg-alt: #f7f6f2;
-  --workspace: #faf9f6;
-  --surface-secondary: #f1f0ec;
-  --sky-surface: #eef3ea;
-  --selection: #e6eadf;
-  --nav-selected: #ebeae4;
+  --bg: #ffffff;
+  --bg-alt: #f8fafc;
+  --workspace: #f8fafc;
+  --surface-secondary: #f1f5f9;
+  --sky-surface: #f0fdf4;
+  --selection: #e2e8f0;
+  --nav-selected: #f1f5f9;
 
   /* lines */
-  --border: #e6e4dd;
-  --border-strong: #cfccc2;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
 
   /* brand */
-  --brand: #1f9d63;
-  --brand-soft: #d5ecdf;
-  --link: #1d6b45;
-  --primary: #1a1a18;
-  --primary-hover: #000000;
+  --brand: #4f46e5;
+  --brand-soft: #e0e7ff;
+  --link: #4f46e5;
+  --primary: #0f172a;
+  --primary-hover: #1e293b;
 
   /* text */
-  --text: #1c1b18;
-  --text-secondary: #3a3935;
-  --text-muted: #6a6860;
-  --placeholder: #86847b;
+  --text: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --placeholder: #94a3b8;
 
   /* status */
-  --success: #2a7d3f;
-  --success-bg: #e5f1e3;
-  --success-line: #b4d8b0;
-  --warning: #7d7410;
-  --warning-bg: #f6f3d3;
-  --warning-line: #ddd69a;
-  --danger: #b8312b;
-  --danger-bg: #fbe7e4;
-  --danger-line: #eeb6b1;
-  --agent: #2f7d55;
-  --agent-bg: #e4f1e8;
-  --agent-line: #a9d3b9;
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --success-line: #a7f3d0;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --warning-line: #fde68a;
+  --danger: #e11d48;
+  --danger-bg: #fff1f2;
+  --danger-line: #fecdd3;
+  --agent: #6366f1;
+  --agent-bg: #eef2ff;
+  --agent-line: #c7d2fe;
 
   /* shape */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 10px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
   /* type */
-  --font-display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-display: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  --shadow-sm: 0 1px 2px rgba(28, 27, 24, 0.05);
-  --shadow-md: 0 16px 40px rgba(28, 27, 24, 0.12);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
 
-  --sidebar-w: 262px;
+  --sidebar-w: 256px;
   --sidebar-w-compact: 64px;
   --header-h: 56px;
 }
@@ -94,6 +94,9 @@ h5,
 h6 {
   margin: 0;
   font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 button,
@@ -857,15 +860,17 @@ video {
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg);
   text-align: left;
   color: var(--text);
+  transition: all 0.15s ease;
 }
 
 .project-select:hover {
   background: var(--bg-alt);
+  border-color: var(--border-strong);
 }
 
 .project-select>div {
@@ -876,12 +881,14 @@ video {
 
 .project-select strong {
   display: block;
-  font-size: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
 .project-select small {
   color: var(--text-muted);
   display: block;
+  font-size: 11px;
 }
 
 .sidebar.compact .project-select {
@@ -897,7 +904,7 @@ video {
   top: calc(100% - 4px);
   z-index: 30;
   background: var(--bg);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 12px;
@@ -970,8 +977,8 @@ video {
 
 .nav-item {
   width: 100%;
-  min-height: 36px;
-  padding: 0 10px;
+  min-height: 38px;
+  padding: 0 12px;
   border: 0;
   border-radius: var(--radius-md);
   background: transparent;
@@ -980,8 +987,9 @@ video {
   align-items: center;
   gap: 10px;
   text-align: left;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
+  transition: all 0.15s ease;
   position: relative;
 }
 
@@ -992,18 +1000,12 @@ video {
 
 .nav-item.active {
   background: var(--nav-selected);
-  color: var(--primary-hover);
+  color: var(--primary);
+  font-weight: 600;
 }
 
-.nav-item.active::before {
-  content: "";
-  position: absolute;
-  left: -10px;
-  top: 7px;
-  bottom: 7px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--primary);
+.nav-item.active .icon {
+  color: var(--brand);
 }
 
 .nav-item>span:first-of-type {
@@ -1013,10 +1015,6 @@ video {
 .sidebar.compact .nav-item {
   justify-content: center;
   padding: 0;
-}
-
-.sidebar.compact .nav-item.active::before {
-  left: 0;
 }
 
 .nav-count {
@@ -4250,11 +4248,11 @@ h1, h2, .heading-xl, .heading-lg, .heading-md,
 .nav-count { border-radius: 6px; }
 .sidebar-foot { border-top: 0; padding: 8px 10px 12px; }
 
-/* sidebar status card (mirrors the plan / credits card) */
-.side-card { margin: 0 10px 10px; padding: 12px; background: var(--bg); border: 1px solid var(--brand); border-radius: var(--radius-lg); display: grid; gap: 6px; box-shadow: var(--shadow-sm); }
-.side-card small { color: var(--brand); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-.side-card strong { font-size: 13.5px; }
-.side-card p { font-size: 12px; line-height: 1.4; }
+/* sidebar status card */
+.side-card { margin: 0 10px 10px; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); display: grid; gap: 6px; box-shadow: var(--shadow-sm); }
+.side-card small { color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.side-card strong { font-size: 13.5px; color: var(--text); }
+.side-card p { font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
 .side-card .side-bar { height: 6px; border-radius: 999px; background: var(--surface-secondary); overflow: hidden; display: flex; }
 .side-card .side-bar i { display: block; height: 100%; }
 .side-card .side-bar .ok { background: var(--success); }

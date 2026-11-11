@@ -24,9 +24,9 @@ function isApiSpecOrTest(specOrName?: string, title?: string): boolean {
 function ScopeSwitcherBar({ tobi, compact = false }: { tobi: Tobi; compact?: boolean }) {
   const activeScope: AuditScope = tobi.auditScope || "fullstack";
   const options: { id: AuditScope; label: string }[] = [
-    { id: "frontend", label: "🖥️ Frontend" },
-    { id: "backend", label: "⚙️ Backend API" },
-    { id: "fullstack", label: "🔗 Full-Stack" },
+    { id: "frontend", label: "Frontend" },
+    { id: "backend", label: "Backend API" },
+    { id: "fullstack", label: "Full-Stack" },
   ];
   return (
     <div style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "nowrap", whiteSpace: "nowrap" }}>
@@ -37,10 +37,10 @@ function ScopeSwitcherBar({ tobi, compact = false }: { tobi: Tobi; compact?: boo
         style={{
           display: "inline-flex",
           alignItems: "center",
-          background: "var(--bg-subtle, rgba(15, 23, 42, 0.75))",
+          background: "var(--surface-secondary)",
           border: "1px solid var(--border)",
-          borderRadius: 8,
-          padding: 2,
+          borderRadius: "var(--radius-md)",
+          padding: 3,
           gap: 2,
         }}
       >
@@ -53,14 +53,15 @@ function ScopeSwitcherBar({ tobi, compact = false }: { tobi: Tobi; compact?: boo
               data-testid={`scope-option-${opt.id}`}
               onClick={() => tobi.setAuditScope(opt.id)}
               style={{
-                border: "none",
-                borderRadius: 6,
+                border: active ? "1px solid var(--border)" : "1px solid transparent",
+                borderRadius: "var(--radius-sm)",
                 padding: compact ? "3px 8px" : "4px 10px",
-                fontSize: compact ? 11 : 11.5,
-                fontWeight: 600,
+                fontSize: compact ? 11 : 12,
+                fontWeight: active ? 600 : 500,
                 cursor: "pointer",
-                background: active ? "var(--primary, #6366f1)" : "transparent",
-                color: active ? "#fff" : "var(--text-secondary, #94a3b8)",
+                background: active ? "var(--bg)" : "transparent",
+                color: active ? "var(--text)" : "var(--text-secondary)",
+                boxShadow: active ? "var(--shadow-sm)" : "none",
                 transition: "all 0.15s ease",
               }}
             >
@@ -74,10 +75,10 @@ function ScopeSwitcherBar({ tobi, compact = false }: { tobi: Tobi; compact?: boo
         data-testid="reaudit-scope-btn"
         className="button button-secondary button-sm"
         onClick={() => tobi.runLiveAudit(activeScope)}
-        title={`Ejecutar o re-auditar alcance ${activeScope.toUpperCase()} fusionando suites incrementalmente`}
-        style={{ fontSize: compact ? 11 : 11.5, padding: compact ? "3px 8px" : "4px 10px" }}
+        title={`Ejecutar o re-auditar alcance ${activeScope.toUpperCase()}`}
+        style={{ fontSize: compact ? 11 : 12, padding: compact ? "4px 8px" : "4px 10px", fontWeight: 500 }}
       >
-        ⚡ Re-auditar alcance
+        Re-auditar
       </button>
     </div>
   );
@@ -553,40 +554,40 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
       <div
         className="panel"
         style={{
-          background: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(20,16,32,0.85) 100%)",
-          border: "1px solid var(--primary, #6366f1)",
-          padding: "20px 24px",
+          background: "var(--bg)",
+          border: "1px solid var(--border)",
+          padding: "16px 20px",
           marginBottom: 20,
-          borderRadius: "var(--radius-lg, 12px)",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+          borderRadius: "var(--radius-lg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ maxWidth: 640 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span className="live-pulse" />
-              <strong style={{ fontSize: 16, color: "var(--fg)" }}>
-                Frontend Vinculado en {project.url || "puerto local"} · Pendiente de Exploración
-              </strong>
-            </div>
-            <p className="t-muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.4 }}>
-              Tu servidor está corriendo. Presioná <strong>Iniciar Exploración del Frontend</strong> para que Antigravity y Explorer QA recorran tu aplicación con Playwright, extraigan rutas y capturen evidencia real con capturas y videos .webm.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <Button
-              variant="primary"
-              onClick={() => {
-                tobi.runLiveAudit(activeScope);
-                navigate("live-run");
-              }}
-              style={{ padding: "10px 18px", fontSize: 13.5, fontWeight: 600 }}
-            >
-              <Icon name="play" size="sm" />
-              ⚡ Iniciar Exploración del Frontend
-            </Button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span className="live-pulse" />
+          <div>
+            <strong style={{ fontSize: 14, color: "var(--text)", display: "block" }}>
+              Exploración pendiente en {project.url || "localhost"}
+            </strong>
+            <small style={{ color: "var(--text-muted)", fontSize: 12 }}>
+              Descubrimiento automatizado de rutas, contratos y telemetría E2E.
+            </small>
           </div>
         </div>
+        <Button
+          variant="primary"
+          onClick={() => {
+            tobi.runLiveAudit(activeScope);
+            navigate("live-run");
+          }}
+          style={{ fontSize: 12.5, fontWeight: 600 }}
+        >
+          <Icon name="play" size="sm" />
+          Iniciar Exploración
+        </Button>
       </div>
     )}
 
