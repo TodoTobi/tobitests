@@ -537,6 +537,7 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
 
   return <>
     <PageHeading title="Dashboard" subtitle={`${project.name} · Rama ${project.branch} · Alcance ${activeScope.toUpperCase()}`}>
+      <Button variant="secondary" onClick={() => tobi.downloadMasterBugReport()}><Icon name="download" size="sm" />Exportar Reporte</Button>
       <Button variant="secondary" onClick={() => navigate("office")}><Icon name="spark" size="sm" />La Oficina ({working} activos)</Button>
       <Button data-testid="shell-primary-btn" onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ver ejecución en vivo</Button>
     </PageHeading>
