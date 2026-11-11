@@ -1,4 +1,4 @@
-import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
+import { defineConfig, type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import fs from 'node:fs'
@@ -314,6 +314,36 @@ function tobiTestsBridgePlugin(): Plugin {
       server.httpServer?.on('close', () => clearInterval(liveInterval));
 
       server.middlewares.use((req, res, next) => {
+        // Direct stream handler for evidence files (avoids Vite SPA index.html fallback for newly generated test evidence)
+        if (req.url && (req.url.startsWith('/evidence/') || req.url.startsWith('/data/')) && req.method === 'GET') {
+          const cleanUrl = req.url.split('?')[0];
+          const filePath = path.resolve(__dirname, './public', cleanUrl.replace(/^\//, ''));
+          if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeTypes: Record<string, string> = {
+              '.png': 'image/png',
+              '.jpg': 'image/jpeg',
+              '.jpeg': 'image/jpeg',
+              '.webp': 'image/webp',
+              '.webm': 'video/webm',
+              '.mp4': 'video/mp4',
+              '.svg': 'image/svg+xml',
+              '.json': 'application/json',
+            };
+            const stat = fs.statSync(filePath);
+            res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+            res.setHeader('Content-Length', stat.size);
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            if (ext === '.webm' || ext === '.mp4') {
+              fs.createReadStream(filePath).pipe(res);
+            } else {
+              const fileBuf = fs.readFileSync(filePath);
+              res.end(fileBuf);
+            }
+            return;
+          }
+        }
+
         if (req.url === '/api/antigravity/live' && req.method === 'GET') {
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Cache-Control', 'no-cache');
@@ -636,10 +666,15 @@ function tobiTestsBridgePlugin(): Plugin {
                   }
                 });
                 // 3. Reset live blackboard if active
-                const current = getAntigravityLiveStatus();
-                if (current.activeProject === proj || current.activeProject === cleanSlug) {
+                let currentLive: any = null;
+                if (fs.existsSync(publicLivePath)) {
+                  try {
+                    currentLive = JSON.parse(fs.readFileSync(publicLivePath, 'utf8'));
+                  } catch (e) {}
+                }
+                if (currentLive && (currentLive.activeProject === proj || currentLive.activeProject === cleanSlug)) {
                   const resetLive = {
-                    ...current,
+                    ...currentLive,
                     activeProject: 'tobitests',
                     blackboardState: 'idle',
                     currentPipelineStep: 1,
@@ -682,14 +717,17 @@ function tobiTestsBridgePlugin(): Plugin {
           try {
             const urlObj = new URL(req.url, 'http://localhost');
             const projParam = urlObj.searchParams.get('project');
-            const targetStateFile = projParam && projParam !== 'tobitests' && projParam !== 'tobi'
+            const isNonTobi = projParam && projParam !== 'tobitests' && projParam !== 'tobi';
+            const targetStateFile = isNonTobi
               ? path.resolve(__dirname, `./public/data/${projParam}-state.json`)
               : stateFilePath;
 
             if (fs.existsSync(targetStateFile)) {
               const raw = fs.readFileSync(targetStateFile, 'utf8');
               res.write(`data: ${JSON.stringify({ type: 'INIT', project: projParam || 'tobitests', payload: JSON.parse(raw) })}\n\n`);
-            } else {
+            } else if (isNonTobi) {
+              res.write(`data: ${JSON.stringify({ type: 'ERROR', error: `Project state not found for: ${projParam}` })}\n\n`);
+            } else if (fs.existsSync(stateFilePath)) {
               const raw = fs.readFileSync(stateFilePath, 'utf8');
               res.write(`data: ${JSON.stringify({ type: 'INIT', project: 'tobitests', payload: JSON.parse(raw) })}\n\n`);
             }
@@ -706,16 +744,23 @@ function tobiTestsBridgePlugin(): Plugin {
           try {
             const urlObj = new URL(req.url, 'http://localhost');
             const projParam = urlObj.searchParams.get('project');
-            const targetStateFile = projParam && projParam !== 'tobitests' && projParam !== 'tobi'
+            const isNonTobi = projParam && projParam !== 'tobitests' && projParam !== 'tobi';
+            const targetStateFile = isNonTobi
               ? path.resolve(__dirname, `./public/data/${projParam}-state.json`)
               : stateFilePath;
 
             if (fs.existsSync(targetStateFile)) {
               const raw = fs.readFileSync(targetStateFile, 'utf8');
               res.end(raw);
-            } else {
+            } else if (isNonTobi) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: `Project state not found: ${projParam}` }));
+            } else if (fs.existsSync(stateFilePath)) {
               const raw = fs.readFileSync(stateFilePath, 'utf8');
               res.end(raw);
+            } else {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: 'Default state file not found' }));
             }
           } catch (e) {
             res.statusCode = 500;
@@ -824,7 +869,7 @@ async function resolveDevPort(preferred: number, host = '127.0.0.1'): Promise<nu
 }
 
 // Vite config — https://vitejs.dev/config/
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(async ({ mode }): Promise<UserConfig> => {
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
   const emitSourcemaps = mode === 'development'
   const preferredPort = parseInt(process.env.PORT || '5180', 10)

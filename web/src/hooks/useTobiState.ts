@@ -306,8 +306,45 @@ export interface SuiteItem {
   specFile: string;
 }
 
+export interface JourneyMapNode {
+  id: string;
+  title?: string;
+  subtitle?: string;
+  route: string;
+  screenshot?: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  testsCount?: number;
+  touches?: number;
+  failedCount?: number;
+  blockedCount?: number;
+  category?: string;
+}
+
+export interface JourneyMapEdge {
+  id: string;
+  from: string;
+  to: string;
+  verb?: string;
+  agentName?: string;
+  agentRole?: string;
+  agentMcp?: string;
+  actionCode?: string;
+  humanExplanation?: string;
+  duration?: string;
+  status?: string;
+}
+
+export interface JourneyMap {
+  nodes: JourneyMapNode[];
+  edges: JourneyMapEdge[];
+}
+
 export interface TobiState {
   auditScope?: AuditScope;
+  journeyMap?: JourneyMap;
   project: {
     name: string;
     repoPath?: string;
@@ -366,6 +403,16 @@ const DEFAULT_PROJECTS: ProjectOption[] = [
     branch: "main",
     repoPath: ".",
     url: "http://localhost:5180",
+    auditScope: "fullstack",
+    isCustom: false
+  },
+  {
+    id: "vetconnect",
+    name: "VetConnect",
+    environment: "Telemedicina Veterinaria",
+    branch: "feature/cerco-frontend-ux-truth",
+    repoPath: "C:/Users/usuario/Documents/VetConnect",
+    url: "http://localhost:5173",
     auditScope: "fullstack",
     isCustom: false
   }
@@ -722,7 +769,13 @@ export function useTobiState() {
   const resolvedInitialProjectId = (() => {
     let saved = "tobitests";
     try {
-      saved = localStorage.getItem("tobitests_active_project") || "tobitests";
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramProj = urlParams.get("project");
+      if (paramProj) {
+        saved = paramProj;
+      } else {
+        saved = localStorage.getItem("tobitests_active_project") || "tobitests";
+      }
     } catch (e) {}
 
     let deletedList: string[] = [];
@@ -1184,24 +1237,74 @@ export function useTobiState() {
     let pollInterval: any = null;
 
     const fetchLiveTelemetry = async () => {
+      let live: any = null;
       try {
         const res = await fetch('/api/antigravity/live');
         if (res.ok) {
-          const live = await res.json();
-          if (live && !live.error) {
-            setAntigravityLive(live);
-            return;
-          }
+          const parsed = await res.json();
+          if (parsed && !parsed.error) live = parsed;
         }
       } catch (e) {}
 
-      try {
-        const resFallback = await fetch('/data/antigravity-live.json');
-        if (resFallback.ok) {
-          const live = await resFallback.json();
-          if (live && !live.error) setAntigravityLive(live);
+      if (!live) {
+        try {
+          const resFallback = await fetch('/data/antigravity-live.json');
+          if (resFallback.ok) {
+            const parsed = await resFallback.json();
+            if (parsed && !parsed.error) live = parsed;
+          }
+        } catch (e) {}
+      }
+
+      if (live) {
+        setAntigravityLive(live);
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlProject = urlParams.get("project");
+        const storedActive = localStorage.getItem("tobitests_active_project");
+        const effectiveProject = urlProject || storedActive;
+
+        if (effectiveProject && effectiveProject !== "tobitests") {
+          if (activeProjectId !== effectiveProject) {
+            setActiveProjectId(effectiveProject);
+            fetch(`/api/state?project=${encodeURIComponent(effectiveProject)}`)
+              .then(async (r) => {
+                if (r.ok) {
+                  const freshData = await r.json();
+                  if (freshData && freshData.project) {
+                    setState((prev) => ({
+                      ...freshData,
+                      liveRun: freshData.liveRun || prev.liveRun,
+                      auditScope: prev.auditScope || freshData.auditScope || "fullstack",
+                      project: { ...freshData.project, auditScope: prev.auditScope || freshData.auditScope || "fullstack" },
+                    }));
+                  }
+                }
+              })
+              .catch(() => {});
+          }
+        } else if (live.activeProject && (!storedActive || live.activeProject !== currentActive)) {
+          const liveProj = live.activeProject;
+          setActiveProjectId(liveProj);
+          try {
+            localStorage.setItem("tobitests_active_project", liveProj);
+          } catch (e) {}
+          fetch(`/api/state?project=${encodeURIComponent(liveProj)}`)
+            .then(async (r) => {
+              if (r.ok) {
+                const freshData = await r.json();
+                if (freshData && freshData.project) {
+                  setState((prev) => ({
+                    ...freshData,
+                    liveRun: freshData.liveRun || prev.liveRun,
+                    auditScope: prev.auditScope || freshData.auditScope || "fullstack",
+                    project: { ...freshData.project, auditScope: prev.auditScope || freshData.auditScope || "fullstack" },
+                  }));
+                }
+              }
+            })
+            .catch(() => {});
         }
-      } catch (e) {}
+      }
     };
 
     fetchLiveTelemetry();
@@ -1226,7 +1329,7 @@ export function useTobiState() {
           .then(async (res) => {
             if (res.ok) {
               const fresh = await res.json();
-              if (fresh && Array.isArray(fresh.runs) && fresh.runs.length > 0) {
+              if (fresh && (fresh.project || (Array.isArray(fresh.runs) && fresh.runs.length > 0))) {
                 let isMockLocked = false;
                 try {
                   const cachedStr = localStorage.getItem(`tobitests_state_${currentActive}`);

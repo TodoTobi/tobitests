@@ -28,7 +28,7 @@ function ScopeSwitcherBar({ tobi, compact = false }: { tobi: Tobi; compact?: boo
     { id: "fullstack", label: "🔗 Full-Stack" },
   ];
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "nowrap", whiteSpace: "nowrap" }}>
       <div
         data-testid="audit-scope-switcher"
         role="group"
@@ -129,11 +129,21 @@ function Icon({ name, size = "md" }: { name: IconName; size?: "sm" | "md" | "lg"
 /* ==========================================================================
    Shared primitives (OfficeView receives these as props: keep signatures)
    ========================================================================== */
-function Logo({ compact = false }: { compact?: boolean }) {
+function Logo({ compact = false, projectName }: { compact?: boolean; projectName?: string }) {
+  const isCustom = projectName && projectName.toLowerCase() !== "tobitests" && !projectName.toLowerCase().includes("self-audit");
+  const label = projectName || "TobiTests";
   return (
-    <div className="logo" aria-label="TobiTests">
+    <div className="logo" aria-label={label}>
       <span className="logo-mark"><span /><span /><span /></span>
-      {!compact && <span className="logo-word">Tobi<span>Tests</span></span>}
+      {!compact && (
+        <span className="logo-word">
+          {isCustom ? (
+            <span>{projectName}</span>
+          ) : (
+            <>Tobi<span>Tests</span></>
+          )}
+        </span>
+      )}
     </div>
   );
 }
@@ -328,7 +338,7 @@ function Sidebar({ compact, onCompact, onHome, activeView, onNavigate, tobi, onO
   return (
     <aside className={`sidebar ${compact ? "compact" : ""}`}>
       <div className="sidebar-head">
-        <Logo compact={compact} />
+        <Logo compact={compact} projectName={project.name} />
         <Button variant="icon" className="sidebar-collapse" label="Contraer navegación" onClick={onCompact}><Icon name="chevron" /></Button>
       </div>
       <div className="project-select-wrap">
@@ -693,15 +703,6 @@ function TestRunsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi
   </>;
 }
 
-const DEFAULT_SUITE_OPTIONS: [string, string][] = [
-  ["vetconnect-auth.spec.ts", "Auth e identidad"],
-  ["vetconnect-rbac.spec.ts", "RBAC y seguridad"],
-  ["vetconnect-tutor-pets.spec.ts", "Tutor y mascotas"],
-  ["vetconnect-doctor-clinic.spec.ts", "Médico y clínica"],
-  ["vetconnect-appointments.spec.ts", "Consultas y mensajes"],
-  ["vetconnect-compliance-a11y.spec.ts", "GDPR y accesibilidad"],
-];
-
 function resolveSuiteOptions(tobi: Tobi, tests: TestItem[]): [string, string][] {
   const suites = tobi.state.suites || [];
   const seen = new Map<string, string>();
@@ -716,10 +717,29 @@ function resolveSuiteOptions(tobi: Tobi, tests: TestItem[]): [string, string][] 
       seen.set(t.spec, t.spec.replace(/\.spec\.ts$/i, ""));
     }
   }
+  if (tobi.state.specs && tobi.state.specs.length > 0) {
+    for (const sp of tobi.state.specs) {
+      if (sp.name && !seen.has(sp.name)) {
+        seen.set(sp.name, sp.domain || sp.name.replace(/\.spec\.ts$/i, ""));
+      }
+    }
+  }
   if (seen.size > 0) {
     return Array.from(seen.entries());
   }
-  return DEFAULT_SUITE_OPTIONS;
+
+  const proj = tobi.activeProjectId;
+  const cleanSlug = proj.replace(/^custom-/, "");
+  if (cleanSlug === "tobitests" || cleanSlug === "tobi") {
+    return [
+      ["tobi-office-agents.spec.ts", "Office Agents & Simulación"],
+      ["tobi-journey-map.spec.ts", "Journey Map & Grafo"],
+      ["tobi-evidence-integrity.spec.ts", "Integridad de Evidencias"],
+    ];
+  }
+  return [
+    [`${cleanSlug}.spec.ts`, `${tobi.state.project.name || cleanSlug} Suite Principal`],
+  ];
 }
 
 function StepList({ steps }: { steps: StepItem[] }) {
@@ -1036,7 +1056,7 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
         <Tabs value={filter} onChange={setFilter} items={[{ id: "all", label: "Todo", count: liveRun.telemetryLogs.length }, { id: "ACTION", label: "Acciones" }, { id: "WARN", label: "Alertas" }]} />
       </div>
       <div className="console"><LogList logs={logs} /></div>
-      <div className="panel-foot"><span>Proyecto {project.name}</span><span className="mono">{project.url}</span></div>
+      <div className="panel-foot"><span>Proyecto {project.name}</span><span className="mono">{project.url?.replace("[::1]", "localhost")}</span></div>
     </section>
   </>;
 }
@@ -1107,8 +1127,9 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
   const [copied, setCopied] = useState(false);
   const bug = tobi.state.bugs.find((b) => b.id === selectedBugId) || tobi.state.bugs[0];
   const diag = diagOf(bug);
-  const isTobi = tobi.activeProjectId === "tobitests" || tobi.state.project.name.toLowerCase().includes("tobi");
-  const video = bug.videoUrl || (isTobi ? "/evidence/videos/tobitests-bug-01-replay.webm" : "/evidence/videos/bug-01-cancellation-replay.webm");
+  const isTobi = tobi.activeProjectId === "tobitests" || tobi.activeProjectId === "tobi";
+  const video = bug.videoUrl || (isTobi ? "/evidence/videos/tobitests-bug-01-replay.webm" : null);
+  const screenshot = bug.screenshot || (isTobi ? "/evidence/bugs/tobi-bug-01-detail.png" : null);
 
   const copy = () => { tobi.copyBddToClipboard(bug); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
@@ -1145,9 +1166,21 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
           </div>
           <div className="media" style={{ borderBottom: 0 }}>
             {mode === "video" ? (
-              <video key={video} src={video} controls autoPlay loop muted playsInline />
+              video ? (
+                <video key={video} src={video} controls autoPlay loop muted playsInline />
+              ) : (
+                <div style={{ padding: 48, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>
+                  Sin video de reproducción registrado para este incidente.
+                </div>
+              )
             ) : (
-              <img src={bug.screenshot || (isTobi ? "/evidence/bugs/tobi-bug-01-detail.png" : "/evidence/bugs/bug-01-divergence-evidence.png")} alt={`Evidencia de ${bug.id}`} />
+              screenshot ? (
+                <img src={screenshot} alt={`Evidencia de ${bug.id}`} />
+              ) : (
+                <div style={{ padding: 48, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>
+                  Sin captura de pantalla registrada para este incidente.
+                </div>
+              )
             )}
           </div>
         </section>
@@ -1186,12 +1219,22 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
           ))}
         </div>
         {evidence === "capture" && (
-          <div className="media"><img src={bug.screenshot || (isTobi ? "/evidence/bugs/tobi-bug-01-detail.png" : "/evidence/bugs/bug-01-divergence-evidence.png")} alt={`Evidencia de ${bug.id}`} /></div>
+          <div className="media">
+            {screenshot ? (
+              <img src={screenshot} alt={`Evidencia de ${bug.id}`} />
+            ) : (
+              <div style={{ padding: 48, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>
+                Sin captura de pantalla registrada.
+              </div>
+            )}
+          </div>
         )}
         {evidence === "console" && (
-          <pre className="pre">{isTobi
-            ? `[Playwright] Entrar a La Oficina en http://localhost:5173\n[DevTools CDP] Escuchando bus de eventos en WebSocket 9222\n[Explorer QA] Click agente pausado\n[Telemetry] Divergencia: eventos previos no limpiados en consola`
-            : `[Playwright] click "Cancelar" en /client/messages\n[DevTools] Bandeja de mensajes actualizada\n[Playwright] navegar a Mascotas → Tus consultas\n[Assertion] Esperado "Cancelado", obtenido "En consulta"`}</pre>
+          <pre className="pre">{bug.evidence?.console_log && bug.evidence.console_log.length > 0
+            ? bug.evidence.console_log.join("\n")
+            : (isTobi
+                ? `[Playwright] Entrar a La Oficina en http://localhost:5173\n[DevTools CDP] Escuchando bus de eventos en WebSocket 9222\n[Explorer QA] Click agente pausado\n[Telemetry] Divergencia: eventos previos no limpiados en consola`
+                : "No console traces captured for this run")}</pre>
         )}
         {evidence === "diag" && (
           <div style={{ padding: 16 }}>
@@ -2061,7 +2104,10 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
 function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => void; openOffice: () => void; tobi: Tobi }) {
   const [menu, setMenu] = useState(false);
   const { liveRun, project } = tobi.state;
+  const isTobiLanding = tobi.activeProjectId === "tobitests" || tobi.activeProjectId === "tobi";
+  const landingImg = liveRun.steps[0]?.screenshot || tobi.state.runs[0]?.tests[0]?.screenshot || (isTobiLanding ? "/evidence/runs/tobi-01-landing.png" : undefined);
   const bug = tobi.state.bugs[0];
+  const bugImg = bug?.screenshot || (isTobiLanding ? "/evidence/bugs/tobi-bug-01-detail.png" : undefined);
   const features = [
     { icon: "search" as IconName, title: "Explora tu app", text: "Los agentes leen tu código y recorren cada flujo como lo haría un operador." },
     { icon: "pulse" as IconName, title: "Encuentra la causa", text: "Consola, red y rendimiento quedan ligados al paso exacto donde falla." },
@@ -2072,7 +2118,7 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
     <main className="landing">
       <header className="site-header">
         <div className="site-header-in">
-          <Logo />
+          <Logo projectName={project.name} />
           <nav className="site-nav" aria-label="Secciones">
             <Button variant="ghost" onClick={openDashboard}>Dashboard</Button>
             <Button variant="ghost" onClick={openOffice}>La Oficina</Button>
@@ -2103,7 +2149,15 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
             <Badge tone="success"><span className="connection-dot" />En vivo</Badge>
           </div>
           <div className="product-body">
-            <div className="media"><img src={liveRun.steps[0]?.screenshot || "/evidence/runs/tobi-01-landing.png"} alt={`Auditoría de ${project.name}`} /></div>
+            <div className="media">
+              {landingImg ? (
+                <img src={landingImg} alt={`Auditoría de ${project.name}`} />
+              ) : (
+                <div style={{ height: 240, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-subtle)", color: "var(--text-secondary)", fontSize: 13 }}>
+                  {project.name} · Vista previa de navegación
+                </div>
+              )}
+            </div>
             <div>
               <div className="panel-head"><h2 className="heading-sm">{liveRun.suite}</h2><code>{liveRun.elapsedTime}</code></div>
               <div className="row-list">
@@ -2146,13 +2200,21 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
           </div>
           <div className="panel">
             <div className="panel-head"><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Badge tone="danger">{bug.severity}</Badge><strong>{bug.id}</strong></div><span className="t-muted">{bug.section}</span></div>
-            <div className="media" style={{ borderBottom: 0 }}><img src={bug.screenshot || "/evidence/bugs/tobi-bug-01-detail.png"} alt={`Evidencia de ${bug.id}`} /></div>
+            <div className="media" style={{ borderBottom: 0 }}>
+              {bugImg ? (
+                <img src={bugImg} alt={`Evidencia de ${bug.id}`} />
+              ) : (
+                <div style={{ padding: 32, textAlign: "center", color: "var(--text-secondary)", fontSize: 13 }}>
+                  Captura de evidencia registrada en telemetría
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}
 
       <footer className="site-footer">
-        <div className="site-footer-in"><Logo /><span>© 2026 TobiTests · Playwright MCP + Chrome DevTools MCP</span></div>
+        <div className="site-footer-in"><Logo projectName={project.name} /><span>© 2026 {project.name || "TobiTests"} · Playwright MCP + Chrome DevTools MCP</span></div>
       </footer>
     </main>
   );
@@ -2161,6 +2223,11 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
 export default function App() {
   const [view, setView] = useState<AppView>(() => {
     try {
+      const params = new URLSearchParams(window.location.search);
+      const urlView = params.get("view");
+      if (urlView && ["dashboard", "journey", "test-runs", "run-detail", "live-run", "bug-tracker", "bug-detail", "office", "specs", "suites", "integrations", "settings"].includes(urlView)) {
+        return urlView as AppView;
+      }
       const saved = localStorage.getItem("tobitests_current_view");
       if (saved && ["dashboard", "journey", "test-runs", "run-detail", "live-run", "bug-tracker", "bug-detail", "office", "specs", "suites", "integrations", "settings"].includes(saved)) {
         return saved as AppView;
@@ -2174,6 +2241,9 @@ export default function App() {
     setView(v);
     try {
       localStorage.setItem("tobitests_current_view", v);
+      const url = new URL(window.location.href);
+      url.searchParams.set("view", v);
+      window.history.replaceState(null, "", url.toString());
     } catch (e) {}
   };
 

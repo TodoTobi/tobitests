@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-11-10T03:12:48Z",
+  "pipelineStep": 4,
+  "orchestrator": "antigravity",
+  "handoffTarget": "opencode",
+  "project": "tobitests",
+  "auditScope": "fullstack",
+  "auditedScopes": [
+    "fullstack"
+  ],
+  "totalSuites": 5,
+  "totalTests": 20,
+  "suites": [
+    {
+      "domain": "tobitests — Core 3-Layer Oracle Audit",
+      "scope": "fullstack",
+      "specFile": "tobitests.spec.ts",
+      "description": "Suite Playwright sintética para auditoría autónoma en tobitests.",
+      "implemented": true,
+      "cases": [
+        "TC-01: Entry Point & DOM Readiness (Layer 1 Oracle)",
+        "TC-02: Runtime Telemetry & Console Health (Layer 1 Oracle)",
+        "TC-03: Interactive Surface & Accessibility Tree (Layer 2 Oracle)",
+        "TC-04: Viewport Adaptability & Layout Integrity (Layer 3 Oracle)"
+      ]
+    },
+    {
+      "domain": "Authentication & Entry",
+      "scope": "frontend",
+      "specFile": "tobitests-auth.spec.ts",
+      "description": "Verifica carga inicial, autenticación, manejo de sesiones y cabeceras de seguridad en tobitests.",
+      "implemented": false,
+      "cases": [
+        "TC-AUTH-01: Carga inicial del punto de entrada (http://localhost:5180) sin errores en consola (Layer 1)",
+        "TC-AUTH-02: Validación de campos obligatorios y formatos en formulario de acceso",
+        "TC-AUTH-03: Persistencia de estado de sesión tras recarga de página (Layer 2)",
+        "TC-AUTH-04: Navegación por teclado (Tab / Escape) y roles ARIA en vista de entrada (Layer 3)"
+      ]
+    },
+    {
+      "domain": "Core User Journeys & State Sync",
+      "scope": "frontend",
+      "specFile": "tobitests-journeys.spec.ts",
+      "description": "Audita los recorridos principales, sincronización reactiva entre vistas y respuestas en tobitests.",
+      "implemented": false,
+      "cases": [
+        "TC-FLOW-01: Transición fluida hacia el panel principal sin layout shift ni overflow horizontal",
+        "TC-FLOW-02: Consistencia de estado entre vistas tras mutación de datos (Layer 2 State Divergence)",
+        "TC-FLOW-03: Verificación de latencia de red (< 3000ms) y ausencia de códigos HTTP >= 400 (Layer 1)",
+        "TC-FLOW-04: Cierre accesible de modales y drawers mediante tecla Escape y clic en backdrop (Layer 3)"
+      ]
+    },
+    {
+      "domain": "RBAC, Edge Cases & Visual A11y",
+      "scope": "frontend",
+      "specFile": "tobitests-rbac-a11y.spec.ts",
+      "description": "Evalúa fronteras de permisos, entradas límite, responsive 375px y contraste WCAG en tobitests.",
+      "implemented": false,
+      "cases": [
+        "TC-RBAC-01: Bloqueo de acceso no autorizado a rutas protegidas y redirección limpia",
+        "TC-RBAC-02: Sanitización de entradas contra payloads XSS e inyecciones en buscadores",
+        "TC-A11Y-01: Adaptación responsive en viewport móvil (375x812) sin solapamiento de controles",
+        "TC-A11Y-02: Verificación de interactividad (pointer-events) y contraste semántico en botones primarios"
+      ]
+    },
+    {
+      "domain": "Backend API Contracts & Security",
+      "scope": "backend",
+      "specFile": "tobitests-api.spec.ts",
+      "description": "Pruebas puras de API con Playwright APIRequestContext ({ request }): códigos HTTP, latencia < 3000ms, schemas JSON y RBAC en tobitests.",
+      "implemented": false,
+      "cases": [
+        "TC-API-01: GET http://localhost:5180/api/health responde 200 OK con schema JSON válido y latencia < 500ms",
+        "TC-API-02: POST http://localhost:5180/api/antigravity/scope sincroniza auditScope sin abrir navegador",
+        "TC-API-03: Rechazo determinista 401/403 ante peticiones sin token de autorización (RBAC)",
+        "TC-API-04: Validación 400/422 ante payloads malformados sin fugas de stacktrace (500)"
+      ]
+    }
+  ]
+}

@@ -1520,6 +1520,67 @@ def update_journey_map_from_run(
     return journey_map
 
 
+def validate_evidence_paths(state: Dict[str, Any], public_dir: Path) -> None:
+    """
+    Validates that all screenshot and video asset paths referenced in the state JSON
+    actually exist on disk under public_dir. Replaces non-existent paths with empty string
+    to prevent browser 404s.
+    """
+    if not public_dir.exists():
+        return
+
+    # 1. Validate journeyMap nodes
+    nodes = state.get("journeyMap", {}).get("nodes", [])
+    if isinstance(nodes, list):
+        for node in nodes:
+            if isinstance(node, dict) and "screenshot" in node:
+                scr = node["screenshot"]
+                if scr and scr != "API_NODE":
+                    disk_file = public_dir / scr.lstrip("/\\")
+                    if not disk_file.exists():
+                        node["screenshot"] = ""
+
+    # 2. Validate runs tests and steps
+    for run in state.get("runs", []):
+        for test in run.get("tests", []):
+            scr = test.get("screenshot")
+            if scr:
+                disk_file = public_dir / scr.lstrip("/\\")
+                if not disk_file.exists():
+                    test["screenshot"] = ""
+            vid = test.get("videoUrl")
+            if vid:
+                disk_file = public_dir / vid.lstrip("/\\")
+                if not disk_file.exists():
+                    test["videoUrl"] = ""
+
+    # 3. Validate bugs
+    for bug in state.get("bugs", []):
+        if isinstance(bug, dict):
+            scr = bug.get("screenshot")
+            if scr:
+                disk_file = public_dir / scr.lstrip("/\\")
+                if not disk_file.exists():
+                    bug["screenshot"] = ""
+            vid = bug.get("videoUrl")
+            if vid:
+                disk_file = public_dir / vid.lstrip("/\\")
+                if not disk_file.exists():
+                    bug["videoUrl"] = ""
+            ev = bug.get("evidence")
+            if isinstance(ev, dict):
+                ev_scr = ev.get("screenshot")
+                if ev_scr:
+                    disk_file = public_dir / ev_scr.lstrip("/\\")
+                    if not disk_file.exists():
+                        ev["screenshot"] = ""
+                ev_vid = ev.get("video")
+                if ev_vid:
+                    disk_file = public_dir / ev_vid.lstrip("/\\")
+                    if not disk_file.exists():
+                        ev["video"] = ""
+
+
 def ingest_report_into_state(
     repo_root: Path,
     project_slug: str,
@@ -1798,6 +1859,8 @@ def ingest_report_into_state(
 
     tests_for_journey = merged_tests if parsed_tests else (state.get("runs", [{}])[0].get("tests", []) if state.get("runs") else [])
     update_journey_map_from_run(state, tests_for_journey, project_slug)
+
+    validate_evidence_paths(state, repo_root / "web" / "public")
 
     atomic_write_json(state_file, state)
 

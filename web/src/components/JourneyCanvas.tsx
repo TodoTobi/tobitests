@@ -433,6 +433,78 @@ function getTestTouchedNodeIds(test: any): string[] {
   return ["landing", "dashboard", "suites", "live-run"];
 }
 
+function JourneyNodeThumbnail({
+  screenshot,
+  title,
+  route,
+  isApiNode,
+}: {
+  screenshot?: string;
+  title: string;
+  route: string;
+  isApiNode: boolean;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [screenshot]);
+
+  if (isApiNode && (!screenshot || screenshot === "API_NODE")) {
+    return (
+      <div className="api-endpoint-telemetry-preview">
+        <div className="api-preview-methods">
+          <span className="api-method-pill get">GET</span>
+          <span className="api-method-pill post">POST</span>
+          <span className="api-method-pill rbac">RBAC</span>
+          <span className="api-contract-pill">application/json</span>
+        </div>
+        <div className="api-preview-route-line">
+          <code>{route}</code>
+        </div>
+        <div className="api-preview-metrics">
+          <span className="api-status-ok">● 200 OK · Schema Valid</span>
+          <span className="api-sla-tag">⏱ 38ms &lt; 500ms SLA</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (screenshot && screenshot !== "API_NODE" && !imgFailed) {
+    return (
+      <img
+        src={screenshot}
+        alt={title}
+        className="node-screenshot-img"
+        loading="lazy"
+        onError={() => setImgFailed(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="fallback-node-preview"
+      style={{
+        height: 140,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(15, 23, 42, 0.7)",
+        color: "var(--muted, #94a3b8)",
+        padding: 12,
+        gap: 6,
+        textAlign: "center",
+      }}
+    >
+      <span style={{ fontSize: 24 }}>🧭</span>
+      <code style={{ fontSize: 11, color: "#cbd5e1" }}>{route}</code>
+      <span style={{ fontSize: 10, opacity: 0.7 }}>Pendiente de captura visual</span>
+    </div>
+  );
+}
+
 export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onInspectTest }: JourneyCanvasProps) {
   const liveTelemetry = propLive ?? tobi.antigravityLive;
   const activeScope: AuditScope = tobi.auditScope || "fullstack";
@@ -544,12 +616,17 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
         ];
       }
 
-      // Discrete visual nodes for each verified route/screen
+      // Discrete visual nodes for each verified route/screen arranged in 4 semantic tracks
+      const colCounts = [0, 0, 0, 0];
       const colX = [80, 480, 880, 1280];
+
       return testsList.map((testItem, i) => {
-        const isApi = (testItem.spec || "").includes("api") || (testItem.name || "").includes("API");
-        const col = i % 4;
-        const row = Math.floor(i / 4);
+        const isApi =
+          (testItem.spec || "").includes("api") ||
+          (testItem.name || "").includes("API") ||
+          (testItem.name || "").includes("REST") ||
+          (testItem.name || "").includes("Backend") ||
+          (testItem.name || "").includes("Health");
         const cleanTitle = (testItem.name || `Paso ${i + 1}`)
           .replace(/^TC-[A-Z0-9]+:\s*/, "")
           .replace(/DOM Structure/i, "Estructura DOM")
@@ -557,13 +634,73 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
           .replace(/Realms Screen/i, "Los Diez Reinos")
           .replace(/HUD Rendering/i, "HUD del Tablero");
         const shot = testItem.screenshot || "";
+        let derivedRoute = "/";
+        let targetCol = 0;
+        let category: "auth" | "workspace" | "diagnostics" | "execution" | "API" = "workspace";
+        const lower = cleanTitle.toLowerCase();
+
+        if (lower.includes("queue") || lower.includes("guardia") || lower.includes("triage")) {
+          derivedRoute = "/vet/queue (Guardia & Triaje)";
+          targetCol = 2;
+          category = "workspace";
+        } else if (lower.includes("call") || lower.includes("llamada") || lower.includes("videoconsulta") || lower.includes("consultation")) {
+          derivedRoute = "/call/consulta (Videoconsulta HD)";
+          targetCol = 3;
+          category = "execution";
+        } else if (lower.includes("dossier") || lower.includes("pets") || lower.includes("historia") || lower.includes("medical records")) {
+          derivedRoute = "/client/pets (Dossier Mascotas)";
+          targetCol = 2;
+          category = "workspace";
+        } else if (lower.includes("prescription") || lower.includes("receta") || lower.includes("verify-rx") || lower.includes("senasa")) {
+          derivedRoute = "/verify-rx (Recetas SENASA)";
+          targetCol = 3;
+          category = "diagnostics";
+        } else if (lower.includes("registration") || lower.includes("registro") || lower.includes("onboarding")) {
+          derivedRoute = "/register (Onboarding)";
+          targetCol = 0;
+          category = "auth";
+        } else if (lower.includes("viewport") || lower.includes("layout") || lower.includes("mobile")) {
+          derivedRoute = "/ (Mobile 375px)";
+          targetCol = 0;
+          category = "diagnostics";
+        } else if (lower.includes("doctor")) {
+          derivedRoute = "/vet/dashboard (Portal Doctor)";
+          targetCol = 2;
+          category = "workspace";
+        } else if (lower.includes("tutor") || lower.includes("client")) {
+          derivedRoute = "/client/dashboard (Portal Tutor)";
+          targetCol = 2;
+          category = "workspace";
+        } else if (lower.includes("validation") || lower.includes("form") || lower.includes("login")) {
+          derivedRoute = "/login (Validación)";
+          targetCol = 1;
+          category = "auth";
+        } else if (lower.includes("rbac") || lower.includes("protected")) {
+          derivedRoute = "/client/dashboard (RBAC)";
+          targetCol = 1;
+          category = "auth";
+        } else if (lower.includes("telemetry") || lower.includes("console")) {
+          derivedRoute = "/ (Consola & Red)";
+          targetCol = 1;
+          category = "diagnostics";
+        } else if (isApi || lower.includes("health") || lower.includes("sla")) {
+          derivedRoute = "GET /health (API SLA)";
+          targetCol = 3;
+          category = "API";
+        } else {
+          derivedRoute = "/ · Portada";
+          targetCol = 0;
+          category = "auth";
+        }
+
+        const row = colCounts[targetCol]++;
         return {
           id: `test-node-${i}`,
           title: cleanTitle.length > 36 ? cleanTitle.slice(0, 36) + "..." : cleanTitle,
           subtitle: testItem.name || `Test ${i + 1}`,
-          route: tobi.state.project.url || "http://localhost:5173",
+          route: derivedRoute,
           screenshot: isApi ? "API_NODE" : shot,
-          x: colX[col],
+          x: colX[targetCol],
           y: 80 + row * 240,
           width: NODE_WIDTH,
           height: NODE_HEIGHT,
@@ -571,7 +708,7 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
           touches: 1,
           failedCount: testItem.status === "Failed" ? 1 : 0,
           blockedCount: 0,
-          category: (isApi ? "API" : (i === 0 ? "auth" : "workspace")) as any,
+          category,
         };
       });
     }
@@ -637,22 +774,83 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
   const dynamicEdges = useMemo(() => {
     if (tobi.activeProjectId !== "tobitests") {
       if (dynamicNodes.length <= 1) return [];
-      return dynamicNodes.slice(1).map((target, idx) => {
-        const prev = dynamicNodes[idx];
-        return {
-          id: `e-${prev.id}-${target.id}`,
-          from: prev.id,
-          to: target.id,
-          verb: target.category === "API" ? "API 2xx/4xx" : "Navegar / Click",
-          agentName: target.category === "API" ? "Telemetry Auditor" : "Explorer QA",
-          agentRole: target.category === "API" ? "Auditor API ({ request })" : "Explorador de DOM",
-          agentMcp: target.category === "API" ? "@playwright/test" : "@playwright/mcp",
-          actionCode: `await page.goto('${target.route}');`,
-          humanExplanation: `Transición explorada: ${prev.title} › ${target.title}.`,
-          duration: `${80 + idx * 25}ms`,
-          status: (target.failedCount && target.failedCount > 0 ? "Failed" : "Passed") as any,
-        };
-      });
+
+      const findNode = (pred: (n: JourneyNode) => boolean) => dynamicNodes.find(pred);
+
+      const entryNode = findNode((n) => n.route.includes("Portada") || n.title.includes("Portada") || n.title.includes("Entry"));
+      const regNode = findNode((n) => n.route.includes("/register") || n.title.includes("Registration") || n.title.includes("Onboarding"));
+      const mobileNode = findNode((n) => n.route.includes("Mobile") || n.title.includes("Viewport"));
+      const valNode = findNode((n) => n.route.includes("/login") || n.title.includes("Validation") || n.title.includes("Surface"));
+      const rbacNode = findNode((n) => n.route.includes("RBAC") || n.title.includes("Protected"));
+      const telemNode = findNode((n) => n.route.includes("Consola") || n.title.includes("Telemetry"));
+      const docNode = findNode((n) => n.route.includes("/vet/dashboard") || n.title.includes("Doctor"));
+      const tutorNode = findNode((n) => n.route.includes("/client/dashboard") || n.title.includes("Tutor"));
+      const queueNode = findNode((n) => n.route.includes("/vet/queue") || n.title.includes("Queue") || n.title.includes("Guardia"));
+      const petsNode = findNode((n) => n.route.includes("/client/pets") || n.title.includes("Dossier") || n.title.includes("Pets"));
+      const callNode = findNode((n) => n.route.includes("/call") || n.title.includes("Video") || n.title.includes("Consultation"));
+      const rxNode = findNode((n) => n.route.includes("/verify-rx") || n.title.includes("Prescription") || n.title.includes("SENASA"));
+      const apiNode = findNode((n) => n.category === "API" || n.route.includes("/health"));
+
+      const semanticEdgeDefs: Array<{ from: JourneyNode | undefined; to: JourneyNode | undefined; verb: string; explanation: string }> = [
+        { from: entryNode, to: valNode, verb: "Autenticar", explanation: "Transición hacia el formulario de login y credenciales." },
+        { from: entryNode, to: regNode, verb: "Registrarse", explanation: "Onboarding de nuevo usuario tutor o profesional." },
+        { from: entryNode, to: mobileNode, verb: "Viewport", explanation: "Adaptabilidad responsive en pantallas reducidas." },
+        { from: valNode, to: docNode, verb: "Login Doc", explanation: "Acceso autorizado al portal médico veterinario." },
+        { from: valNode, to: tutorNode, verb: "Login Tutor", explanation: "Acceso autorizado al workspace de tutores." },
+        { from: valNode, to: rbacNode, verb: "Guardia RBAC", explanation: "Verificación de barreras de acceso y protección de rutas." },
+        { from: rbacNode, to: telemNode, verb: "Auditar Consola", explanation: "Inspección de telemetría de red y errores de runtime." },
+        { from: docNode, to: queueNode, verb: "Sala Guardia", explanation: "Navegación al panel de triaje y cola de atención." },
+        { from: docNode, to: callNode, verb: "Iniciar Video", explanation: "Conexión a la sala de consulta WebRTC/HD." },
+        { from: tutorNode, to: petsNode, verb: "Dossier", explanation: "Gestión de fichas clínicas e historial de mascotas." },
+        { from: tutorNode, to: callNode, verb: "Unirse Video", explanation: "Ingreso del tutor a la videoconsulta activa." },
+        { from: callNode, to: rxNode, verb: "Receta SENASA", explanation: "Validación digital de prescripciones veterinarias oficiales." },
+        { from: telemNode, to: apiNode, verb: "SLA Contrato", explanation: "Auditoría de latencia y estado de salud de la API REST." },
+      ];
+
+      const validSemanticEdges = semanticEdgeDefs
+        .filter((def) => Boolean(def.from && def.to && def.from.id !== def.to.id))
+        .map((def, idx) => ({
+          id: `e-${def.from!.id}-${def.to!.id}`,
+          from: def.from!.id,
+          to: def.to!.id,
+          verb: def.verb,
+          agentName: def.to!.category === "API" ? "Telemetry Auditor" : "Explorer QA",
+          agentRole: def.to!.category === "API" ? "Auditor API ({ request })" : "Explorador de DOM",
+          agentMcp: def.to!.category === "API" ? "@playwright/test" : "@playwright/mcp",
+          actionCode: `await page.goto('${def.to!.route}');`,
+          humanExplanation: def.explanation,
+          duration: `${60 + idx * 20}ms`,
+          status: (def.to!.failedCount && def.to!.failedCount > 0 ? "Failed" : "Passed") as any,
+        }));
+
+      if (validSemanticEdges.length >= 3) {
+        return validSemanticEdges;
+      }
+
+      // Fallback for general projects: connect within columns downwards, and column to next column
+      // Strictly NO backward diagonal lines
+      const edges: JourneyEdge[] = [];
+      const sortedNodes = [...dynamicNodes].sort((a, b) => (a.x !== b.x ? a.x - b.x : a.y - b.y));
+      for (let i = 0; i < sortedNodes.length - 1; i++) {
+        const cur = sortedNodes[i];
+        const next = sortedNodes[i + 1];
+        if (next.x >= cur.x) {
+          edges.push({
+            id: `e-${cur.id}-${next.id}`,
+            from: cur.id,
+            to: next.id,
+            verb: next.category === "API" ? "API 2xx/4xx" : "Navegar / Click",
+            agentName: next.category === "API" ? "Telemetry Auditor" : "Explorer QA",
+            agentRole: next.category === "API" ? "Auditor API ({ request })" : "Explorador de DOM",
+            agentMcp: next.category === "API" ? "@playwright/test" : "@playwright/mcp",
+            actionCode: `await page.goto('${next.route}');`,
+            humanExplanation: `Transición explorada: ${cur.title} › ${next.title}.`,
+            duration: `${75 + i * 20}ms`,
+            status: (next.failedCount && next.failedCount > 0 ? "Failed" : "Passed") as any,
+          });
+        }
+      }
+      return edges;
     }
 
     const stateJourneyEdges = tobi.state.journeyMap?.edges;
@@ -812,7 +1010,7 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
       <header className="journey-topbar">
         <div className="journey-topbar-left">
           <div className="journey-breadcrumbs">
-            <span>{tobi.state.project.url}</span>
+            <span>{tobi.state.project.name || "vetconnect"}</span>
             <span className="sep">›</span>
             <span>Test Runs</span>
             <span className="sep">›</span>
@@ -822,7 +1020,7 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
           <div className="journey-title-row">
             <h1 className="journey-title">Execution: {run.date || "2026-10-16 14:50"}</h1>
             <span className="journey-target-badge">
-              {testsList.length} tests ({activeScope.toUpperCase()}) · {tobi.state.project.name} (rama {tobi.state.project.branch})
+              {testsList.length} tests · {activeScope.toUpperCase()} · Rama {tobi.state.project.branch}
             </span>
           </div>
 
@@ -866,68 +1064,7 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
           </div>
         </div>
 
-        <div className="journey-topbar-actions" style={{ flexWrap: "wrap", gap: "8px" }}>
-          {/* Dynamic Post-Test Scope Switcher */}
-          <div
-            data-testid="audit-scope-switcher"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              background: "#0f172a",
-              border: "1px solid #334155",
-              borderRadius: "8px",
-              padding: "3px",
-              gap: "3px",
-            }}
-          >
-            {(
-              [
-                { id: "frontend", label: "🖥️ Frontend" },
-                { id: "backend", label: "⚙️ Backend API" },
-                { id: "fullstack", label: "🔗 Full-Stack" },
-              ] as const
-            ).map((opt) => {
-              const isSelected = activeScope === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  data-testid={`scope-option-${opt.id}`}
-                  onClick={() => tobi.setAuditScope(opt.id)}
-                  style={{
-                    border: "none",
-                    borderRadius: "6px",
-                    padding: "5px 10px",
-                    fontSize: "11.5px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    background: isSelected ? "#6366f1" : "transparent",
-                    color: isSelected ? "#ffffff" : "#94a3b8",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            data-testid="reaudit-scope-btn"
-            className="btn-toggle-sidebar"
-            onClick={() => tobi.runLiveAudit(activeScope)}
-            title={`Ejecutar o re-auditar alcance ${activeScope.toUpperCase()} fusionando resultados incrementalmente`}
-            style={{
-              borderColor: "rgba(99, 102, 241, 0.55)",
-              background: "rgba(99, 102, 241, 0.14)",
-              color: "#c7d2fe",
-              fontWeight: 700,
-            }}
-          >
-            ⚡ Re-auditar alcance
-          </button>
-
+        <div className="journey-topbar-actions" style={{ flexWrap: "nowrap", gap: "8px" }}>
           {/* Toggle Sidebar to maximize canvas */}
           <button
             type="button"
@@ -1279,7 +1416,8 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
                 node.category === "API" ||
                 node.route.startsWith("/api") ||
                 node.route.includes("/api/") ||
-                !node.screenshot;
+                node.route.includes("(API)") ||
+                node.screenshot === "API_NODE";
 
               return (
                 <div
@@ -1333,49 +1471,12 @@ export function JourneyCanvas({ tobi, antigravityLive: propLive, navigate, onIns
                         {node.route}
                       </div>
                     </div>
-                    {isApiNode && !node.screenshot ? (
-                      <div className="api-endpoint-telemetry-preview">
-                        <div className="api-preview-methods">
-                          <span className="api-method-pill get">GET</span>
-                          <span className="api-method-pill post">POST</span>
-                          <span className="api-method-pill rbac">RBAC</span>
-                          <span className="api-contract-pill">application/json</span>
-                        </div>
-                        <div className="api-preview-route-line">
-                          <code>{node.route}</code>
-                        </div>
-                        <div className="api-preview-metrics">
-                          <span className="api-status-ok">● 200 OK · Schema Valid</span>
-                          <span className="api-sla-tag">⏱ 38ms &lt; 500ms SLA</span>
-                        </div>
-                      </div>
-                    ) : node.screenshot ? (
-                      <img
-                        src={node.screenshot}
-                        alt={node.title}
-                        className="node-screenshot-img"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          height: 140,
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: "rgba(15, 23, 42, 0.7)",
-                          color: "var(--muted, #94a3b8)",
-                          padding: 12,
-                          gap: 6,
-                          textAlign: "center",
-                        }}
-                      >
-                        <span style={{ fontSize: 24 }}>🧭</span>
-                        <code style={{ fontSize: 11, color: "#cbd5e1" }}>{node.route}</code>
-                        <span style={{ fontSize: 10, opacity: 0.7 }}>Pendiente de captura visual</span>
-                      </div>
-                    )}
+                    <JourneyNodeThumbnail
+                      screenshot={node.screenshot}
+                      title={node.title}
+                      route={node.route}
+                      isApiNode={isApiNode}
+                    />
                     <button
                       type="button"
                       className="btn-quick-open"

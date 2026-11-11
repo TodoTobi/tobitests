@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-11-10T22:25:20Z",
+  "pipelineStep": 3,
+  "orchestrator": "antigravity",
+  "auditScope": "fullstack",
+  "auditedScopes": [
+    "fullstack"
+  ],
+  "project": {
+    "id": "vetconnect",
+    "name": "vetconnect",
+    "url": "http://[::1]:5173",
+    "repoPath": "../VetConnect",
+    "auditScope": "fullstack",
+    "stack": {
+      "framework": "React 18 + Vite 6 + TypeScript",
+      "language": "TypeScript / JavaScript",
+      "dependencies": [
+        "@livekit/components-react",
+        "@livekit/components-styles",
+        "@sentry/react",
+        "@tanstack/react-query",
+        "axios",
+        "livekit-client",
+        "lucide-react",
+        "react",
+        "react-dom",
+        "react-router-dom",
+        "socket.io-client",
+        "zod"
+      ],
+      "devDependencies": [
+        "@chromatic-com/storybook",
+        "@storybook/addon-a11y",
+        "@storybook/addon-essentials",
+        "@storybook/addon-interactions",
+        "@storybook/react",
+        "@storybook/react-vite",
+        "@testing-library/jest-dom",
+        "@testing-library/react",
+        "@types/react",
+        "@types/react-dom",
+        "@vitejs/plugin-react",
+        "autoprefixer",
+        "jsdom",
+        "postcss",
+        "storybook",
+        "tailwindcss",
+        "typescript",
+        "vite",
+        "vitest"
+      ],
+      "packageManager": "npm",
+      "hasPlaywright": false,
+      "auditScope": "fullstack"
+    }
+  },
+  "oraclesContract": {
+    "layer1Implicit": "Monitor pageerror, console.error, HTTP >= 400, and requests > 3000ms via Chrome DevTools MCP & Playwright APIRequestContext.",
+    "layer2StateDivergence": "Compare source code state machine against live DOM snapshots or REST/GraphQL payloads across views and roles.",
+    "layer3VisualAndA11y": "Verify pointer-events, scrollWidth overflow, Escape modal dismissal, and ARIA/WCAG contrast (or JSON schema invariants for API scope)."
+  },
+  "routesDiscovered": [
+    {
+      "id": "landing",
+      "route": "http://[::1]:5173",
+      "title": "/ · Landing & Entry",
+      "category": "auth"
+    },
+    {
+      "id": "login",
+      "route": "/login",
+      "title": "/login · Login",
+      "category": "auth"
+    },
+    {
+      "id": "register",
+      "route": "/register",
+      "title": "/register · Register",
+      "category": "execution"
+    },
+    {
+      "id": "forgot-password",
+      "route": "/forgot-password",
+      "title": "/forgot-password · Forgot Password",
+      "category": "auth"
+    },
+    {
+      "id": "client",
+      "route": "/client",
+      "title": "/client · Client",
+      "category": "diagnostics"
+    },
+    {
+      "id": "api-get-health",
+      "route": "GET /health",
+      "title": "GET /health · API",
+      "category": "API"
+    },
+    {
+      "id": "api-get-stats",
+      "route": "GET /stats",
+      "title": "GET /stats · API",
+      "category": "API"
+    },
+    {
+      "id": "api-get-audit-logs",
+      "route": "GET /audit-logs",
+      "title": "GET /audit-logs · API",
+      "category": "API"
+    },
+    {
+      "id": "api-get-vets-pending",
+      "route": "GET /vets/pending",
+      "title": "GET /vets/pending · API",
+      "category": "API"
+    },
+    {
+      "id": "api-patch-vets-id-approve",
+      "route": "PATCH /vets/:id/approve",
+      "title": "PATCH /vets/:id/approve · API",
+      "category": "API"
+    },
+    {
+      "id": "api-patch-vets-id-reject",
+      "route": "PATCH /vets/:id/reject",
+      "title": "PATCH /vets/:id/reject · API",
+      "category": "API"
+    }
+  ]
+}

@@ -365,28 +365,54 @@ def detect_stack_and_routes(
     if not root.exists():
         return stack_info, filter_by_scope(default_ui_routes, default_api_routes)
 
-    # 1. Inspect package.json (root or web/ or frontend/)
-    pkg_candidates = [root / "package.json", root / "web" / "package.json", root / "frontend" / "package.json"]
-    all_deps: Dict[str, str] = {}
-    for pkg_file in pkg_candidates:
+    # 1. Inspect package.json (root or web/ or frontend/ or client/ or app/ or ui/)
+    candidate_subdirs = ["", "web", "frontend", "client", "app", "ui"]
+    found_pkgs: List[Tuple[Path, Dict[str, Any], int]] = []
+    
+    for sub in candidate_subdirs:
+        pkg_file = (root / sub / "package.json") if sub else (root / "package.json")
         if pkg_file.exists():
             try:
                 pkg_data = json.loads(pkg_file.read_text(encoding="utf-8", errors="ignore"))
                 deps = pkg_data.get("dependencies", {}) or {}
                 dev_deps = pkg_data.get("devDependencies", {}) or {}
-                all_deps.update(deps)
-                all_deps.update(dev_deps)
-                stack_info["dependencies"] = sorted(list(deps.keys()))[:25]
-                stack_info["devDependencies"] = sorted(list(dev_deps.keys()))[:25]
-                break
+                combined = {**deps, **dev_deps}
+                score = 0
+                for fw in ["next", "vite", "react", "vue", "nuxt", "@angular/core", "svelte", "express", "fastify", "@nestjs/core"]:
+                    if fw in combined:
+                        score += 5
+                score += len(combined)
+                found_pkgs.append((pkg_file, pkg_data, score))
             except Exception:
                 pass
 
+    all_deps: Dict[str, str] = {}
+    if found_pkgs:
+        # Prioritize the most framework-rich package.json
+        found_pkgs.sort(key=lambda x: x[2], reverse=True)
+        best_pkg_file, best_pkg_data, _ = found_pkgs[0]
+        deps = best_pkg_data.get("dependencies", {}) or {}
+        dev_deps = best_pkg_data.get("devDependencies", {}) or {}
+        stack_info["dependencies"] = sorted(list(deps.keys()))[:25]
+        stack_info["devDependencies"] = sorted(list(dev_deps.keys()))[:25]
+        
+        for _, pdata, _ in found_pkgs:
+            all_deps.update(pdata.get("dependencies", {}) or {})
+            all_deps.update(pdata.get("devDependencies", {}) or {})
+
     dep_names = set(all_deps.keys())
+    react_ver = all_deps.get("react", "")
+    vite_ver = all_deps.get("vite", "")
+
     if "next" in dep_names:
         stack_info["framework"] = "Next.js (App/Pages Router)"
     elif "vite" in dep_names and "react" in dep_names:
-        stack_info["framework"] = "React + Vite"
+        r_clean = react_ver.lstrip("^~").split(".")[0] if react_ver else ""
+        v_clean = vite_ver.lstrip("^~").split(".")[0] if vite_ver else ""
+        if r_clean and v_clean:
+            stack_info["framework"] = f"React {r_clean} + Vite {v_clean} + TypeScript"
+        else:
+            stack_info["framework"] = "React + Vite"
     elif "react" in dep_names:
         stack_info["framework"] = "React SPA"
     elif "vue" in dep_names or "nuxt" in dep_names:

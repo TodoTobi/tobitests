@@ -1,0 +1,9 @@
+{
+  "project": "vetconnect",
+  "target_url": "http://localhost:5173",
+  "visited_routes": [
+    "http://localhost:5173"
+  ],
+  "console_errors": [],
+  "network_failures": []
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-11-10T03:12:48Z",
+  "pipelineStep": 3,
+  "orchestrator": "antigravity",
+  "auditScope": "fullstack",
+  "auditedScopes": [
+    "fullstack"
+  ],
+  "project": {
+    "id": "tobitests",
+    "name": "tobitests",
+    "url": "http://localhost:5180",
+    "repoPath": "C:\\Users\\usuario\\Documents\\tobitests",
+    "auditScope": "fullstack",
+    "stack": {
+      "framework": "Web Application (Generic SPA/SSR)",
+      "language": "TypeScript / JavaScript",
+      "dependencies": [],
+      "devDependencies": [],
+      "packageManager": "npm",
+      "hasPlaywright": false,
+      "auditScope": "fullstack"
+    }
+  },
+  "oraclesContract": {
+    "layer1Implicit": "Monitor pageerror, console.error, HTTP >= 400, and requests > 3000ms via Chrome DevTools MCP & Playwright APIRequestContext.",
+    "layer2StateDivergence": "Compare source code state machine against live DOM snapshots or REST/GraphQL payloads across views and roles.",
+    "layer3VisualAndA11y": "Verify pointer-events, scrollWidth overflow, Escape modal dismissal, and ARIA/WCAG contrast (or JSON schema invariants for API scope)."
+  },
+  "routesDiscovered": [
+    {
+      "id": "landing",
+      "route": "/",
+      "title": "/ · Landing & Entry Point",
+      "category": "auth"
+    },
+    {
+      "id": "login",
+      "route": "/login",
+      "title": "/login · Authentication & Session",
+      "category": "auth"
+    },
+    {
+      "id": "dashboard",
+      "route": "/dashboard",
+      "title": "/dashboard · Core Workspace",
+      "category": "workspace"
+    },
+    {
+      "id": "settings",
+      "route": "/settings",
+      "title": "/settings · Configuration & Profile",
+      "category": "execution"
+    },
+    {
+      "id": "api-health",
+      "route": "GET /api/health",
+      "title": "GET /api/health · API",
+      "category": "API"
+    },
+    {
+      "id": "api-state-rbac",
+      "route": "POST /api/antigravity/scope",
+      "title": "POST /api/antigravity/scope · API",
+      "category": "API"
+    },
+    {
+      "id": "api-auth-session",
+      "route": "POST /api/auth/session",
+      "title": "POST /api/auth/session · API",
+      "category": "API"
+    }
+  ]
+}

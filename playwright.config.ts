@@ -10,12 +10,12 @@ try {
   if (fs.existsSync(statePath)) {
     const raw = fs.readFileSync(statePath, 'utf8');
     const parsed = JSON.parse(raw);
-    stateUrl = parsed?.project?.url || '';
+    stateUrl = (parsed?.project?.url || '').replace('[::1]', 'localhost');
   }
 } catch (e) {}
 
 const defaultUrl = 'http://localhost:5180';
-const targetUrl = process.env.TARGET_URL || process.env.BASE_URL || stateUrl || defaultUrl;
+const targetUrl = (process.env.TARGET_URL || process.env.BASE_URL || stateUrl || defaultUrl).replace('[::1]', 'localhost');
 
 const isTobitestsDefault = (projectSlug === 'tobitests' || projectSlug === 'tobi') && targetUrl === defaultUrl;
 
@@ -41,9 +41,16 @@ export default defineConfig({
     baseURL: targetUrl,
     trace: 'retain-on-failure',
     screenshot: 'on',
+    permissions: ['camera', 'microphone'],
     video: {
       mode: 'on',
       size: { width: 1280, height: 720 },
+    },
+    launchOptions: {
+      args: [
+        '--use-fake-ui-for-media-stream',
+        '--use-fake-device-for-media-stream',
+      ],
     },
   },
   ...(isTobitestsDefault ? {

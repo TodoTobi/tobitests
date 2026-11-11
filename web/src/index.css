@@ -1074,7 +1074,8 @@ video {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-width: 0;
+  flex-shrink: 0;
+  margin-right: 12px;
   color: var(--text-muted);
   font-size: 14px;
 }
@@ -1089,8 +1090,13 @@ video {
 .app-header-actions {
   margin-left: auto;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .env-chip {
@@ -1104,6 +1110,10 @@ video {
   background: var(--bg-alt);
   font-size: 13px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .run-chip {
@@ -3845,6 +3855,63 @@ button.feature:hover {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 12px;
+}
+
+.console {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-radius: var(--radius-md, 8px);
+  padding: 6px 10px;
+  overflow: hidden;
+}
+
+.console .log-list {
+  gap: 0 !important;
+}
+
+.console .log-row {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 !important;
+  padding: 8px 10px !important;
+  color: #f1f5f9 !important;
+}
+
+.console .log-row:last-child {
+  border-bottom: none !important;
+}
+
+.console .log-time {
+  color: #94a3b8 !important;
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+}
+
+.console .log-msg {
+  color: #f8fafc !important;
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+}
+
+.console .log-msg small {
+  color: #64748b !important;
+  font-family: var(--font-body, sans-serif);
+  margin-left: 8px;
+}
+
+.panel:not(.console) .log-row {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  color: var(--text, #0f172a);
+}
+
+.panel:not(.console) .log-time {
+  color: var(--text-muted, #64748b);
+}
+
+.panel:not(.console) .log-msg {
+  color: var(--text, #0f172a);
 }
 
 .log-time {
