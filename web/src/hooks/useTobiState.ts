@@ -231,12 +231,63 @@ export interface TelemetryLog {
   source: string;
 }
 
+export type FailureCategory = 'PRODUCT_BUG' | 'SELECTOR_FRAGILITY' | 'ENV_DRIFT';
+
+export interface HealingCandidate {
+  fragileSelector: string;
+  suggestedLocator: string;
+  reason?: string;
+  confidence?: number;
+  autoHealable?: boolean;
+}
+
+export interface AgentDigestPayload {
+  schemaVersion: string;
+  generatedAt: string;
+  project: string;
+  url: string;
+  auditScope: string;
+  activeRun: string;
+  summary: {
+    passRate: string;
+    totalTests: number;
+    passed: number;
+    failed: number;
+    skipped: number;
+    openBugs: number;
+  };
+  actionableBugs: Array<{
+    id: string;
+    title: string;
+    severity: string;
+    priority: string;
+    failureCategory: FailureCategory | string;
+    file: string;
+    line: number;
+    hypothesis: string;
+    healingCandidate?: HealingCandidate | null;
+  }>;
+  healingCandidates?: Array<{
+    bugId: string;
+    spec: string;
+    fragileSelector: string;
+    suggestedLocator: string;
+    confidence: number;
+  }>;
+  untestedRoutes: string[];
+}
+
 export interface BugItem {
   id: string;
   title: string;
   severity: string;
   priority?: string;
   oracle_layer?: string;
+  failureCategory?: FailureCategory | string;
+  healingCandidate?: HealingCandidate | null;
+  autoResolved?: boolean;
+  resolvedAt?: string;
+  resolution?: string;
   status: string;
   section: string;
   runId: string;
@@ -281,9 +332,80 @@ export interface BugItem {
     recommendedFix?: string;
     impact?: string;
     badgeTone?: string;
+    failureCategory?: FailureCategory | string;
+    healingCandidate?: HealingCandidate | null;
     scopeIn?: string[];
     scopeOut?: string[];
   };
+}
+
+export function inferFailureCategory(bug?: Partial<BugItem> | null): FailureCategory {
+  if (!bug) return 'PRODUCT_BUG';
+  const explicit = String(bug.failureCategory || bug.diagnostic?.failureCategory || '').toUpperCase();
+  if (explicit === 'PRODUCT_BUG' || explicit === 'SELECTOR_FRAGILITY' || explicit === 'ENV_DRIFT') {
+    return explicit;
+  }
+  const haystack = [
+    bug.title,
+    bug.scenario,
+    bug.cuando,
+    bug.entonces,
+    bug.diagnostic?.observedFact,
+    bug.diagnostic?.whiteBoxHypothesis,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  if (
+    haystack.includes('econnrefused') ||
+    haystack.includes('err_connection') ||
+    haystack.includes('net::') ||
+    haystack.includes('server unreachable') ||
+    haystack.includes('puerto inaccesible')
+  ) {
+    return 'ENV_DRIFT';
+  }
+  if (
+    haystack.includes('selector') ||
+    haystack.includes('locator') ||
+    haystack.includes('getby') ||
+    haystack.includes('strict mode') ||
+    haystack.includes('waiting for selector') ||
+    haystack.includes('timeout exceeded')
+  ) {
+    return 'SELECTOR_FRAGILITY';
+  }
+  return 'PRODUCT_BUG';
+}
+
+export function inferHealingCandidate(bug?: Partial<BugItem> | null): HealingCandidate | null {
+  if (!bug) return null;
+  const direct = bug.healingCandidate || bug.diagnostic?.healingCandidate;
+  if (direct && direct.fragileSelector && direct.suggestedLocator) {
+    return direct;
+  }
+  const cat = inferFailureCategory(bug);
+  if (cat === 'SELECTOR_FRAGILITY') {
+    const titleLower = (bug.title || '').toLowerCase();
+    if (titleLower.includes('telemetr') || titleLower.includes('filtro')) {
+      return {
+        fragileSelector: "page.locator('.iso-feed .log-entry')",
+        suggestedLocator: "page.getByTestId('office-feed-item')",
+        reason: 'El selector por clase CSS puede perder estabilidad entre cambios visuales; usar data-testid explícito.',
+        confidence: 0.92,
+        autoHealable: true,
+      };
+    }
+    return {
+      fragileSelector: "page.locator('button.primary, .btn-submit')",
+      suggestedLocator: "page.getByRole('button', { name: /guardar|confirmar|enviar/i })",
+      reason: 'Reemplazar selector acoplado al DOM/CSS por locator semántico accesible.',
+      confidence: 0.86,
+      autoHealable: true,
+    };
+  }
+  return null;
 }
 
 export interface SpecItem {
@@ -1641,6 +1763,56 @@ Entonces ${bug.entonces}
     runLiveAudit(auditScope);
   }, [runLiveAudit, auditScope]);
 
+  const [agentDigest, setAgentDigest] = useState<AgentDigestPayload | null>(null);
+  const [isHealing, setIsHealing] = useState(false);
+  const [lastHealResult, setLastHealResult] = useState<{ healedCount: number; message: string } | null>(null);
+
+  const fetchAgentDigest = useCallback(async (projectId?: string) => {
+    const targetProj = projectId || activeProjectId || 'tobitests';
+    try {
+      const res = await fetch(`/api/agent/digest?project=${encodeURIComponent(targetProj)}`);
+      if (res.ok) {
+        const data = (await res.json()) as AgentDigestPayload;
+        if (data && data.summary) {
+          setAgentDigest(data);
+          return data;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }, [activeProjectId]);
+
+  useEffect(() => {
+    fetchAgentDigest(activeProjectId);
+  }, [activeProjectId, state.runs?.length, state.bugs?.length, fetchAgentDigest]);
+
+  const triggerSelfHeal = useCallback(async (apply = true) => {
+    setIsHealing(true);
+    try {
+      const res = await fetch('/api/agent/heal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: activeProjectId, apply }),
+      });
+      const json = await res.json();
+      const inner = json?.result || {};
+      const healedCount = Number(inner.healed_count ?? inner.healedCount ?? (inner.healedFiles?.length || 0));
+      const msg =
+        healedCount > 0
+          ? `Self-healing aplicado: ${healedCount} selector${healedCount === 1 ? '' : 'es'} estabilizado${healedCount === 1 ? '' : 's'}.`
+          : inner.message || 'Escaneo de locators completado sin selectores frágiles pendientes de escritura.';
+      setLastHealResult({ healedCount, message: msg });
+      await fetchAgentDigest(activeProjectId);
+      return { ok: Boolean(json?.ok), healedCount, message: msg, result: inner };
+    } catch (err) {
+      const msg = `No se pudo ejecutar auto-heal: ${String(err)}`;
+      setLastHealResult({ healedCount: 0, message: msg });
+      return { ok: false, healedCount: 0, message: msg };
+    } finally {
+      setIsHealing(false);
+    }
+  }, [activeProjectId, fetchAgentDigest]);
+
   const displayOfficeAgents: OfficeAgent[] = useMemo(() => {
     const primaryEngine = SUPPORTED_AGENT_ENGINES[orchestrationConfig.primaryAgent] || SUPPORTED_AGENT_ENGINES.antigravity;
     const secondaryId = orchestrationConfig.secondaryAgent;
@@ -1717,6 +1889,13 @@ Entonces ${bug.entonces}
     SUPPORTED_AGENT_ENGINES,
     deletedProjects,
     restoreDefaultProjects,
+    agentDigest,
+    isHealing,
+    lastHealResult,
+    fetchAgentDigest,
+    triggerSelfHeal,
+    inferFailureCategory,
+    inferHealingCandidate,
   };
 }
 

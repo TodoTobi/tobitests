@@ -11,6 +11,8 @@ import pytest
 
 # (a) sys.path.insert(0, <raíz>/scripts)
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 
@@ -115,6 +117,8 @@ def isolated_scripts(tmp_path):
             self.sync = _load_module_from_file(f"sync_specs_iso_{tmp_path.name}", scripts_dest / "sync_specs.py")
             if (scripts_dest / "run_deep_audit.py").exists():
                 self.deep_audit = _load_module_from_file(f"run_deep_audit_iso_{tmp_path.name}", scripts_dest / "run_deep_audit.py")
+            if (scripts_dest / "tobitests_mcp.py").exists():
+                self.mcp = _load_module_from_file(f"tobitests_mcp_iso_{tmp_path.name}", scripts_dest / "tobitests_mcp.py")
 
         def __getitem__(self, item: str):
             if item in ("cli", "tobitests_cli"):

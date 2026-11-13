@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { AuditScope } from "../hooks/useTobiState";
+import { inferFailureCategory, inferHealingCandidate, type AuditScope } from "../hooks/useTobiState";
 
 export interface TestStep {
   step?: number;
@@ -51,15 +51,17 @@ interface TestDetailModalProps {
   onClose: () => void;
   onRunTest?: (test: TestCaseItem) => void;
   onCreateBug?: (test: TestCaseItem) => void;
+  onTriggerSelfHeal?: () => void;
   bugs?: any[];
   auditScope?: AuditScope;
   runs?: any[];
   projectUrl?: string;
 }
 
-export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, auditScope, runs = [], projectUrl }: TestDetailModalProps) {
+export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, onTriggerSelfHeal, bugs, auditScope, runs = [], projectUrl }: TestDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"preview" | "code" | "log" | "history">("preview");
-  const [diagTab, setDiagTab] = useState<"error" | "cause" | "fix">("error");
+  const [diagTab, setDiagTab] = useState<"error" | "cause" | "fix" | "heal">("error");
+  const [copiedMcp, setCopiedMcp] = useState(false);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -121,6 +123,32 @@ export function TestDetailModal({ test, onClose, onRunTest, onCreateBug, bugs, a
   const moduleLabel = currentTest.spec.replace("vetconnect-", "").replace("tobitests-", "").replace(".spec.ts", "").toUpperCase();
   const projectName = isTobi ? "TobiTests" : "VetConnect";
 
+  const failureCategory = existingBug
+    ? inferFailureCategory(existingBug)
+    : inferFailureCategory({
+        title: currentTest.name,
+        entonces: failedStep?.actual || "",
+        cuando: failedStep?.target || "",
+      });
+  const healingCandidate = existingBug
+    ? inferHealingCandidate(existingBug)
+    : isFailed && failureCategory === "SELECTOR_FRAGILITY"
+    ? {
+        fragileSelector: failedStep?.target || "page.locator('.fragile-selector')",
+        suggestedLocator: "page.getByTestId('target-element')",
+        reason: "Selector acoplado al DOM/CSS; se recomienda locator semántico por testid o role.",
+        confidence: 0.88,
+        autoHealable: true,
+      }
+    : null;
+
+  const handleCopyMcpCommand = () => {
+    const cmd = `python scripts/tobitests_mcp.py --call-tool tobitests_heal_selectors --args '{"project":"${isTobi ? "tobitests" : "vetconnect"}","apply":true}'`;
+    navigator.clipboard?.writeText(cmd);
+    setCopiedMcp(true);
+    setTimeout(() => setCopiedMcp(false), 2000);
+  };
+
   const historyRuns = (runs || []).filter((r: any) =>
     (r.tests || []).some((t: any) => t.name === currentTest.name || t.spec === currentTest.spec) || runs.length <= 1
   );
@@ -176,6 +204,18 @@ Proponé el cambio de código exacto respetando la arquitectura del proyecto.`;
                 <span className="pill-dot" />
                 {isFailed ? "Con Hallazgo" : "Aprobado"}
               </span>
+              {isFailed && (
+                <span className={`failure-pill ${failureCategory.toLowerCase().replace("_", "-")}`}>
+                  {failureCategory === "PRODUCT_BUG"
+                    ? "Bug de Producto"
+                    : failureCategory === "SELECTOR_FRAGILITY"
+                    ? "Selector Frágil"
+                    : "Entorno / Red"}
+                </span>
+              )}
+              {existingBug?.oracle_layer && (
+                <span className="module-badge">{existingBug.oracle_layer}</span>
+              )}
             </div>
           </div>
 
@@ -676,6 +716,13 @@ ${steps.map((s, idx) => `    // Paso ${idx + 1}: ${s.action} (${s.duration})
                   >
                     Solución Sugerida
                   </button>
+                  <button
+                    type="button"
+                    className={`analysis-tab ${diagTab === "heal" ? "active" : ""}`}
+                    onClick={() => setDiagTab("heal")}
+                  >
+                    Auto-Heal & MCP
+                  </button>
                 </div>
 
                 <button
@@ -747,7 +794,7 @@ ${steps.map((s, idx) => `    // Paso ${idx + 1}: ${s.action} (${s.duration})
                       </code>
                     </div>
                   </div>
-                ) : (
+                ) : diagTab === "fix" ? (
                   <div className="analysis-fix-box">
                     <div className="fix-title">Plan de mitigación recomendado:</div>
                     <p className="fix-text">
@@ -756,6 +803,63 @@ ${steps.map((s, idx) => `    // Paso ${idx + 1}: ${s.action} (${s.duration})
                           ? "1. Emitir un evento global o invalidación de query tras confirmar la acción.\n2. Asegurar que las vistas compartan la misma fuente de verdad (Single Source of Truth).\n3. Re-ejecutar el spec con Playwright para verificar la regresión en verde."
                           : "No se requieren acciones correctivas. Mantener la suite incluida en la integración continua (CI).")}
                     </p>
+                  </div>
+                ) : (
+                  <div className="heal-diff-card">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span className={`failure-pill ${failureCategory.toLowerCase().replace("_", "-")}`}>
+                          {failureCategory}
+                        </span>
+                        {healingCandidate?.confidence && (
+                          <span className="module-badge">
+                            Confianza {Math.round(healingCandidate.confidence * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          className="btn-copy-fix-prompt"
+                          onClick={handleCopyMcpCommand}
+                        >
+                          {copiedMcp ? "✓ Comando MCP copiado" : "Copiar MCP tobitests_heal_selectors"}
+                        </button>
+                        {onTriggerSelfHeal && (
+                          <button
+                            type="button"
+                            className="btn-run-test-primary"
+                            style={{ padding: "5px 12px", fontSize: 12 }}
+                            onClick={onTriggerSelfHeal}
+                          >
+                            Aplicar Auto-Heal en Spec
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {healingCandidate ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <div className="heal-line-remove">
+                          <span>- FRÁGIL:</span>
+                          <code>{healingCandidate.fragileSelector}</code>
+                        </div>
+                        <div className="heal-line-add">
+                          <span>+ SEMÁNTICO:</span>
+                          <code>{healingCandidate.suggestedLocator}</code>
+                        </div>
+                        {healingCandidate.reason && (
+                          <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-secondary)" }}>
+                            {healingCandidate.reason}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p style={{ margin: 0, fontSize: 12.5, color: "var(--text-secondary)" }}>
+                        {isFailed
+                          ? "Este hallazgo está clasificado como falla funcional o de entorno (no es un selector frágil). Usá `tobitests_get_digest` desde tu agente para aplicar el fix mínimo en el código fuente."
+                          : "Este test pasó con locators estables. No requiere self-healing."}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

@@ -22,13 +22,20 @@ def state_path(repo_root: Path, slug: str) -> Path:
     return repo_root / "web" / "public" / "data" / f"{slug}-state.json"
 
 
-def atomic_write_json(path: Path, payload: Dict[str, Any]) -> None:
-    """Escritura atómica de JSON mediante archivo temporal en el mismo directorio + os.replace."""
+def atomic_write_json(path: Path, payload: Dict[str, Any], retries: int = 6, delay: float = 0.05) -> None:
+    """Escritura atómica de JSON mediante archivo temporal en el mismo directorio + os.replace con reintentos en Windows."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = path.parent / f"{path.name}.tmp.{os.getpid()}"
+    tmp_path = path.parent / f".{path.name}.{os.getpid()}.{time.time_ns()}.tmp"
     try:
         tmp_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        os.replace(tmp_path, path)
+        for attempt in range(retries):
+            try:
+                os.replace(tmp_path, path)
+                break
+            except PermissionError:
+                if attempt == retries - 1:
+                    raise
+                time.sleep(delay * (attempt + 1))
     except Exception:
         if tmp_path.exists():
             try:

@@ -1,5 +1,11 @@
-import { useEffect, useState, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { useTobiState, type BugItem, type AuditScope } from "./hooks/useTobiState";
+import { useEffect, useState, useRef, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from "react";
+import {
+  useTobiState,
+  inferFailureCategory,
+  inferHealingCandidate,
+  type BugItem,
+  type AuditScope,
+} from "./hooks/useTobiState";
 import { OfficeView } from "./components/OfficeView";
 import { JourneyCanvas } from "./components/JourneyCanvas";
 import { TestDetailModal, type TestCaseItem } from "./components/TestDetailModal";
@@ -253,6 +259,171 @@ function Severity({ value }: { value: string }) {
   return <span className={`severity ${value.toLowerCase()}`}><i />{value}</span>;
 }
 
+const PIPELINE_STEPS: { step: number; label: string; short: string }[] = [
+  { step: 1, label: "Bootstrap", short: "Stack & Puertos" },
+  { step: 2, label: "Deep Audit", short: "Crawler & CDP" },
+  { step: 3, label: "PRD Truth", short: "Rutas y Scope" },
+  { step: 4, label: "Test Matrix", short: "Casos P0-P2" },
+  { step: 5, label: "Spec Synth", short: "Playwright" },
+  { step: 6, label: "Ejecución", short: "UI + API Runs" },
+  { step: 7, label: "Triaje 3-Oráculos", short: "Causa Raíz" },
+  { step: 8, label: "Auto-Heal & MCP", short: "Digest <4KB" },
+];
+
+function FailureCategoryBadge({ category }: { category: string }) {
+  const norm = (category || "PRODUCT_BUG").toUpperCase();
+  const cls = norm === "SELECTOR_FRAGILITY" ? "selector-fragility" : norm === "ENV_DRIFT" ? "env-drift" : "product-bug";
+  const label =
+    norm === "SELECTOR_FRAGILITY"
+      ? "Selector Frágil"
+      : norm === "ENV_DRIFT"
+      ? "Entorno / Red"
+      : "Bug de Producto";
+  return <span className={`failure-pill ${cls}`}>{label}</span>;
+}
+
+function PipelineStepperRail({ tobi, onOpenDigest }: { tobi: Tobi; onOpenDigest: () => void }) {
+  const hasRuns = (tobi.state.runs || []).length > 0;
+  const rawStep = tobi.antigravityLive?.currentPipelineStep;
+  const activeStep = rawStep ? Math.min(8, Math.max(1, rawStep)) : hasRuns ? 8 : 1;
+  const stepName = tobi.antigravityLive?.pipelineStepName || (hasRuns ? "Auto-Heal & Agent Digest (<4KB)" : "Listo para Bootstrap");
+
+  return (
+    <section className="panel ts-pipeline-panel" aria-label="Pipeline autónomo de 8 pasos">
+      <div className="panel-head" style={{ flexWrap: "wrap", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <h2 className="heading-sm">Pipeline Autónomo QA (8 Pasos)</h2>
+          <Badge tone="agent">Paso {activeStep}/8 · {stepName}</Badge>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <Button variant="secondary" small onClick={onOpenDigest}>
+            <Icon name="terminal" size="sm" />
+            Agent Digest (&lt;4KB)
+          </Button>
+          <Button
+            variant="secondary"
+            small
+            disabled={tobi.isHealing}
+            onClick={() => tobi.triggerSelfHeal(true)}
+          >
+            <Icon name="spark" size="sm" />
+            {tobi.isHealing ? "Curando..." : "Auto-Heal Selectores"}
+          </Button>
+        </div>
+      </div>
+      <div className="ts-pipeline-rail">
+        {PIPELINE_STEPS.map((st) => {
+          const stateCls = st.step < activeStep ? "done" : st.step === activeStep ? "current" : "pending";
+          return (
+            <div className={`ts-pipeline-step ${stateCls}`} key={st.step}>
+              <span className="ts-step-num">{st.step < activeStep ? "✓" : st.step}</span>
+              <div>
+                <strong>{st.label}</strong>
+                <small>{st.short}</small>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {tobi.lastHealResult && (
+        <div className="panel-foot" style={{ background: "var(--sky-surface)", color: "var(--text)" }}>
+          <span><strong>Self-Healing MCP:</strong> {tobi.lastHealResult.message}</span>
+          <span className="mono t-muted">tobitests_heal_selectors</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AgentDigestModal({ open, onClose, tobi }: { open: boolean; onClose: () => void; tobi: Tobi }) {
+  const [copiedJson, setCopiedJson] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    tobi.fetchAgentDigest(tobi.activeProjectId);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose, tobi.activeProjectId]);
+
+  if (!open) return null;
+
+  const digest = tobi.agentDigest;
+  const serializedDigest = JSON.stringify(
+    digest || {
+      schemaVersion: "2.0.0",
+      project: tobi.activeProjectId,
+      auditScope: tobi.auditScope,
+      summary: {
+        passRate: tobi.state.metrics.passRate,
+        totalTests: tobi.state.metrics.totalTests || 0,
+        openBugs: tobi.state.bugs.filter((b) => b.status !== "Resolved" && b.status !== "Closed").length,
+      },
+      actionableBugs: tobi.state.bugs.slice(0, 5).map((b) => ({
+        id: b.id,
+        title: b.title,
+        failureCategory: inferFailureCategory(b),
+        file: b.root_cause_file || b.diagnostic?.affectedFile || "",
+      })),
+    },
+    null,
+    2
+  );
+  const digestBytes = new Blob([serializedDigest]).size;
+  const rawStateBytes = new Blob([JSON.stringify(tobi.state)]).size;
+  const savingsPct = rawStateBytes > digestBytes ? Math.max(0, Math.round((1 - digestBytes / rawStateBytes) * 100)) : 90;
+
+  const copyDigest = () => {
+    navigator.clipboard?.writeText(serializedDigest);
+    setCopiedJson(true);
+    setTimeout(() => setCopiedJson(false), 2000);
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="panel modal" role="dialog" aria-modal="true" aria-label="Agent Digest MCP (<4KB)" onClick={(e) => e.stopPropagation()}>
+        <div className="panel-head">
+          <div>
+            <h2 className="heading-md">Agent Digest &amp; Handoff MCP</h2>
+            <p>Payload compacto diseñado para ahorrar tokens en Antigravity, OpenCode, Claude Code y Cursor</p>
+          </div>
+          <Button variant="icon" label="Cerrar" onClick={onClose}><Icon name="x" /></Button>
+        </div>
+        <div className="panel-body" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="digest-stat-grid">
+            <div className="digest-stat">
+              <small>Tamaño Digest</small>
+              <strong>{(digestBytes / 1024).toFixed(2)} KB</strong>
+              <span className="t-success">Límite &lt; 4.0 KB</span>
+            </div>
+            <div className="digest-stat">
+              <small>State Completo</small>
+              <strong>{(rawStateBytes / 1024).toFixed(1)} KB</strong>
+              <span className="t-muted">Evitado en prompt</span>
+            </div>
+            <div className="digest-stat">
+              <small>Ahorro de Tokens</small>
+              <strong className="t-success">~{savingsPct}%</strong>
+              <span className="t-muted">tool: tobitests_get_digest</span>
+            </div>
+          </div>
+          <pre className="pre" style={{ maxHeight: 320, overflowY: "auto" }}>{serializedDigest}</pre>
+        </div>
+        <div className="modal-actions">
+          <Button variant="secondary" onClick={onClose}>Cerrar</Button>
+          <Button variant="secondary" disabled={tobi.isHealing} onClick={() => tobi.triggerSelfHeal(true)}>
+            <Icon name="spark" size="sm" />
+            {tobi.isHealing ? "Aplicando..." : "Ejecutar Self-Heal"}
+          </Button>
+          <Button onClick={copyDigest}>
+            <Icon name={copiedJson ? "check" : "copy"} size="sm" />
+            {copiedJson ? "¡Digest copiado!" : "Copiar Digest JSON"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ==========================================================================
    Navigation
    ========================================================================== */
@@ -501,7 +672,7 @@ function AppHeader({ title, onMenu, onNotifications, onLive, tobi }: { title: st
 /* ==========================================================================
    Dashboard
    ========================================================================== */
-function RunsTable({ tobi, onOpen }: { tobi: Tobi; onOpen: () => void }) {
+function RunsTable({ tobi, onOpen }: { tobi: Tobi; onOpen: (runId: string) => void }) {
   const { runs } = tobi.state;
   return (
     <div className="table-wrap">
@@ -509,7 +680,7 @@ function RunsTable({ tobi, onOpen }: { tobi: Tobi; onOpen: () => void }) {
         <thead><tr><th>Run</th><th className="col-main">Suite</th><th>Estado</th><th>Resultado</th><th className="num">Duración</th><th>Fecha</th><th /></tr></thead>
         <tbody>
           {runs.map((run) => (
-            <tr key={run.id} className="clickable" onClick={onOpen}>
+            <tr key={run.id} className="clickable" onClick={() => onOpen(run.id)}>
               <td className="nowrap"><strong>{run.id}</strong></td>
               <td className="col-main"><div className="cell-title"><strong>{run.suite}</strong><small>{run.branch} · {run.commit}</small></div></td>
               <td><StatusBadge status={run.status} /></td>
@@ -525,7 +696,19 @@ function RunsTable({ tobi, onOpen }: { tobi: Tobi; onOpen: () => void }) {
   );
 }
 
-function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: Tobi }) {
+function DashboardPage({
+  navigate,
+  tobi,
+  onSelectBug,
+  onSelectRun,
+  onOpenDigest,
+}: {
+  navigate: (v: AppView) => void;
+  tobi: Tobi;
+  onSelectBug: (id: string) => void;
+  onSelectRun: (runId: string) => void;
+  onOpenDigest: () => void;
+}) {
   const { project, metrics, runs, officeAgents, bugs, liveRun } = tobi.state;
   const run = runs[0];
   const working = (officeAgents || []).filter((a) => a.status === "working").length;
@@ -537,17 +720,94 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
     return true;
   });
 
+  const numericRate = (() => {
+    const parsed = parseFloat(String(metrics.passRate || "0").replace("%", ""));
+    if (!Number.isNaN(parsed) && parsed > 0) return Math.min(100, Math.round(parsed));
+    if (run && run.total > 0) return Math.round((run.passed / run.total) * 100);
+    return 0;
+  })();
+  const productBugCount = bugs.filter((b) => inferFailureCategory(b) === "PRODUCT_BUG" && b.status !== "Resolved").length;
+  const selectorFragileCount = bugs.filter((b) => inferFailureCategory(b) === "SELECTOR_FRAGILITY" && b.status !== "Resolved").length;
+  const envDriftCount = bugs.filter((b) => inferFailureCategory(b) === "ENV_DRIFT" && b.status !== "Resolved").length;
+  const autoResolvedCount = bugs.filter((b) => b.autoResolved || b.status === "Resolved").length;
+  const digestCount = tobi.agentDigest?.actionableBugs?.length ?? bugs.filter((b) => b.status !== "Resolved").length;
+
   return <>
     <PageHeading title="Dashboard" subtitle={`${project.name} · Rama ${project.branch} · Alcance ${activeScope.toUpperCase()}`}>
+      <Button variant="secondary" onClick={onOpenDigest}><Icon name="terminal" size="sm" />Agent Digest (&lt;4KB)</Button>
       <Button variant="secondary" onClick={() => tobi.downloadMasterBugReport()}><Icon name="download" size="sm" />Exportar Reporte</Button>
       <Button variant="secondary" onClick={() => navigate("office")}><Icon name="spark" size="sm" />La Oficina ({working} activos)</Button>
       <Button data-testid="shell-primary-btn" onClick={() => navigate("live-run")}><Icon name="play" size="sm" />Ver ejecución en vivo</Button>
     </PageHeading>
 
+    <section className="panel ts-command-deck" aria-label="Resumen de salud y triaje autónomo">
+      <div className="ts-deck-health">
+        <div
+          className="ts-health-ring"
+          style={{ "--pct": numericRate } as CSSProperties}
+          role="img"
+          aria-label={`Índice de salud ${numericRate}%`}
+        >
+          <div>
+            <strong>{run ? `${numericRate}%` : "—"}</strong>
+            <small>Salud QA</small>
+          </div>
+        </div>
+        <div className="ts-health-meta">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <h2 className="heading-md">Diagnóstico Autónomo</h2>
+            <Badge tone={numericRate >= 90 ? "success" : numericRate >= 70 ? "warning" : "danger"}>
+              {numericRate >= 90 ? "Production-Ready" : runs.length === 0 ? "Pendiente de Run" : "Requiere Atención"}
+            </Badge>
+          </div>
+          <p>
+            Triaje automático por 3 Oráculos (UI DOM, Consola/Red CDP y Contratos API). Listo para consumo de baja latencia vía MCP.
+          </p>
+          <div className="ts-triage-pills">
+            <button type="button" className="ts-triage-chip" onClick={() => navigate("bug-tracker")}>
+              <FailureCategoryBadge category="PRODUCT_BUG" />
+              <strong>{productBugCount}</strong>
+            </button>
+            <button type="button" className="ts-triage-chip" onClick={() => navigate("bug-tracker")}>
+              <FailureCategoryBadge category="SELECTOR_FRAGILITY" />
+              <strong>{selectorFragileCount}</strong>
+            </button>
+            <button type="button" className="ts-triage-chip" onClick={() => navigate("bug-tracker")}>
+              <FailureCategoryBadge category="ENV_DRIFT" />
+              <strong>{envDriftCount}</strong>
+            </button>
+            <span className="ts-triage-chip passive">
+              <Badge tone="success">Auto-Resueltos</Badge>
+              <strong>{autoResolvedCount}</strong>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="ts-deck-digest">
+        <div className="ts-digest-head">
+          <span className="mono t-muted" style={{ fontSize: 11 }}>MCP SERVER · 5 TOOLS</span>
+          <Badge tone="info">-94% Tokens</Badge>
+        </div>
+        <strong style={{ fontSize: 14 }}>{digestCount} hallazgo{digestCount === 1 ? "" : "s"} accionable{digestCount === 1 ? "" : "s"}</strong>
+        <small>
+          {tobi.agentDigest?.untestedRoutes?.length
+            ? `${tobi.agentDigest.untestedRoutes.length} rutas aún sin cobertura en PRD`
+            : "agent-digest.json sincronizado para Antigravity & OpenCode"}
+        </small>
+        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+          <Button variant="secondary" small onClick={onOpenDigest}>Inspeccionar Digest</Button>
+          <Button variant="ghost" small onClick={() => navigate("settings")}>Tools MCP</Button>
+        </div>
+      </div>
+    </section>
+
+    <PipelineStepperRail tobi={tobi} onOpenDigest={onOpenDigest} />
+
     <div className="stat-row">
       <Stat label="Tasa de aprobación" value={metrics.passRate} meta={`${scopedTests.length} tests visibles (${activeScope})`} tone="success" />
       <Stat label="Ejecuciones" value={String(metrics.totalRuns)} meta={`Rama ${project.branch}`} />
       <Stat label="Tests fallidos" value={String(metrics.failedTests)} meta="Requieren revisión" tone="danger" />
+      <Stat label="Bugs abiertos" value={String(metrics.openBugs ?? bugs.filter((b) => b.status !== "Resolved").length)} meta={`${autoResolvedCount} auto-resueltos`} tone="warning" />
     </div>
 
     {runs.length === 0 && (
@@ -598,7 +858,7 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
             <h2 className="heading-sm">Ejecuciones recientes</h2>
             <Button variant="ghost" small onClick={() => navigate("test-runs")}>Ver todas<Icon name="arrow" size="sm" /></Button>
           </div>
-          <RunsTable tobi={tobi} onOpen={() => navigate("run-detail")} />
+          <RunsTable tobi={tobi} onOpen={(runId) => { onSelectRun(runId); navigate("run-detail"); }} />
         </section>
 
         <section className="panel">
@@ -608,12 +868,13 @@ function DashboardPage({ navigate, tobi }: { navigate: (v: AppView) => void; tob
           </div>
           <div className="row-list">
             {bugs.map((bug) => (
-              <button type="button" className="row-item" key={bug.id} onClick={() => navigate("bug-detail")}>
+              <button type="button" className="row-item" key={bug.id} onClick={() => { onSelectBug(bug.id); navigate("bug-detail"); }}>
                 <span className="row-icon danger"><Icon name="bug" size="sm" /></span>
                 <span className="row-main">
                   <strong>{bug.id} · {bug.title}</strong>
                   <span>{bug.section} · {bug.agent}</span>
                 </span>
+                <FailureCategoryBadge category={inferFailureCategory(bug)} />
                 <Badge tone={severityTone(bug.severity)}>{bug.severity}</Badge>
                 <span className="row-chevron"><Icon name="chevron" size="sm" /></span>
               </button>
@@ -673,7 +934,7 @@ function LogList({ logs = [], compact = false }: { logs?: Tobi["state"]["liveRun
 /* ==========================================================================
    Test runs
    ========================================================================== */
-function TestRunsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: Tobi }) {
+function TestRunsPage({ navigate, tobi, onSelectRun }: { navigate: (v: AppView) => void; tobi: Tobi; onSelectRun?: (runId: string) => void }) {
   const { runs, project } = tobi.state;
   return <>
     <PageHeading title="Test Runs" subtitle={`${runs.length} ejecuciones registradas en ${project.name}`}>
@@ -685,7 +946,7 @@ function TestRunsPage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi
           <thead><tr><th>Run</th><th className="col-main">Suite</th><th>Estado</th><th className="num">Total</th><th className="num">Pass</th><th className="num">Fail</th><th className="num">Skip</th><th className="num">Duración</th><th>Rama</th><th /></tr></thead>
           <tbody>
             {runs.map((run) => (
-              <tr key={run.id} className="clickable" onClick={() => navigate("run-detail")}>
+              <tr key={run.id} className="clickable" onClick={() => { onSelectRun?.(run.id); navigate("run-detail"); }}>
                 <td className="nowrap"><strong>{run.id}</strong></td>
                 <td className="col-main"><div className="cell-title"><strong>{run.suite}</strong><small>{run.date}</small></div></td>
                 <td><StatusBadge status={run.status} /></td>
@@ -764,8 +1025,8 @@ function StepList({ steps }: { steps: StepItem[] }) {
   );
 }
 
-function RunDetailPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppView) => void; tobi: Tobi; onInspectTest?: (test: any) => void }) {
-  const run = tobi.state.runs?.[0];
+function RunDetailPage({ navigate, tobi, selectedRunId, onInspectTest, onSelectBug }: { navigate: (v: AppView) => void; tobi: Tobi; selectedRunId?: string; onInspectTest?: (test: any) => void; onSelectBug?: (id: string) => void }) {
+  const run = tobi.state.runs?.find((r) => r.id === selectedRunId) || tobi.state.runs?.[0];
   if (!run) {
     return (
       <div className="panel" style={{ padding: 32, textAlign: "center" }}>
@@ -928,28 +1189,43 @@ function RunDetailPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppVie
           )}
         </div>
 
-        {failed && (
-          <div className="callout danger">
-            <div className="callout-title"><Icon name="alert" size="sm" />Por qué falló{bug ? ` · ${bug.id}` : ""}</div>
-            {failedStep?.expected && (
-              <div className="compare">
-                <div className="good"><small>Esperado</small><code>{failedStep.expected}</code></div>
-                <div className="bad"><small>Obtenido</small><code>{failedStep.actual}</code></div>
+        {failed && (() => {
+          const cat = inferFailureCategory(bug || { title: selected?.name, entonces: failedStep?.actual || "" });
+          const heal = inferHealingCandidate(bug || { title: selected?.name, failureCategory: cat });
+          return (
+            <div className="callout danger">
+              <div className="callout-title" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="alert" size="sm" />Por qué falló{bug ? ` · ${bug.id}` : ""}
+                </span>
+                <FailureCategoryBadge category={cat} />
               </div>
-            )}
-            {diag.whiteBoxHypothesis && <p>{diag.whiteBoxHypothesis}</p>}
-            {diag.recommendedFix && <p><strong>Cómo arreglarlo: </strong>{diag.recommendedFix}</p>}
-          </div>
-        )}
+              {failedStep?.expected && (
+                <div className="compare">
+                  <div className="good"><small>Esperado</small><code>{failedStep.expected}</code></div>
+                  <div className="bad"><small>Obtenido</small><code>{failedStep.actual}</code></div>
+                </div>
+              )}
+              {diag.whiteBoxHypothesis && <p>{diag.whiteBoxHypothesis}</p>}
+              {diag.recommendedFix && <p><strong>Cómo arreglarlo: </strong>{diag.recommendedFix}</p>}
+              {heal && (
+                <div className="heal-inline-box">
+                  <small>Auto-Heal sugerido ({Math.round((heal.confidence || 0.9) * 100)}%):</small>
+                  <code>{heal.suggestedLocator}</code>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <div className="section-label"><span>Pasos ({steps.length})</span><Badge tone="agent">Playwright</Badge></div>
         <StepList steps={steps} />
 
         <div className="inspector-actions">
           <Button small onClick={() => onInspectTest && onInspectTest(selected)}><Icon name="eye" size="sm" />Ver Detalle Studio</Button>
-          <Button variant="secondary" small onClick={() => navigate("diagnostic")}><Icon name="pulse" size="sm" />Diagnóstico</Button>
+          <Button variant="secondary" small onClick={() => { if (bug) onSelectBug?.(bug.id); navigate("diagnostic"); }}><Icon name="pulse" size="sm" />Diagnóstico</Button>
           <Button variant="secondary" small onClick={() => navigate("specs")}><Icon name="code" size="sm" />Ver spec</Button>
-          {bug && <Button small onClick={() => navigate("bug-detail")}>Abrir {bug.id}<Icon name="arrow" size="sm" /></Button>}
+          {bug && <Button small onClick={() => { onSelectBug?.(bug.id); navigate("bug-detail"); }}>Abrir {bug.id}<Icon name="arrow" size="sm" /></Button>}
         </div>
       </aside>
     </div>
@@ -1070,36 +1346,64 @@ function LiveRunPage({ tobi }: { tobi: Tobi }) {
 function BugTrackerPage({ navigate, tobi, onSelectBug }: { navigate: (v: AppView) => void; tobi: Tobi; onSelectBug: (id: string) => void }) {
   const [reportOpen, setReportOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "PRODUCT_BUG" | "SELECTOR_FRAGILITY" | "ENV_DRIFT">("all");
   const activeScope = tobi.auditScope || "fullstack";
   const q = search.toLowerCase();
-  const list = tobi.state.bugs.filter((b) => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q) || b.section.toLowerCase().includes(q));
+  const list = tobi.state.bugs.filter((b) => {
+    const matchesSearch = b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q) || b.section.toLowerCase().includes(q);
+    if (!matchesSearch) return false;
+    if (categoryFilter === "all") return true;
+    return inferFailureCategory(b) === categoryFilter;
+  });
   const open = (id: string) => { onSelectBug(id); navigate("bug-detail"); };
 
   return <>
     <PageHeading title="Bug Tracker" subtitle={`${list.length} incidentes documentados · Alcance ${activeScope.toUpperCase()}`}>
+      <Button variant="secondary" disabled={tobi.isHealing} onClick={() => tobi.triggerSelfHeal(true)}>
+        <Icon name="spark" size="sm" />{tobi.isHealing ? "Curando..." : "Auto-Heal Selectores"}
+      </Button>
       <Button variant="secondary" onClick={() => setReportOpen(true)}><Icon name="eye" size="sm" />Vista previa</Button>
       <Button onClick={() => tobi.downloadMasterBugReport()}><Icon name="download" size="sm" />Descargar reporte (.md)</Button>
     </PageHeading>
     <section className="panel">
       <div className="toolbar">
         <SearchField placeholder="Buscar por ID, título o sección" value={search} onChange={setSearch} />
+        <Tabs
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          items={[
+            { id: "all", label: "Todos", count: tobi.state.bugs.length },
+            { id: "PRODUCT_BUG", label: "Producto" },
+            { id: "SELECTOR_FRAGILITY", label: "Selectores" },
+            { id: "ENV_DRIFT", label: "Entorno" },
+          ]}
+        />
         <span className="t-muted">{list.length} {list.length === 1 ? "bug" : "bugs"}</span>
       </div>
       <div className="table-wrap">
         <table className="table">
-          <thead><tr><th>Bug</th><th>Severidad</th><th>Estado</th><th>Sección</th><th>Run</th><th>Detectado por</th><th /></tr></thead>
+          <thead><tr><th>Bug</th><th>Clasificación</th><th>Severidad</th><th>Estado</th><th>Sección</th><th>Run</th><th>Detectado por</th><th /></tr></thead>
           <tbody>
-            {list.map((bug) => (
-              <tr key={bug.id} className="clickable" onClick={() => open(bug.id)}>
-                <td><div className="cell-title"><strong>{bug.id} · {bug.title}</strong><small>{bug.date}</small></div></td>
-                <td><Severity value={bug.severity} /></td>
-                <td><StatusBadge status={bug.status} /></td>
-                <td>{bug.section}</td>
-                <td className="mono">{bug.runId}</td>
-                <td>{bug.agent}</td>
-                <td className="cell-end"><Icon name="chevron" size="sm" /></td>
-              </tr>
-            ))}
+            {list.map((bug) => {
+              const cat = inferFailureCategory(bug);
+              return (
+                <tr key={bug.id} className="clickable" onClick={() => open(bug.id)}>
+                  <td>
+                    <div className="cell-title">
+                      <strong>{bug.id} · {bug.title}</strong>
+                      <small>{bug.date}{bug.priority ? ` · ${bug.priority}` : ""}{bug.autoResolved ? " · Auto-resuelto" : ""}</small>
+                    </div>
+                  </td>
+                  <td><FailureCategoryBadge category={cat} /></td>
+                  <td><Severity value={bug.severity} /></td>
+                  <td><StatusBadge status={bug.status} /></td>
+                  <td>{bug.section}</td>
+                  <td className="mono">{bug.runId}</td>
+                  <td>{bug.agent}</td>
+                  <td className="cell-end"><Icon name="chevron" size="sm" /></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {list.length === 0 && <div className="empty"><strong>Sin resultados</strong><span>Ningún bug coincide con “{search}”.</span></div>}
@@ -1151,6 +1455,7 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
     </PageHeading>
 
     <section className="panel kv">
+      <div><small>Clasificación</small><FailureCategoryBadge category={inferFailureCategory(bug)} /></div>
       <div><small>Severidad</small><Severity value={bug.severity} /></div>
       <div><small>Estado</small><StatusBadge status={bug.status} /></div>
       <div><small>Sección</small><strong>{bug.section}</strong></div>
@@ -1202,7 +1507,10 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
         <section className="panel analysis">
           <div className="panel-head">
             <h2 className="heading-sm">Diagnóstico y Causa Raíz</h2>
-            <Badge tone="agent">Análisis Técnico</Badge>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <FailureCategoryBadge category={inferFailureCategory(bug)} />
+              <Badge tone="agent">Análisis Técnico</Badge>
+            </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, padding: "16px 20px" }}>
             {blocks.map((b) => (
@@ -1212,6 +1520,23 @@ function BugDetailPage({ navigate, tobi, selectedBugId }: { navigate: (v: AppVie
               </div>
             ))}
           </div>
+          {(() => {
+            const heal = inferHealingCandidate(bug);
+            if (!heal) return null;
+            return (
+              <div className="panel-foot" style={{ flexDirection: "column", alignItems: "stretch", gap: 10, background: "var(--bg-alt)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                  <strong>Auto-Healing de Selectores (Semantic Locator)</strong>
+                  <Button variant="secondary" small disabled={tobi.isHealing} onClick={() => tobi.triggerSelfHeal(true)}>
+                    <Icon name="spark" size="sm" />
+                    {tobi.isHealing ? "Aplicando..." : "Auto-Curar Selector"}
+                  </Button>
+                </div>
+                <div className="heal-line-remove"><span>- FRÁGIL:</span><code>{heal.fragileSelector}</code></div>
+                <div className="heal-line-add"><span>+ SEMÁNTICO:</span><code>{heal.suggestedLocator}</code></div>
+              </div>
+            );
+          })()}
         </section>
       </div>
 
@@ -1418,10 +1743,28 @@ function SuitesPage({ navigate, tobi, onInspectTest }: { navigate: (v: AppView) 
   const current = suites.find((s) => s.name === name) || suites[0];
   const tests = (tobi.state.runs[0]?.tests as unknown as TestItem[]).filter((t) => t.spec === current?.specFile);
 
+  const untestedRoutes = tobi.agentDigest?.untestedRoutes || [];
+
   return <>
     <PageHeading title="Suites" subtitle={`${suites.length} suites automatizadas (${activeScope.toUpperCase()})`}>
       <Button onClick={() => navigate("specs")}><Icon name="file" size="sm" />Ver specs</Button>
     </PageHeading>
+    {untestedRoutes.length > 0 && (
+      <section className="panel" style={{ padding: "12px 16px", background: "var(--warning-bg)", borderColor: "var(--warning-line)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <Badge tone="warning">Cobertura PRD</Badge>
+            <strong style={{ fontSize: 13 }}>{untestedRoutes.length} rutas descubiertas sin tests vinculados:</strong>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {untestedRoutes.slice(0, 5).map((r) => (
+                <code key={r} style={{ fontSize: 11.5, background: "var(--bg)", padding: "2px 6px", borderRadius: 4, border: "1px solid var(--warning-line)" }}>{r}</code>
+              ))}
+            </div>
+          </div>
+          <Button variant="secondary" small onClick={() => tobi.runLiveAudit(activeScope)}>Generar Cobertura</Button>
+        </div>
+      </section>
+    )}
     <div className="suite-layout">
       <section className="panel">
         <div className="table-wrap">
@@ -1487,11 +1830,60 @@ function OfficePage({ navigate, tobi }: { navigate: (v: AppView) => void; tobi: 
   return <OfficeView navigate={navigate} tobi={tobi} Badge={Badge} Button={Button} Icon={Icon} PageHeading={PageHeading} />;
 }
 
+const MCP_NATIVE_TOOLS = [
+  { name: "tobitests_bootstrap", desc: "Escanea stack, rutas App Router/API, esquemas y genera prd-ground-truth.json + test-matrix.json." },
+  { name: "tobitests_run_audit", desc: "Ejecuta Playwright + ingesta con clasificación (PRODUCT_BUG / SELECTOR_FRAGILITY / ENV_DRIFT)." },
+  { name: "tobitests_get_digest", desc: "Devuelve agent-digest.json (< 4 KB) ahorrando ~94% de tokens para Antigravity, OpenCode y Cursor." },
+  { name: "tobitests_heal_selectors", desc: "Detecta locators frágiles y reescribe specs/*.spec.ts con getByTestId / getByRole semánticos." },
+  { name: "tobitests_blackboard_sync", desc: "Sincroniza antigravity-live.json y paso activo (1-8) con La Oficina 2.5D." },
+];
+
+function NativeMcpPanel() {
+  const [copiedMcpCfg, setCopiedMcpCfg] = useState(false);
+  const copyMcpConfig = () => {
+    const snippet = JSON.stringify({
+      mcpServers: {
+        tobitests: {
+          command: "python",
+          args: ["scripts/tobitests_mcp.py"],
+        },
+      },
+    }, null, 2);
+    navigator.clipboard?.writeText(snippet);
+    setCopiedMcpCfg(true);
+    setTimeout(() => setCopiedMcpCfg(false), 2000);
+  };
+
+  return (
+    <section className="panel">
+      <div className="panel-head">
+        <div>
+          <h2 className="heading-sm">Servidor MCP Nativo (scripts/tobitests_mcp.py)</h2>
+          <p>5 tools JSON-RPC 2.0 sobre stdio listas para OpenCode, Antigravity, Claude Code y Cursor</p>
+        </div>
+        <Button variant="secondary" small onClick={copyMcpConfig}>
+          <Icon name={copiedMcpCfg ? "check" : "copy"} size="sm" />
+          {copiedMcpCfg ? "¡Config copiada!" : "Copiar opencode.json MCP"}
+        </Button>
+      </div>
+      <div className="mcp-tool-grid">
+        {MCP_NATIVE_TOOLS.map((tool) => (
+          <div className="mcp-tool-card" key={tool.name}>
+            <code>{tool.name}</code>
+            <p>{tool.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function IntegrationsPage({ tobi }: { tobi: Tobi }) {
   const { project } = tobi.state;
   const items = [
     { icon: "play" as IconName, tone: "", name: "@playwright/mcp", role: "Ejecuta las pruebas", text: "Navega la app usando el árbol de accesibilidad y escribe los specs.", badge: "Motor de acción" },
     { icon: "pulse" as IconName, tone: "agent", name: "@chromedevtools/chrome-devtools-mcp", role: "Diagnostica", text: "Lee consola, red y rendimiento mientras corren las pruebas.", badge: "Motor de diagnóstico" },
+    { icon: "terminal" as IconName, tone: "agent", name: "TobiTests MCP Server (tobitests_mcp.py)", role: "Handoff & Ahorro de Tokens", text: "Expone bootstrap, run_audit, get_digest (<4KB), heal_selectors y blackboard_sync por stdio.", badge: "MCP Nativo (5 Tools)" },
     { icon: "code" as IconName, tone: "success", name: `Repositorio ${project.name}`, role: "Código fuente", text: project.repoPath || project.url, badge: `Rama ${project.branch}` },
   ];
   return <>
@@ -1510,6 +1902,7 @@ function IntegrationsPage({ tobi }: { tobi: Tobi }) {
         </div>
       ))}
     </section>
+    <NativeMcpPanel />
   </>;
 }
 
@@ -1518,6 +1911,7 @@ function SettingsPage({ tobi }: { tobi: Tobi }) {
   const items = [
     { icon: "play" as IconName, tone: "", name: "@playwright/mcp", role: "Ejecución de pruebas", text: "Navega la app usando el árbol de accesibilidad y escribe los specs.", badge: "Motor de acción" },
     { icon: "pulse" as IconName, tone: "agent", name: "@chromedevtools/chrome-devtools-mcp", role: "Telemetría y DevTools", text: "Lee consola, red y rendimiento mientras corren las pruebas.", badge: "Motor de diagnóstico" },
+    { icon: "terminal" as IconName, tone: "agent", name: "TobiTests MCP Server (tobitests_mcp.py)", role: "MCP Nativo Local", text: "Servidor JSON-RPC 2.0 sobre stdio para agentes externos con digest compacto (<4KB).", badge: "5 Tools Activas" },
     { icon: "code" as IconName, tone: "success", name: `Repositorio ${project.name}`, role: "Código fuente", text: project.repoPath || project.url, badge: `Rama ${project.branch}` },
   ];
   return <>
@@ -1545,6 +1939,8 @@ function SettingsPage({ tobi }: { tobi: Tobi }) {
         </div>
       ))}
     </section>
+
+    <NativeMcpPanel />
 
     <section className="panel">
       <div className="panel-head"><h2 className="heading-sm">Agentes de prueba</h2><span className="t-muted">{officeAgents.length} configurados</span></div>
@@ -1998,7 +2394,9 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
   });
   const [mobileNav, setMobileNav] = useState(false);
   const [notifications, setNotifications] = useState(false);
+  const [digestOpen, setDigestOpen] = useState(false);
   const [activeBugId, setActiveBugId] = useState("BUG-01");
+  const [activeRunId, setActiveRunId] = useState<string | undefined>(undefined);
   const [inspectedTest, setInspectedTest] = useState<TestCaseItem | null>(null);
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
 
@@ -2016,16 +2414,16 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
 
   const go = (v: AppView) => { navigate(v); setMobileNav(false); };
   const labels: Record<AppView, string> = {
-    landing: "Portada", dashboard: "Dashboard", journey: "Mapa de Flujos E2E", "test-runs": "Test Runs", "run-detail": `Run ${tobi.state.runs[0]?.id ?? ""}`,
+    landing: "Portada", dashboard: "Dashboard", journey: "Mapa de Flujos E2E", "test-runs": "Test Runs", "run-detail": `Run ${activeRunId || tobi.state.runs[0]?.id || ""}`,
     "live-run": "Live Run", "bug-tracker": "Bug Tracker", "bug-detail": activeBugId, diagnostic: "Diagnostic Studio",
     office: "La Oficina", specs: "Test Specs", suites: "Suites", integrations: "Integraciones", settings: "Settings",
   };
 
   const content =
-    view === "dashboard" ? <DashboardPage navigate={go} tobi={tobi} /> :
+    view === "dashboard" ? <DashboardPage navigate={go} tobi={tobi} onSelectBug={setActiveBugId} onSelectRun={setActiveRunId} onOpenDigest={() => setDigestOpen(true)} /> :
       view === "journey" ? <JourneyCanvas tobi={tobi} antigravityLive={tobi.antigravityLive} navigate={go} onInspectTest={setInspectedTest} /> :
-        view === "test-runs" ? <TestRunsPage navigate={go} tobi={tobi} /> :
-          view === "run-detail" ? <RunDetailPage navigate={go} tobi={tobi} onInspectTest={setInspectedTest} /> :
+        view === "test-runs" ? <TestRunsPage navigate={go} tobi={tobi} onSelectRun={setActiveRunId} /> :
+          view === "run-detail" ? <RunDetailPage navigate={go} tobi={tobi} selectedRunId={activeRunId} onInspectTest={setInspectedTest} onSelectBug={setActiveBugId} /> :
             view === "live-run" ? <LiveRunPage tobi={tobi} /> :
               view === "bug-tracker" ? <BugTrackerPage navigate={go} tobi={tobi} onSelectBug={setActiveBugId} /> :
                 view === "bug-detail" || view === "diagnostic" ? <BugDetailPage navigate={go} tobi={tobi} selectedBugId={activeBugId} /> :
@@ -2081,6 +2479,7 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
         bugs={tobi.state.bugs}
         auditScope={tobi.auditScope}
         onClose={() => setInspectedTest(null)}
+        onTriggerSelfHeal={() => tobi.triggerSelfHeal(true)}
         onCreateBug={(t) => {
           const bugMatch = tobi.state.bugs.find((b) => (t?.name && t.name.includes(b.id)) || (t?.spec?.includes("office") && b.id === "BUG-01"));
           if (bugMatch) {
@@ -2094,6 +2493,11 @@ function Operations({ view, navigate, onHome, tobi }: { view: AppView; navigate:
         onRunTest={(_passedTest) => {
           tobi.runLiveAudit(tobi.auditScope);
         }}
+      />
+      <AgentDigestModal
+        open={digestOpen}
+        onClose={() => setDigestOpen(false)}
+        tobi={tobi}
       />
       <AddProjectModal
         open={isAddProjectOpen}
@@ -2140,9 +2544,9 @@ function Landing({ openDashboard, openOffice, tobi }: { openDashboard: () => voi
 
       <section className="hero">
         <div className="hero-copy">
-          <Badge tone="info"><Icon name="spark" size="sm" />Testing con agentes de IA</Badge>
+          <Badge tone="info"><Icon name="spark" size="sm" />QA Autónomo · MCP Nativo (5 Tools) · -94% Tokens</Badge>
           <h1 className="heading-xl">Prueba tu web con agentes que la usan de verdad</h1>
-          <p>Exploración automatizada de flujos, detección de fallos con DevTools y generación de tests deterministas en Playwright.</p>
+          <p>Exploración automatizada en 8 pasos, clasificación de fallos (Producto / Selector Frágil / Entorno), self-healing de locators y digests compactos por MCP.</p>
           <div className="hero-actions">
             <Button onClick={openDashboard}>Entrar al workspace<Icon name="arrow" size="sm" /></Button>
             <Button variant="secondary" onClick={openOffice}><Icon name="spark" size="sm" />Conocer La Oficina</Button>

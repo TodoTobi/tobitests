@@ -144,6 +144,213 @@ ALLOWED_SEVERITIES = {
 }
 
 ALLOWED_STATUSES = {"Confirmed", "Resolved", "Closed"}
+ALLOWED_FAILURE_CATEGORIES = {"PRODUCT_BUG", "SELECTOR_FRAGILITY", "ENV_DRIFT"}
+
+
+def _suggest_semantic_locator(broken: str) -> Dict[str, Any]:
+    """Genera un candidato semántico resiliente a partir de un selector frágil."""
+    raw = broken.strip()
+    if raw.startswith("getBy"):
+        return {
+            "brokenLocator": raw,
+            "suggestedLocator": raw,
+            "strategy": "wait-or-strict-disambiguation",
+            "canAutoHeal": False,
+        }
+
+    # Extraer pista legible desde data-testid, aria-label, id, clase o texto
+    testid_match = re.search(r"""data-testid\s*=\s*["']?([a-zA-Z0-9_\-:]+)["']?""", raw)
+    if testid_match:
+        tid = testid_match.group(1)
+        return {
+            "brokenLocator": raw,
+            "suggestedLocator": f"getByTestId('{tid}')",
+            "strategy": "testid",
+            "canAutoHeal": True,
+        }
+
+    aria_match = re.search(r"""aria-label\s*=\s*["']([^"']+)["']""", raw)
+    if aria_match:
+        lbl = aria_match.group(1)
+        return {
+            "brokenLocator": raw,
+            "suggestedLocator": f"getByLabel('{lbl}')",
+            "strategy": "label",
+            "canAutoHeal": True,
+        }
+
+    text_match = re.search(r""":has-text\(\s*["']([^"']+)["']\s*\)|text=\s*["']?([^"'\)]+)["']?""", raw)
+    if text_match:
+        txt = (text_match.group(1) or text_match.group(2) or "").strip()
+        role = "button" if "button" in raw.lower() or "btn" in raw.lower() else ("link" if raw.lower().startswith("a") else None)
+        if role and txt:
+            return {
+                "brokenLocator": raw,
+                "suggestedLocator": f"getByRole('{role}', {{ name: /{re.escape(txt)}/i }})",
+                "strategy": "semantic-role",
+                "canAutoHeal": True,
+            }
+        if txt:
+            return {
+                "brokenLocator": raw,
+                "suggestedLocator": f"getByText(/{re.escape(txt)}/i)",
+                "strategy": "text",
+                "canAutoHeal": True,
+            }
+
+    # Derivar nombre legible desde id o clases CSS (.btn-old -> /old/i o /btn old/i)
+    tokens = [
+        tok
+        for tok in re.split(r"[^a-zA-Z0-9]+", raw)
+        if tok and tok.lower() not in {"button", "btn", "div", "span", "a", "input", "form", "primary", "secondary"}
+    ]
+    hint = " ".join(tokens[:3]).strip()
+    is_btn = "button" in raw.lower() or "btn" in raw.lower()
+    is_input = "input" in raw.lower() or "textarea" in raw.lower()
+    if is_btn:
+        suggested = f"getByRole('button', {{ name: /{hint or 'submit'}/i }})"
+        strategy = "semantic-role"
+    elif is_input:
+        suggested = f"getByRole('textbox', {{ name: /{hint or 'input'}/i }})"
+        strategy = "semantic-role"
+    else:
+        slug_id = re.sub(r"[^a-zA-Z0-9_-]+", "-", raw).strip("-") or "target"
+        suggested = f"getByTestId('{slug_id}')"
+        strategy = "testid"
+
+    return {
+        "brokenLocator": raw,
+        "suggestedLocator": suggested,
+        "strategy": strategy,
+        "canAutoHeal": True,
+    }
+
+
+def classify_failure(test_item: Dict[str, Any]) -> Dict[str, Any]:
+    """Clasifica un test fallido en PRODUCT_BUG | SELECTOR_FRAGILITY | ENV_DRIFT."""
+    error_obj = test_item.get("error")
+    err_msg = ""
+    err_stack = ""
+    nearby_list: List[str] = []
+    if isinstance(error_obj, dict):
+        err_msg = str(error_obj.get("message", "") or "")
+        err_stack = str(error_obj.get("stack", "") or "")
+        raw_nearby = error_obj.get("nearby")
+        if isinstance(raw_nearby, list):
+            nearby_list = [str(x) for x in raw_nearby]
+    elif isinstance(error_obj, str):
+        err_msg = error_obj
+
+    ev = test_item.get("evidence") or {}
+    page_errors = test_item.get("pageErrors") or []
+    console_log = ev.get("console_log") or []
+    network_trace = ev.get("network_trace") or []
+
+    combined_text = "\n".join(
+        [err_msg, err_stack] + [str(x) for x in nearby_list] + [str(x) for x in network_trace]
+    )
+    combined_lower = combined_text.lower()
+
+    # 1. ENV_DRIFT: servidor caído, DNS, gateway o browser cerrado
+    env_markers = (
+        "econnrefused",
+        "err_connection_refused",
+        "err_name_not_resolved",
+        "err_internet_disconnected",
+        "502 bad gateway",
+        "503 service unavailable",
+        "504 gateway timeout",
+        "target page, context or browser has been closed",
+    )
+    if any(m in combined_lower for m in env_markers):
+        return {
+            "category": "ENV_DRIFT",
+            "confidence": 0.94,
+            "severity": "medium",
+            "priority": "P2",
+            "healingCandidate": None,
+            "hypothesis": "Fallo de conectividad o caída temporal del entorno objetivo durante la prueba.",
+            "recommendedFix": "Verificar que el servidor web/API objetivo esté levantado y accesible antes de re-ejecutar.",
+        }
+
+    # 2. Señales fuertes de PRODUCT_BUG (5xx/4xx, pageerror, console error, aserción de estado/visual)
+    has_http_5xx = any(
+        re.search(r"->\s*5\d\d\b|\bstatus\s*5\d\d\b", str(x)) for x in network_trace
+    )
+    has_http_4xx = any(
+        re.search(r"->\s*4\d\d\b", str(x)) for x in network_trace
+    )
+    has_console_err = any("[error]" in str(x).lower() for x in console_log)
+    has_page_error = bool(page_errors)
+
+    # 3. SELECTOR_FRAGILITY: timeout / strict mode / visibilidad de locator sin fallos 5xx ni pageerror
+    selector_markers = (
+        "waiting for locator",
+        "strict mode violation",
+        "locator resolved to",
+        "element is not visible",
+        "element is not attached",
+        "intercepts pointer events",
+    )
+    is_timeout_waiting_locator = "timeout" in combined_lower and (
+        "locator(" in combined_lower or "getby" in combined_lower
+    )
+    has_selector_drift = any(m in combined_lower for m in selector_markers) or is_timeout_waiting_locator
+
+    if has_selector_drift and not has_http_5xx and not has_page_error:
+        broken_locator = ""
+        loc_match = re.search(r"""locator\(\s*['"]([^'"]+)['"]\s*\)""", combined_text)
+        if loc_match:
+            broken_locator = loc_match.group(1)
+        else:
+            getby_match = re.search(r"""(getBy[A-Za-z]+\([^)]+\))""", combined_text)
+            if getby_match:
+                broken_locator = getby_match.group(1)
+
+        healing_candidate = _suggest_semantic_locator(broken_locator) if broken_locator else None
+        return {
+            "category": "SELECTOR_FRAGILITY",
+            "confidence": 0.89 if healing_candidate else 0.78,
+            "severity": "medium",
+            "priority": "P2",
+            "healingCandidate": healing_candidate,
+            "hypothesis": (
+                f"Deriva de selector DOM detectada para '{broken_locator or 'locator'}' sin errores de servidor ni excepciones JS."
+            ),
+            "recommendedFix": (
+                f"Reemplazar '{broken_locator}' por '{healing_candidate['suggestedLocator']}'."
+                if healing_candidate
+                else "Migrar el selector frágil hacia getByRole, getByLabel o getByTestId."
+            ),
+        }
+
+    # 4. PRODUCT_BUG (default para aserciones, pageErrors, console errors o HTTP >= 400)
+    is_critical = has_page_error or has_http_5xx
+    severity = "critical" if is_critical else "high"
+    priority = "P0" if is_critical else "P1"
+
+    if has_page_error:
+        hyp = f"Excepción de runtime en navegador: {str(page_errors[0])[:180]}"
+        fix = "Corregir la excepción no capturada en el componente o manejador afectado y agregar guardas null-safe."
+    elif has_http_5xx:
+        hyp = f"Error HTTP 5xx en backend durante el flujo: {str(network_trace[0])[:180]}"
+        fix = "Inspeccionar los logs del servidor/API para resolver el error interno 500 y devolver respuestas controladas."
+    elif has_http_4xx or has_console_err:
+        hyp = "Fallo de contrato de API (HTTP 4xx) o error de consola durante la interacción."
+        fix = "Verificar payload enviado, headers de autorización y validaciones entre frontend y backend."
+    else:
+        hyp = "Divergencia funcional o falla de aserción detectada por el runner de Playwright."
+        fix = "Inspeccionar el error y la traza cercana en el modal de diagnóstico para corregir la divergencia."
+
+    return {
+        "category": "PRODUCT_BUG",
+        "confidence": 0.95 if is_critical else 0.85,
+        "severity": severity,
+        "priority": priority,
+        "healingCandidate": None,
+        "hypothesis": hyp,
+        "recommendedFix": fix,
+    }
 
 
 def validate_bug_report(
@@ -182,6 +389,10 @@ def validate_bug_report(
     st = bug.get("status")
     if st is not None and st not in ALLOWED_STATUSES:
         errors.append(f"Invalid status '{st}'. Allowed: {sorted(ALLOWED_STATUSES)}")
+
+    fc = bug.get("failureCategory")
+    if fc is not None and fc not in ALLOWED_FAILURE_CATEGORIES:
+        errors.append(f"Invalid failureCategory '{fc}'. Allowed: {sorted(ALLOWED_FAILURE_CATEGORIES)}")
 
     if "gherkin" in bug and bug["gherkin"] is not None:
         gh = bug["gherkin"]
@@ -286,17 +497,20 @@ def synthesize_draft_bug(
         rc_line = 1
 
     nearby = error_obj.get("nearby", []) if isinstance(error_obj, dict) else []
+    classification = classify_failure(t)
     if nearby and isinstance(nearby, list):
         wb_hyp = "; ".join(str(x) for x in nearby[:3])
     else:
-        wb_hyp = "Fallo de aserción o timeout detectado por el runner de Playwright."
+        wb_hyp = classification["hypothesis"]
 
-    diag = {
+    diag: Dict[str, Any] = {
         "observedFact": entonces,
         "whiteBoxHypothesis": wb_hyp,
         "reproductionSpec": f"specs/{spec_name} ({t_name})",
         "affectedFile": f"{rc_file}:{rc_line}",
-        "recommendedFix": "Inspeccionar el error y la traza cercana en el modal de diagnóstico para corregir la divergencia.",
+        "recommendedFix": classification["recommendedFix"],
+        "failureCategory": classification["category"],
+        "healingCandidate": classification["healingCandidate"],
         "scopeIn": [f"specs/{spec_name}"],
         "scopeOut": ["package.json", "playwright.config.ts"],
     }
@@ -307,8 +521,10 @@ def synthesize_draft_bug(
     draft_bug = {
         "id": bug_id,
         "title": f"Fallo en {t_name}",
-        "severity": "high",
-        "priority": "P1",
+        "severity": classification["severity"],
+        "priority": classification["priority"],
+        "failureCategory": classification["category"],
+        "confidence": classification["confidence"],
         "oracle_layer": oracle_layer,
         "status": "Confirmed",
         "section": spec_name,
@@ -1822,6 +2038,25 @@ def ingest_report_into_state(
                     auto_numbers.append(int(m.group(1)))
         next_auto_num = max(auto_numbers, default=0) + 1
 
+        # Auto-resolución de bugs auto-generados cuyo test volvió a pasar
+        passed_test_keys = {
+            f"{str(t.get('spec', ''))}::{str(t.get('name', ''))}"
+            for t in parsed_tests
+            if t.get("status") == "Passed"
+        }
+        for b in existing_bugs:
+            if (
+                isinstance(b, dict)
+                and b.get("autoGenerated") is True
+                and b.get("status") == "Confirmed"
+                and b.get("testKey") in passed_test_keys
+            ):
+                b["status"] = "Resolved"
+                b["resolvedInRun"] = run_id
+                b["resolution"] = (
+                    f"Auto-verificado en corrida {run_id}: el caso de prueba '{b.get('testKey')}' pasó sin errores."
+                )
+
         failed_tests = [t for t in parsed_tests if t.get("status") == "Failed"]
         for t in failed_tests:
             spec_name = str(t.get("spec", ""))
@@ -1871,7 +2106,162 @@ def ingest_report_into_state(
         if src_state.exists():
             atomic_write_json(src_state, state)
 
+    generate_agent_digest(repo_root, project_slug, state)
+
     return state_file
+
+
+def heal_fragile_selectors(
+    repo_root: Path,
+    bugs: List[Dict[str, Any]],
+    apply_changes: bool = False,
+) -> List[Dict[str, Any]]:
+    """Analiza y opcionalmente auto-cura selectores frágiles en archivos .spec.ts."""
+    healed: List[Dict[str, Any]] = []
+    for bug in bugs:
+        if not isinstance(bug, dict):
+            continue
+        diag = bug.get("diagnostic") if isinstance(bug.get("diagnostic"), dict) else {}
+        category = bug.get("failureCategory") or diag.get("failureCategory")
+        if category != "SELECTOR_FRAGILITY":
+            continue
+
+        candidate = diag.get("healingCandidate")
+        if not isinstance(candidate, dict):
+            continue
+
+        broken = str(candidate.get("brokenLocator") or "").strip()
+        suggested = str(candidate.get("suggestedLocator") or "").strip()
+        can_heal = bool(candidate.get("canAutoHeal"))
+        if not broken or not suggested or not can_heal:
+            continue
+
+        rc_file = str(bug.get("root_cause_file") or "").strip()
+        section = str(bug.get("section") or "").strip()
+        candidate_paths: List[Path] = []
+        if rc_file:
+            candidate_paths.append(repo_root / rc_file)
+            candidate_paths.append(repo_root / "specs" / Path(rc_file).name)
+        if section:
+            candidate_paths.append(repo_root / "specs" / section)
+            candidate_paths.append(repo_root / "specs" / Path(section).name)
+
+        spec_path: Optional[Path] = next((p for p in candidate_paths if p.is_file()), None)
+        entry: Dict[str, Any] = {
+            "bugId": bug.get("id", ""),
+            "specFile": str(spec_path.relative_to(repo_root).as_posix()) if spec_path else rc_file or section,
+            "brokenLocator": broken,
+            "suggestedLocator": suggested,
+            "applied": False,
+        }
+
+        if spec_path is not None:
+            content = spec_path.read_text(encoding="utf-8")
+            patterns = [
+                (f"locator('{broken}')", suggested),
+                (f'locator("{broken}")', suggested),
+                (f"locator(`{broken}`)", suggested),
+                (broken, suggested),
+            ]
+            matched_old: Optional[str] = None
+            for old_str, new_str in patterns:
+                if old_str in content:
+                    matched_old = old_str
+                    if apply_changes:
+                        updated_content = content.replace(old_str, new_str)
+                        spec_path.write_text(updated_content, encoding="utf-8")
+                        entry["applied"] = True
+                        entry["replaced"] = old_str
+                    break
+            if matched_old and not entry["applied"]:
+                entry["matchFound"] = matched_old
+
+        healed.append(entry)
+
+    return healed
+
+
+def generate_agent_digest(
+    repo_root: Path,
+    project_slug: str,
+    state: Dict[str, Any],
+) -> Path:
+    """Genera workspaces/<project_slug>/agent-digest.json (< 2-4 KB) para consumo ultra-compacto de agentes IA."""
+    digest_path = repo_root / "workspaces" / project_slug / "agent-digest.json"
+    now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    runs = state.get("runs") if isinstance(state.get("runs"), list) else []
+    latest_run = runs[0] if runs and isinstance(runs[0], dict) else {}
+    metrics = state.get("metrics") if isinstance(state.get("metrics"), dict) else {}
+    project_info = state.get("project") if isinstance(state.get("project"), dict) else {}
+    bugs = state.get("bugs") if isinstance(state.get("bugs"), list) else []
+
+    open_bugs = [
+        b for b in bugs
+        if isinstance(b, dict) and b.get("status") not in ("Resolved", "Closed")
+    ]
+
+    breakdown = {
+        "PRODUCT_BUG": 0,
+        "SELECTOR_FRAGILITY": 0,
+        "ENV_DRIFT": 0,
+    }
+    actionable_bugs: List[Dict[str, Any]] = []
+    for b in open_bugs:
+        diag = b.get("diagnostic") if isinstance(b.get("diagnostic"), dict) else {}
+        cat = str(b.get("failureCategory") or diag.get("failureCategory") or "PRODUCT_BUG")
+        if cat in breakdown:
+            breakdown[cat] += 1
+        else:
+            breakdown["PRODUCT_BUG"] += 1
+
+        if len(actionable_bugs) < 10:
+            item: Dict[str, Any] = {
+                "id": b.get("id", ""),
+                "title": str(b.get("title", ""))[:100],
+                "severity": b.get("severity", "high"),
+                "priority": b.get("priority", "P1"),
+                "failureCategory": cat,
+                "file": b.get("root_cause_file") or diag.get("affectedFile", ""),
+                "line": b.get("root_cause_line", 1),
+                "hypothesis": str(diag.get("whiteBoxHypothesis") or b.get("entonces") or "")[:180],
+                "fix": str(diag.get("recommendedFix") or "")[:180],
+            }
+            if isinstance(diag.get("healingCandidate"), dict):
+                item["healingCandidate"] = diag["healingCandidate"]
+            actionable_bugs.append(item)
+
+    nodes = state.get("journeyMap", {}).get("nodes", []) if isinstance(state.get("journeyMap"), dict) else []
+    untested_routes: List[str] = []
+    if isinstance(nodes, list):
+        for n in nodes:
+            if isinstance(n, dict) and int(n.get("testsCount", 0) or 0) == 0:
+                r = str(n.get("route") or n.get("id") or "")
+                if r and r not in untested_routes:
+                    untested_routes.append(r)
+
+    digest_payload: Dict[str, Any] = {
+        "schemaVersion": "2.0.0",
+        "generatedAt": now_iso,
+        "project": project_slug,
+        "url": project_info.get("url", ""),
+        "auditScope": state.get("auditScope") or project_info.get("auditScope") or "fullstack",
+        "activeRun": metrics.get("activeRun") or latest_run.get("id") or "",
+        "summary": {
+            "passRate": metrics.get("passRate", "0%"),
+            "totalTests": int(latest_run.get("total", metrics.get("totalTests", 0)) or 0),
+            "passed": int(latest_run.get("passed", 0) or 0),
+            "failed": int(latest_run.get("failed", metrics.get("failedTests", 0)) or 0),
+            "skipped": int(latest_run.get("skipped", 0) or 0),
+            "openBugs": len(open_bugs),
+        },
+        "failureBreakdown": breakdown,
+        "actionableBugs": actionable_bugs,
+        "untestedRoutes": untested_routes[:15],
+    }
+
+    atomic_write_json(digest_path, digest_payload)
+    return digest_path
 
 
 def transition_blackboard_to_standup(
@@ -1987,6 +2377,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         default=None,
         help="Optional repo root directory",
     )
+    parser.add_argument(
+        "--heal-specs",
+        action="store_true",
+        help="Automatically patch fragile DOM locators in specs/*.spec.ts using semantic healing candidates",
+    )
+    parser.add_argument(
+        "--print-digest",
+        action="store_true",
+        help="Print compact agent-digest.json payload to stdout for low-token agent consumption",
+    )
     args = parser.parse_args(argv)
 
     repo_root = Path(args.repo).resolve() if args.repo else Path(__file__).resolve().parent.parent
@@ -2058,9 +2458,25 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"[TobiTests Bridge] ERROR (code {e.code}): {e}", file=sys.stderr)
         return e.code
 
+    if args.heal_specs and state_file.exists():
+        try:
+            current_state = json.loads(state_file.read_text(encoding="utf-8"))
+            healed = heal_fragile_selectors(repo_root, current_state.get("bugs", []), apply_changes=True)
+            applied_count = sum(1 for h in healed if h.get("applied"))
+            if applied_count > 0:
+                print(f"[TobiTests Bridge] Self-Healed specs     : {applied_count} selector(s) updated")
+        except Exception as exc:
+            print(f"[TobiTests Bridge] WARNING: self-healing error: {exc}", file=sys.stderr)
+
     print(f"[TobiTests Bridge] Updated UI State JSON : {state_file.relative_to(repo_root)}")
     print(f"[TobiTests Bridge] Evidence linked       : {len(screenshots)} screenshots, {len(videos)} videos")
     print(f"[TobiTests Bridge] Blackboard updated    : {live_path.relative_to(repo_root)} (standup_meeting, step=8/8)")
+
+    if args.print_digest:
+        digest_file = repo_root / "workspaces" / project_slug / "agent-digest.json"
+        if digest_file.exists():
+            print(digest_file.read_text(encoding="utf-8"))
+
     return 0
 
 

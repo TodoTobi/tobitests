@@ -66,12 +66,13 @@ async def execute_deep_audit(
 
     console_errors: List[str] = []
     network_failures: List[str] = []
+    page_errors: List[str] = []
     visited: List[str] = []
 
     browser = None
     ctx = None
 
-    # Credenciales opcionales vÃ­a variables de entorno seguras
+    # Credenciales opcionales vía variables de entorno seguras
     audit_user = os.environ.get("TOBI_AUDIT_USER")
     audit_password = os.environ.get("TOBI_AUDIT_PASSWORD")
 
@@ -87,7 +88,9 @@ async def execute_deep_audit(
             page.set_default_timeout(timeout_ms)
 
             page.on("console", lambda m: console_errors.append(f"[{m.type}] {m.text}") if m.type in ("error", "warning") else None)
+            page.on("pageerror", lambda err: page_errors.append(str(err)))
             page.on("requestfailed", lambda r: network_failures.append(f"{r.method} {r.url} -> {r.failure}"))
+            page.on("response", lambda res: network_failures.append(f"HTTP {res.status} {res.url}") if res.status >= 400 else None)
 
             base_parsed = urllib.parse.urlparse(target_url)
 
@@ -163,6 +166,7 @@ async def execute_deep_audit(
         "visited_routes": visited,
         "console_errors": console_errors,
         "network_failures": network_failures,
+        "page_errors": page_errors,
     }
 
 
@@ -188,7 +192,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             if prd_file.exists():
                 try:
                     prd_data = json.loads(prd_file.read_text(encoding="utf-8"))
-                    target_url = prd_data.get("baseUrl")
+                    target_url = prd_data.get("project", {}).get("url") or prd_data.get("baseUrl")
                 except Exception:
                     pass
         if not target_url:
@@ -200,10 +204,22 @@ def main(argv: Optional[List[str]] = None) -> int:
     if prd_path.exists():
         try:
             prd_data = json.loads(prd_path.read_text(encoding="utf-8"))
-            for r in prd_data.get("routes", []):
-                route = r.get("route")
-                if route and not route.startswith(("GET ", "POST ", "PUT ", "DELETE ")):
-                    routes_to_visit.append(route)
+            raw_routes = prd_data.get("routesDiscovered") or prd_data.get("routes") or []
+            for r in raw_routes:
+                if not isinstance(r, dict):
+                    continue
+                raw_route = str(r.get("route", "")).strip()
+                if not raw_route:
+                    continue
+                if raw_route.startswith(("GET ", "POST ", "PUT ", "DELETE ", "PATCH ")) or r.get("category") == "API":
+                    continue
+                if raw_route.startswith(("http://", "https://")):
+                    parsed_r = urllib.parse.urlparse(raw_route)
+                    clean_path = parsed_r.path or "/"
+                else:
+                    clean_path = raw_route
+                if clean_path not in routes_to_visit:
+                    routes_to_visit.append(clean_path)
         except Exception:
             pass
     if not routes_to_visit:

@@ -81,6 +81,7 @@ ALLOWED_SEVERITIES = {
 }
 
 ALLOWED_STATUSES = {"Confirmed", "Resolved", "Closed"}
+ALLOWED_FAILURE_CATEGORIES = {"PRODUCT_BUG", "SELECTOR_FRAGILITY", "ENV_DRIFT"}
 
 
 def validate_bug_report(
@@ -119,6 +120,10 @@ def validate_bug_report(
     st = bug.get("status")
     if st is not None and st not in ALLOWED_STATUSES:
         errors.append(f"Invalid status '{st}'. Allowed: {sorted(ALLOWED_STATUSES)}")
+
+    fc = bug.get("failureCategory")
+    if fc is not None and fc not in ALLOWED_FAILURE_CATEGORIES:
+        errors.append(f"Invalid failureCategory '{fc}'. Allowed: {sorted(ALLOWED_FAILURE_CATEGORIES)}")
 
     if "gherkin" in bug and bug["gherkin"] is not None:
         gh = bug["gherkin"]
@@ -338,6 +343,8 @@ def detect_stack_and_routes(
         "packageManager": "npm",
         "hasPlaywright": False,
         "auditScope": audit_scope,
+        "schemas": [],
+        "hasAuthGuard": False,
     }
     default_ui_routes: List[Dict[str, str]] = [
         {"id": "landing", "route": "/", "title": "/ · Landing & Entry Point", "category": "auth"},
@@ -530,6 +537,27 @@ def detect_stack_and_routes(
                     if clean_route not in route_set and len(clean_route) <= 42:
                         route_set.append(clean_route)
 
+            for p in app_dir.rglob("route.*"):
+                if p.suffix in (".ts", ".tsx", ".js", ".jsx"):
+                    rel = p.parent.relative_to(app_dir).as_posix()
+                    route = "/" if rel == "." else f"/{rel}"
+                    parts = [part for part in route.split("/") if not (part.startswith("(") and part.endswith(")")) and not part.startswith("_")]
+                    api_path = "/" + "/".join(filter(None, parts))
+                    try:
+                        route_src = p.read_text(encoding="utf-8", errors="ignore")
+                    except Exception:
+                        route_src = ""
+                    methods = re.findall(
+                        r"\bexport\s+(?:async\s+function|function|const|let)\s+(GET|POST|PUT|PATCH|DELETE)\b",
+                        route_src,
+                    )
+                    if not methods:
+                        methods = ["GET"]
+                    for method in methods:
+                        pair = (method.upper(), api_path)
+                        if len(api_path) <= 48 and pair not in api_route_set:
+                            api_route_set.append(pair)
+
     next_pages_candidates = [
         root / "pages",
         root / "src" / "pages",
@@ -581,6 +609,31 @@ def detect_stack_and_routes(
                     "category": "API",
                 }
             )
+
+    # 5. Schema / ORM / Auth Guard detection
+    detected_schemas: List[str] = []
+    for lib_key, canonical_name in [
+        ("zod", "zod"),
+        ("valibot", "valibot"),
+        ("yup", "yup"),
+        ("joi", "joi"),
+        ("@prisma/client", "prisma"),
+        ("prisma", "prisma"),
+        ("drizzle-orm", "drizzle"),
+    ]:
+        if lib_key in dep_names and canonical_name not in detected_schemas:
+            detected_schemas.append(canonical_name)
+
+    for py_lib in ("pydantic", "sqlalchemy", "sqlmodel"):
+        if py_lib in py_deps_text and py_lib not in detected_schemas:
+            detected_schemas.append(py_lib)
+
+    stack_info["schemas"] = detected_schemas
+
+    auth_libs = {"next-auth", "@clerk/nextjs", "jsonwebtoken", "passport", "firebase-admin", "@auth/core", "lucia"}
+    has_auth_routes = any("login" in r.lower() or "auth" in r.lower() or "signin" in r.lower() for r in route_set)
+    has_auth_api = any("auth" in ep.lower() or "login" in ep.lower() or "session" in ep.lower() for _, ep in api_route_set)
+    stack_info["hasAuthGuard"] = bool(auth_libs.intersection(dep_names) or has_auth_routes or has_auth_api)
 
     final_ui = custom_ui_routes if len(custom_ui_routes) >= 2 else default_ui_routes
     final_api = custom_api_routes if len(custom_api_routes) >= 1 else default_api_routes
@@ -665,6 +718,75 @@ def merge_list_by_key(existing_items: List[Dict[str, Any]], new_items: List[Dict
     return [merged_map[k] for k in order]
 
 
+def _synthesize_domain_suite_code(
+    suite_spec: Dict[str, Any],
+    project_name: str,
+    url: str,
+    routes: List[Dict[str, str]],
+) -> str:
+    spec_file = str(suite_spec.get("specFile", ""))
+    domain = str(suite_spec.get("domain", project_name))
+    ui_routes = [
+        r.get("route", "/")
+        for r in routes
+        if r.get("category") != "API" and not str(r.get("route", "")).startswith(("GET ", "POST ", "PUT ", "PATCH ", "DELETE "))
+    ]
+    api_routes = [
+        r.get("route", "GET /api/health")
+        for r in routes
+        if r.get("category") == "API" or str(r.get("route", "")).startswith(("GET ", "POST ", "PUT ", "PATCH ", "DELETE "))
+    ]
+
+    if spec_file.endswith("-api.spec.ts"):
+        first_get = next((r.split(" ", 1)[1] for r in api_routes if r.startswith("GET ")), "/api/health")
+        first_mut = next((r.split(" ", 1)[1] for r in api_routes if r.startswith(("POST ", "PUT ", "PATCH "))), first_get)
+        return f"""import {{ test, expect }} from '@playwright/test';
+
+const API_BASE_URL = process.env.API_BASE_URL || process.env.TARGET_URL || '{url}';
+
+test.describe('{project_name} — {domain}', () => {{
+  test('TC-API-01: GET {first_get} returns < 500 within latency SLA', async ({{ request }}) => {{
+    const start = Date.now();
+    const res = await request.get(`${{API_BASE_URL}}{first_get}`);
+    expect(res.status()).toBeLessThan(500);
+    expect(Date.now() - start).toBeLessThan(3000);
+  }});
+
+  test('TC-API-02: {first_mut} rejects malformed payload without 500', async ({{ request }}) => {{
+    const res = await request.post(`${{API_BASE_URL}}{first_mut}`, {{ data: {{}} }});
+    expect(res.status()).toBeLessThan(500);
+  }});
+}});
+"""
+
+    primary_ui = ui_routes[0] if ui_routes else "/"
+    secondary_ui = ui_routes[1] if len(ui_routes) > 1 else primary_ui
+    return f"""import {{ test, expect }} from '@playwright/test';
+
+const TARGET_URL = process.env.TARGET_URL || '{url}';
+
+test.describe('{project_name} — {domain}', () => {{
+  test('{domain} — Primary route check', async ({{ page }}) => {{
+    const pageErrors: string[] = [];
+    page.on('pageerror', (err) => pageErrors.push(err.message));
+    const dest = '{primary_ui}'.startsWith('http') ? '{primary_ui}' : `${{TARGET_URL}}{primary_ui}`;
+    const res = await page.goto(dest, {{ waitUntil: 'domcontentloaded', timeout: 15000 }});
+    expect(res ? res.status() : 200).toBeLessThan(500);
+    await expect(page.locator('body')).toBeVisible();
+    expect(pageErrors).toEqual([]);
+  }});
+
+  test('{domain} — Secondary route & layout integrity', async ({{ page }}) => {{
+    const dest = '{secondary_ui}'.startsWith('http') ? '{secondary_ui}' : `${{TARGET_URL}}{secondary_ui}`;
+    const res = await page.goto(dest, {{ waitUntil: 'domcontentloaded', timeout: 15000 }});
+    expect(res ? res.status() : 200).toBeLessThan(500);
+    const hasOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 25);
+    expect(hasOverflow).toBe(false);
+  }});
+}});
+"""
+
+
 def generate_workspace_artifacts(
     repo_root: Path,
     project_name: str,
@@ -673,6 +795,7 @@ def generate_workspace_artifacts(
     target_repo: Optional[str],
     audit_scope: str = "fullstack",
     force_clean: bool = False,
+    synthesize_suites: bool = False,
 ) -> Tuple[Path, Path, Path]:
     url = resolve_fastest_url(url)
     ws_dir = repo_root / "workspaces" / project_slug
@@ -829,6 +952,24 @@ def generate_workspace_artifacts(
         lambda s: s.get("specFile"),
     )
 
+    specs_dir = repo_root / "specs"
+    specs_dir.mkdir(parents=True, exist_ok=True)
+    target_spec_file = specs_dir / f"{project_slug}.spec.ts"
+    custom_spec_file = specs_dir / f"custom-{project_slug}.spec.ts"
+
+    if synthesize_suites and project_slug not in ("tobitests", "tobi"):
+        for s in merged_suites_spec:
+            sf_name = s.get("specFile")
+            if not sf_name or sf_name == f"{project_slug}.spec.ts":
+                continue
+            sf_path = specs_dir / sf_name
+            if not sf_path.exists():
+                sf_path.write_text(
+                    _synthesize_domain_suite_code(s, project_name, url, merged_routes),
+                    encoding="utf-8",
+                )
+            s["implemented"] = True
+
     for s in merged_suites_spec:
         if s.get("specFile") == f"{project_slug}.spec.ts":
             s["implemented"] = True
@@ -852,10 +993,6 @@ def generate_workspace_artifacts(
     atomic_write_json(matrix_path, matrix_data)
 
     # 2.5. Step 5: Synthesize Physical Playwright Spec on Disk (`specs/<project-slug>.spec.ts`)
-    specs_dir = repo_root / "specs"
-    specs_dir.mkdir(parents=True, exist_ok=True)
-    target_spec_file = specs_dir / f"{project_slug}.spec.ts"
-    custom_spec_file = specs_dir / f"custom-{project_slug}.spec.ts"
 
     spec_content = f"""import {{ test, expect }} from '@playwright/test';
 
@@ -1084,6 +1221,56 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
         src_state = repo_root / "web" / "src" / "data" / "tobi-state.json"
         if src_state.exists():
             atomic_write_json(src_state, state_payload)
+
+    # Generate compact agent-digest.json for low-token AI consumption
+    untested_routes = [
+        str(n.get("route") or n.get("id") or "")
+        for n in merged_nodes
+        if int(n.get("testsCount", 0) or 0) == 0 and (n.get("route") or n.get("id"))
+    ]
+    open_bugs_list = [
+        b for b in bugs
+        if isinstance(b, dict) and b.get("status") not in ("Resolved", "Closed")
+    ]
+    breakdown = {"PRODUCT_BUG": 0, "SELECTOR_FRAGILITY": 0, "ENV_DRIFT": 0}
+    actionable_bugs = []
+    for b in open_bugs_list:
+        diag = b.get("diagnostic") if isinstance(b.get("diagnostic"), dict) else {}
+        cat = str(b.get("failureCategory") or diag.get("failureCategory") or "PRODUCT_BUG")
+        breakdown[cat if cat in breakdown else "PRODUCT_BUG"] += 1
+        if len(actionable_bugs) < 10:
+            actionable_bugs.append({
+                "id": b.get("id", ""),
+                "title": str(b.get("title", ""))[:100],
+                "severity": b.get("severity", "high"),
+                "priority": b.get("priority", "P1"),
+                "failureCategory": cat,
+                "file": b.get("root_cause_file") or diag.get("affectedFile", ""),
+                "line": b.get("root_cause_line", 1),
+                "hypothesis": str(diag.get("whiteBoxHypothesis") or b.get("entonces") or "")[:180],
+                "fix": str(diag.get("recommendedFix") or "")[:180],
+            })
+
+    digest_payload = {
+        "schemaVersion": "2.0.0",
+        "generatedAt": now_iso,
+        "project": project_slug,
+        "url": url,
+        "auditScope": audit_scope,
+        "activeRun": metrics.get("activeRun", ""),
+        "summary": {
+            "passRate": metrics.get("passRate", "0%"),
+            "totalTests": int(metrics.get("totalTests", 0) or 0),
+            "passed": 0,
+            "failed": int(metrics.get("failedTests", 0) or 0),
+            "skipped": 0,
+            "openBugs": len(open_bugs_list),
+        },
+        "failureBreakdown": breakdown,
+        "actionableBugs": actionable_bugs,
+        "untestedRoutes": untested_routes[:15],
+    }
+    atomic_write_json(ws_dir / "agent-digest.json", digest_payload)
 
     return prd_path, matrix_path, target_state
 
@@ -1321,6 +1508,21 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         action="store_true",
         help="Explicitly allow wiping/regenerating protected demo project states",
     )
+    parser.add_argument(
+        "--synthesize-suites",
+        action="store_true",
+        help="Synthesize all planned domain spec files on disk from discovered routes",
+    )
+    parser.add_argument(
+        "--run-pipeline",
+        action="store_true",
+        help="Execute the full 8-step QA pipeline (init -> sync -> Playwright -> ingest -> digest)",
+    )
+    parser.add_argument(
+        "--print-digest",
+        action="store_true",
+        help="Print compact workspaces/<project>/agent-digest.json to stdout",
+    )
     return parser.parse_args(argv)
 
 
@@ -1366,6 +1568,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 target_repo=args.repo,
                 audit_scope=resolved_scope,
                 force_clean=args.force,
+                synthesize_suites=args.synthesize_suites,
             )
             mode_label = "Incrementally merged" if had_existing else "Initialized"
             print(f"[TobiTests CLI] Workspace {mode_label} (scope={resolved_scope}): workspaces/{project_slug}/")
@@ -1392,6 +1595,35 @@ def main(argv: Optional[List[str]] = None) -> int:
         f"[TobiTests CLI] Shared Blackboard synchronized: {live_path.relative_to(repo_root)} "
         f"(orchestrator={args.orchestrator}, scope={resolved_scope}, state={args.status}, step={args.step}/8)"
     )
+
+    eff_slug = project_slug or "tobitests"
+    eff_scope = resolved_scope or "fullstack"
+
+    if args.run_pipeline:
+        scripts_dir = str(Path(__file__).resolve().parent)
+        if scripts_dir not in sys.path:
+            sys.path.insert(0, scripts_dir)
+        try:
+            import sync_specs
+            sync_specs.sync_once(repo_root, eff_slug)
+        except Exception:
+            pass
+        import ingest_playwright_results
+        ingest_argv = [
+            "--project", eff_slug,
+            "--run-playwright",
+            "--scope", eff_scope,
+            "--repo", str(repo_root),
+        ]
+        rc = ingest_playwright_results.main(ingest_argv)
+        if rc != 0:
+            return rc
+
+    if args.print_digest or args.run_pipeline:
+        digest_file = repo_root / "workspaces" / eff_slug / "agent-digest.json"
+        if digest_file.exists():
+            print(digest_file.read_text(encoding="utf-8"))
+
     return 0
 
 
