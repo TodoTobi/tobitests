@@ -34,18 +34,18 @@
 
 ```bash
 # 1. Clone & install
-git clone https://github.com/TodoTobi/tobitests.git
-cd tobitests
-npm install
+git clone https://github.com/TodoTobi/tobitests.git && cd tobitests && npm install
 
-# 2. Launch the visual dashboard (http://localhost:5173)
+# 2. Launch the visual dashboard (http://localhost:5180)
 npm run dev:web
 
 # 3. Audit your app (replace URL & project name)
 python scripts/tobitests_cli.py --project my-app --url http://localhost:3000
 ```
 
-> **Demo:** A 60-second recording against [Huellicam / VetConnect](https://github.com/grupo-pinnacle/VetConnect) is coming soon. Want to contribute one? See [CONTRIBUTING.md](CONTRIBUTING.md).
+![TobiTests Demo — Visual QA & Huellicam (workspaces/vetconnect) audit](docs/assets/tobitests-demo.gif)
+
+> **Demo workspace:** Shown above inspecting the sanitized local **Huellicam (`workspaces/vetconnect`)** demo workspace alongside `tobitests` self-audit data. Want to contribute a workflow or recording? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -145,10 +145,10 @@ The TobiTests web platform (`web/src/`) provides three flagship observability st
 > * **[`docs/USER_GUIDE.md`](docs/USER_GUIDE.md):** Step-by-step daily guide for **Frontend/Full-Stack Web Apps**, **Pure Backend/REST APIs**, **Static Portfolio Deployment**, and **Copy-Paste Prompts** for Antigravity & OpenCode.
 > * **[`docs/MCP_SETUP.md`](docs/MCP_SETUP.md):** Complete MCP configuration for **Antigravity IDE**, **OpenCode CLI** ([`opencode.json`](opencode.json)), and **Cursor / Claude Code**.
 
-### Mode 1: Interactive Portfolio Demo (Pre-Loaded Workspaces)
-TobiTests ships with two complete, pre-audited workspaces ready to explore in the browser (and deployable as a static build to Vercel or GitHub Pages):
-* **`TobiTests (Self-Audit)`:** 8 suites, 45 E2E tests, flow map (including API contract telemetry nodes), native steps reporter (`tobi-steps-reporter.ts`), and `.webm` self-audit video recordings.
-* **`VetConnect`:** 6 suites, 108 E2E tests, and 4 real Gherkin-documented bugs (`BUG-01` to `BUG-04`) with video replays.
+### Mode 1: Interactive Demo (Pre-Loaded Workspaces)
+TobiTests ships with two pre-audited workspaces ready to explore locally via `vite` (or deployed as a static build to a **root domain** such as Vercel/Netlify — note that `web/src/` uses root-relative `/data/...` and `/evidence/...` paths, so subpath hosting like `github.io/tobitests/` is not supported):
+* **`TobiTests (Self-Audit)`:** 5 suites, 84 tests, 1 resolved bug (`BUG-01`), flow map (including API contract telemetry nodes), native steps reporter (`tobi-steps-reporter.ts`), and `.webm` self-audit video recordings.
+* **`Huellicam (VetConnect)` (`workspaces/vetconnect`):** 9 recorded tests and 3 documented Gherkin bugs (`BUG-AUTO-01` to `BUG-AUTO-03`, resolved) with diagnostic traces and specs.
 
 ```bash
 # 1. Clone and install dependencies
@@ -157,10 +157,10 @@ cd tobitests
 npm install
 npm --prefix web install
 
-# 2. Launch the Visual Observability Dashboard + Live Spec Watcher (http://localhost:5173)
+# 2. Launch the Visual Observability Dashboard (http://localhost:5180)
 npm run dev:all
 
-# 3. Build production bundle (for Vercel / GitHub Pages)
+# 3. Build production bundle (for local vite preview or root-domain hosting)
 npm run build:web
 ```
 
@@ -210,19 +210,15 @@ See **[`docs/MCP_SETUP.md`](docs/MCP_SETUP.md)** for full instructions. Add `@pl
 
 ```text
 tobitests/
-├── .agents/                        # System prompts for the 4 specialized QA subagents (UI + Pure API modes)
-│   ├── orchestrator.md             # Antigravity + OpenCode Co-Orchestration & Blackboard protocol
-│   ├── explorer-qa.md              # Playwright MCP actuator & 3-Oracle behavioral/API hunter
-│   ├── telemetry-auditor.md        # Chrome DevTools MCP auditor & White-Box root-cause inspector
-│   └── spec-writer.md              # Deterministic Playwright .spec.ts synthesizer ({ page } & { request })
 ├── docs/                           # Master Documentation Suite
 │   ├── USER_GUIDE.md               # Daily operational manual (Frontend, Pure Backend API & Copy-Paste Prompts)
 │   ├── MCP_SETUP.md                # MCP & Co-Orchestration setup guide (Antigravity, OpenCode, Cursor, Claude)
 │   ├── ARCHITECTURE.md             # 8-Step Local Pipeline & JSON schemas
 │   ├── TESTING_PROTOCOL.md         # 3-Layer Bug Oracle, P0-P3 Rubric & Gherkin Bug Contract
 │   └── FIGMA_AI_PROMPT_SPEC.md     # UI/UX design specification
-├── scripts/                        # Repository-agnostic core CLI & bridge scripts (strictly 4 scripts)
+├── scripts/                        # Repository-agnostic core CLI, MCP & bridge scripts (5 scripts)
 │   ├── tobitests_cli.py            # Agnostic project bootstrapper, route/API scanner & Blackboard CLI
+│   ├── tobitests_mcp.py            # Native MCP server exposing TobiTests tools over stdio
 │   ├── ingest_playwright_results.py# Automatic Playwright JSON report -> UI state & evidence bridge
 │   ├── run_deep_audit.py           # Deep multi-oracle audit runner
 │   └── sync_specs.py               # Real-time .spec.ts watcher & UI state synchronizer
@@ -231,8 +227,9 @@ tobitests/
 │   └── sample-api.spec.ts          # Pure Backend / REST API audit template ({ request } 2xx/4xx/RBAC/Race)
 ├── specs/                          # Permanent Playwright E2E & API test specifications (.spec.ts)
 ├── workspaces/                     # Decoupled per-project PRDs, Test Matrices & project-specific scripts
-│   ├── tobitests/                  # 8 suites / 45 self-audit tests & verification scripts
-│   └── vetconnect-demo/            # 6 suites / 108 VetConnect tests, 4 bugs & scripts
+│   ├── tobitests/                  # Active TobiTests self-audit PRD, matrix & telemetry
+│   ├── tobitests-self-audit/       # Self-audit evidence scripts & reference PRD
+│   └── vetconnect/                 # Sanitized Huellicam (VetConnect) demo workspace (9 tests, 3 Gherkin bugs)
 ├── web/                            # React + TypeScript + Vite Visual Observability App
 │   ├── public/data/                # Live state JSONs, projects.json & Shared Blackboard (antigravity-live.json)
 │   ├── public/evidence/            # Captured .webm videos & .png screenshots
@@ -240,10 +237,20 @@ tobitests/
 ├── AGENTS.md                       # Agent topology, CLI commands & Shared Blackboard manifest
 ├── AGENT_INSTRUCTIONS.md           # Autonomous operating manual for AI coding agents
 ├── CLAUDE.md                       # Claude Code guidance & CLI reference
-├── .cursorrules                    # Cursor IDE rules
+├── .mcp.json                       # Zero-config MCP server registration (tobitests, playwright, chrome-devtools)
+├── pyproject.toml                  # Python package metadata & console scripts (`tobitests`, `tobitests-mcp`)
 ├── opencode.json                   # OpenCode CLI co-orchestration configuration
-└── package.json                    # Root CLI ("audit:init", "audit:run", "dev:all") & Playwright scripts
+└── package.json                    # Root CLI ("audit:init", "audit:run", "dev:all", "verify") & Playwright scripts
 ```
+
+---
+
+## 🤝 Community & Governance
+
+* **[Contributing Guide](CONTRIBUTING.md)** ([Español](CONTRIBUTING.es.md))
+* **[Security Policy](SECURITY.md)** ([Español](SECURITY.es.md))
+* **[Code of Conduct](CODE_OF_CONDUCT.md)** ([Español](CODE_OF_CONDUCT.es.md))
+* **[Changelog](CHANGELOG.md)**
 
 ---
 

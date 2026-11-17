@@ -14,21 +14,21 @@
 
 </div>
 
-> **"Um estúdio autônomo de QA e diagnóstico 100% local e open-source. Una inteligência de código white-box, atuação via Playwright MCP, telemetria CDP do Chrome DevTools e um escritório 2.5D de agentes em tempo real—com zero cotas em nuvem."**
+> **"Um estúdio autônomo de QA e diagnóstico local e open-source. Una inteligência de código white-box, atuação via Playwright MCP, telemetria CDP do Chrome DevTools e um escritório 2.5D de agentes em tempo real—sem cotas em nuvem."**
 
-**TobiTests** é um framework de **Garantia de Qualidade E2E Multiagente Autônomo e Telemetria Visual**, desenvolvido como uma alternativa local e white-box a plataformas comerciais em nuvem como o TestSprite. Desenvolvido sobre o **Model Context Protocol (MCP)**, integra agentes como **Antigravity**, **OpenCode**, **Claude Code** ou **Cursor** com subagentes especializados que inspecionam o código-fonte, exploram jornadas no DOM ao vivo, auditam a telemetria de rede/console por meio de um **Oráculo de Detecção de Bugs em 3 Camadas** e geram suítes permanentes e autorreparáveis no Playwright (`.spec.ts`).
+**TobiTests** é um framework open-source de **Garantia de Qualidade E2E Multiagente Autônomo e Telemetria Visual**, desenvolvido como uma alternativa local e white-box. Baseado no **Model Context Protocol (MCP)**, integra agentes como **Antigravity**, **OpenCode**, **Claude Code** ou **Cursor** com subagentes especializados que inspecionam o código-fonte, exploram jornadas no DOM ao vivo, auditam a telemetria de rede/console por meio de um **Oráculo de Detecção de Bugs em 3 Camadas** e geram suítes permanentes e autorreparáveis no Playwright (`.spec.ts`).
 
 ---
 
 ## ✨ Por que o TobiTests?
 
-| Dimensão | Agentes de "Uso de Computador" (Pixels) | QA SaaS na Nuvem (ex. TestSprite) | **Framework TobiTests** |
-| :--- | :--- | :--- | :--- |
-| **Motor de Execução** | Coordenadas de mouse e capturas de tela | MicroVMs proprietárias na nuvem | **100% Chromium Local / CI via Playwright e CDP** |
-| **Conhecimento do Código**| Caixa-Preta (apenas pixels) | Maioria Caixa-Preta / Upload de PRD | **Caixa-Branca Total** (Rotas, esquemas Zod/Joi, stores, AST) |
-| **Profundidade do Oráculo**| Apenas falhas visuais de asserção | Logs padrão HTTP e asserções | **Oráculo em 3 Camadas** (CDP Implícito + Divergência de Estado + A11y) |
-| **Observabilidade de Agentes**| Logs de texto no terminal | Dashboard estático na nuvem | **Mapa de Fluxo Interativo + Escritório Isométrico 2.5D** |
-| **Custos e Cotas** | Alto consumo de tokens de visão | Assinaturas caras e limites de execução | **100% Open Source, Execuções Ilimitadas em Local e CI** |
+| Dimensão | Agentes de "Uso de Computador" (Pixels) | **Framework TobiTests** |
+| :--- | :--- | :--- |
+| **Motor de Execução** | Coordenadas de mouse e capturas de tela | **Chromium Local / CI via Playwright e CDP** |
+| **Conhecimento do Código**| Caixa-Preta (apenas pixels) | **Caixa-Branca Total** (Rotas, esquemas Zod/Joi, stores, AST) |
+| **Profundidade do Oráculo**| Apenas falhas visuais de asserção | **Oráculo em 3 Camadas** (CDP Implícito + Divergência de Estado + A11y) |
+| **Observabilidade de Agentes**| Logs de texto no terminal | **Mapa de Fluxo Interativo + Escritório Isométrico 2.5D** |
+| **Custos e Cotas** | Alto consumo de tokens de visão | **Open Source (MIT), Execuções Ilimitadas em Local e CI** |
 
 ---
 
@@ -60,7 +60,7 @@ flowchart LR
 
 ## 🤝 Orquestração Dual e Bring Your Own Agent (BYOA)
 
-O TobiTests é 100% agnóstico ao agente. A configuração padrão combina **Antigravity** (Cérebro Analítico) com **OpenCode** (Executor Determinístico), permitindo conectar qualquer modelo ou IDE:
+O TobiTests é agnóstico ao agente. A configuração padrão combina **Antigravity** (Cérebro Analítico) com **OpenCode** (Executor Determinístico), permitindo conectar qualquer modelo ou IDE:
 
 * **Motores Suportados:** `antigravity`, `opencode`, `claude-code`, `cursor`, `codex`, `windsurf` e `custom`.
 * **Troca Dinâmica de Papéis:** Defina quem é o **Líder Principal** (Etapas 1–4, 7) e quem é o **Executor Secundário** (Etapas 5, 6, 8), ou inverta-os com 1 clique (`--swap-agents`).
@@ -77,10 +77,10 @@ git clone https://github.com/TodoTobi/tobitests.git
 cd tobitests
 npm install
 
-# 2. Iniciar o Dashboard de Observabilidade Visual + Watcher em tempo real (http://localhost:5173)
+# 2. Iniciar o Dashboard de Observabilidade Visual + Watcher em tempo real (http://localhost:5180)
 npm run dev:all
 
-# 3. Compilar pacote de produção (para Vercel / GitHub Pages)
+# 3. Compilar pacote de produção (para preview local ou hospedagem em domínio raiz)
 npm run build:web
 
 # 4. Executar suíte de autoverificação Playwright

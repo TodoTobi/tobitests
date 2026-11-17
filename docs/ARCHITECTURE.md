@@ -10,15 +10,15 @@ TobiTests is designed around the principle of **Separation of Concerns between R
 
 ---
 
-## Architectural Comparison: TobiTests vs. Desktop AI vs. TestSprite
+## Architectural Comparison: TobiTests vs. Desktop AI vs. Cloud SaaS QA
 
-| Dimension | Desktop "Computer-Use" (e.g. OpenDesk) | Commercial Cloud QA (e.g. TestSprite) | TobiTests Framework |
+| Dimension | Desktop "Computer-Use" (e.g. OpenDesk) | Commercial Cloud SaaS QA | TobiTests Framework |
 | :--- | :--- | :--- | :--- |
 | **Execution Surface** | OS Level (Mouse coordinates, display pixels) | Cloud Headless Browsers / MicroVMs | Local / CI Browser Engine via CDP & MCP |
 | **Code Awareness** | None (Black-Box) | Requirement / PRD docs (Mostly Black-Box) | **Full White-Box** (Direct access to repo source) |
-| **Flakiness** | High (Window focus, DPI, screen popups) | Low (Isolated sandboxes) | **Very Low** (Semantic DOM & Accessibility Tree) |
-| **Token Efficiency** | Very Low (Heavy screen image processing) | High (Optimized agent prompts) | **High** (Structured accessibility snapshots) |
-| **Ownership** | Self-hosted script | Proprietary SaaS subscription | **100% Open Source & Version-Controlled** |
+| **Flakiness** | High (Window focus, DPI, screen popups) | Low (Isolated sandboxes) | **Low** (Semantic DOM & Accessibility Tree) |
+| **Token Efficiency** | Low (Heavy screen image processing) | High (Optimized agent prompts) | **High** (Structured accessibility snapshots) |
+| **Ownership** | Self-hosted script | Proprietary SaaS subscription | **Open Source (MIT) & Version-Controlled** |
 
 ---
 
@@ -112,7 +112,7 @@ flowchart LR
 * **Actions:**
   * Run tests with Playwright native video recording (`web/public/evidence/videos/*.webm`), per-step high-resolution screenshots (`web/public/evidence/runs/*.png` and `web/public/evidence/bugs/*.png`), and execution timing metrics (`duration` in `ms`/`s`).
   * Ingest granular execution steps via native custom reporter ([`reporters/tobi-steps-reporter.ts`](../reporters/tobi-steps-reporter.ts)) and JSONL telemetry through the custom `tobi` fixture ([`specs/fixtures/tobi.ts`](../specs/fixtures/tobi.ts)).
-  * Self-audit validation suite covers 8 suites and 45 deterministic tests across all system views (Shell, Navigation, Office, Specs, Telemetry, Run Detail, Settings, Smoke).
+  * Self-audit validation suite covers 5 suites and 84 deterministic tests across all system views (Shell, Navigation, Office, Specs, Bug Tracker, Settings, Smoke).
   * Record route graph traversal (`touches`, `testsCount`, `failedCount`, `blockedCount`) to drive [`JourneyCanvas.tsx`](../web/src/components/JourneyCanvas.tsx).
 
 ### Step 7: Triage & 3-Layer Divergence Oracle

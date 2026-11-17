@@ -1,11 +1,11 @@
 # TobiTests — Figma AI Design Brief & UI Specification
 
-> **Prompt for Figma AI / UI Designer:** Generate a modern, developer-first, dark-themed SaaS web application interface called **TobiTests** (an autonomous, multi-agent E2E testing and diagnostics platform inspired by TestSprite). Follow this detailed design brief and component hierarchy.
+> **Prompt for Figma AI / UI Designer:** Generate a modern, developer-first, dark-themed SaaS web application interface called **TobiTests** (a local-first, white-box autonomous multi-agent E2E testing and diagnostics platform). Follow this detailed design brief and component hierarchy.
 
 ---
 
 ## 🎨 Design System & Theme Directives
-* **Aesthetic:** High-density, professional developer tool (similar to Linear, Vercel, Raycast, and TestSprite).
+* **Aesthetic:** High-density, professional developer tool (similar to Linear, Vercel, and Raycast).
 * **Color Palette:**
   * Backgrounds: Deep Slate / Obsidian (`#0B0F17`, `#111827`, `#1F2937`)
   * Surface & Cards: Elevated Charcoal (`#161E2E`, `#1E293B`) with subtle 1px border (`#334155`)
@@ -87,7 +87,7 @@ Entonces [Resultado real obtenido en el sistema] frente a [Resultado esperado qu
 
 ---
 
-## 📊 Live Run View (The TestSprite Experience)
+## 📊 Live Run View (Interactive Run-Map Experience)
 
 * **Split-Screen Layout:**
   * **Left Side (Browser Mirror):** Live or recorded stream of the browser executing steps via Playwright MCP with highlighted green/blue click halos and typed text markers.

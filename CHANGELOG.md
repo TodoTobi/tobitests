@@ -28,8 +28,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - `ingest_playwright_results.py` sanitizes all absolute paths in ingested report JSON before writing state files
 
 ### Fixed
-- `specs/tobitests-run-detail.spec.ts`: removed hardcoded `C:\Users\usuario\Documents\tobitests` repo path
-- `web/src/hooks/useTobiState.ts`: removed hardcoded `C:/Users/usuario/Documents/vetconnect` default path
+- `specs/tobitests-run-detail.spec.ts`: removed hardcoded personal local repository path
+- `web/src/hooks/useTobiState.ts`: removed hardcoded personal local default path (uses relative `../vetconnect` fallback)
 - `web/public/data/vetconnect-state.json`: sanitized all absolute paths in error messages and stack traces
 
 [1.0.0]: https://github.com/TodoTobi/tobitests/releases/tag/v1.0.0

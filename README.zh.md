@@ -14,21 +14,21 @@
 
 </div>
 
-> **“100% 本地运行、开源的自主 QA 与诊断工坊。融合白盒代码智能解析、Playwright MCP 操作驱动、Chrome DevTools CDP 遥测以及 2.5D 等轴实时智能体办公室——零云端额度消耗。”**
+> **“本地运行、开源的自主 QA 与诊断工坊。融合白盒代码智能解析、Playwright MCP 操作驱动、Chrome DevTools CDP 遥测以及 2.5D 等轴实时智能体办公室——无需云端额度。”**
 
-**TobiTests** 是一款开源的**自主多智能体端到端质量保障与可视化遥测框架**，作为 TestSprite 等商业云端测试平台的本地白盒替代方案构建。基于 **Model Context Protocol (MCP)** 标准，它无缝连接 **Antigravity**、**OpenCode**、**Claude Code**、**Cursor** 等主流智能体，通过专业子智能体深度分析源码、遍历 DOM 交互路径、经由**三层缺陷检测预言机**审计网络与控制台运行时遥测，并生成持久化、具备选择器自愈能力的 Playwright 测试套件（`.spec.ts`）。
+**TobiTests** 是一款开源的**自主多智能体端到端质量保障与可视化遥测框架**。基于 **Model Context Protocol (MCP)** 标准，它无缝连接 **Antigravity**、**OpenCode**、**Claude Code**、**Cursor** 等主流智能体，通过专业子智能体深度分析源码、遍历 DOM 交互路径、经由**三层缺陷检测预言机**审计网络与控制台运行时遥测，并生成持久化、具备选择器自愈能力的 Playwright 测试套件（`.spec.ts`）。
 
 ---
 
 ## ✨ 为什么选择 TobiTests？
 
-| 维度 | 像素级“操作电脑”智能体 | 云端 SaaS QA (例如 TestSprite) | **TobiTests 框架** |
-| :--- | :--- | :--- | :--- |
-| **执行引擎** | 系统鼠标坐标模拟与屏幕截图 | 专有云端虚拟机集群 | **100% 本地 Chromium / CI（Playwright + CDP）** |
-| **代码库感知** | 黑盒（仅基于像素） | 大多为黑盒 / 上传 PRD | **全白盒解析**（路由、Zod/Joi 模型、状态库、AST） |
-| **缺陷预言机深度** | 仅依赖视觉断言失败 | 基础 HTTP 与断言日志 | **三层预言机**（隐式 CDP + 状态分歧 + 可访问性） |
-| **智能体可观测性** | 终端命令行纯文本输出 | 静态云端报表页面 | **交互式路径图谱 + 2.5D 等轴智能体办公室** |
-| **成本与额度** | 消耗大量多模态视觉 Token | 昂贵的月订阅与运行次数限制 | **100% 开源，本地与 CI 环境无限次运行** |
+| 维度 | 像素级“操作电脑”智能体 | **TobiTests 框架** |
+| :--- | :--- | :--- |
+| **执行引擎** | 系统鼠标坐标模拟与屏幕截图 | **本地 Chromium / CI（Playwright + CDP）** |
+| **代码库感知** | 黑盒（仅基于像素） | **全白盒解析**（路由、Zod/Joi 模型、状态库、AST） |
+| **缺陷预言机深度** | 仅依赖视觉断言失败 | **三层预言机**（隐式 CDP + 状态分歧 + 可访问性） |
+| **智能体可观测性** | 终端命令行纯文本输出 | **交互式路径图谱 + 2.5D 等轴智能体办公室** |
+| **成本与额度** | 消耗大量多模态视觉 Token | **MIT 开源，本地与 CI 环境无限次运行** |
 
 ---
 
@@ -60,7 +60,7 @@ flowchart LR
 
 ## 🤝 “自带智能体” (BYOA) 与双智能体协同编排
 
-TobiTests 遵循 100% 智能体无关（Agent-Agnostic）架构。默认模式由 **Antigravity**（分析大脑）与 **OpenCode**（执行执行器）协同运作，同时支持接入您日常所用的任何 AI 智能体或 IDE：
+TobiTests 遵循智能体无关（Agent-Agnostic）架构。默认模式由 **Antigravity**（分析大脑）与 **OpenCode**（执行执行器）协同运作，同时支持接入您日常所用的任何 AI 智能体或 IDE：
 
 * **支持的引擎：** `antigravity`、`opencode`、`claude-code`、`cursor`、`codex`、`windsurf` 和 `custom`。
 * **动态角色互换：** 一键指定主导编排者（步骤 1–4、7）与次级执行者（步骤 5、6、8），支持通过命令行（`--swap-agents`）或界面即时调换。
@@ -77,10 +77,10 @@ git clone https://github.com/TodoTobi/tobitests.git
 cd tobitests
 npm install
 
-# 2. 启动可视化遥测面板与实时 Spec 监听器 (http://localhost:5173)
+# 2. 启动可视化遥测面板与实时 Spec 监听器 (http://localhost:5180)
 npm run dev:all
 
-# 3. 构建生产包（可部署至 Vercel 或 GitHub Pages）
+# 3. 构建生产包（用于本地预览或根域名静态部署）
 npm run build:web
 
 # 4. 执行平台自愈冒烟测试套件

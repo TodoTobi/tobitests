@@ -12,7 +12,7 @@ This guide provides the end-to-end operational manual for auditing any **Fronten
 | `npm run audit:run -- --project <slug> --scope <frontend\|backend\|fullstack> --run-playwright` | **Steps 6–7** | Runs Playwright (`test-results/report.json`), copies screenshots/`.webm` videos to `web/public/evidence/`, incrementally merges test results into `web/public/data/<slug>-state.json`, and syncs `antigravity-live.json`. |
 | `python scripts/ingest_playwright_results.py --project <slug> --scope <scope>` | **Step 7** | Incrementally merges an existing `test-results/report.json` into the active project's UI JSON state and updates the shared blackboard. |
 | `npm run dev:all` | **Live UI + Sync** | Starts the Vite React dashboard (`http://localhost:5173`) concurrently with the live spec file watcher (`scripts/sync_specs.py --watch`). |
-| `npm run build:web` | **Static Export** | Builds the self-contained production bundle (`web/dist`) ready for Vercel or GitHub Pages deployment. |
+| `npm run build:web` | **Static Export** | Builds the self-contained production bundle (`web/dist`) for local `vite preview` or root-domain static hosting (Vercel / Netlify). |
 
 ---
 
@@ -120,7 +120,7 @@ npm run audit:init -- --project payments-api --repo ../payments-api --url http:/
 `scripts/tobitests_cli.py` automatically detects Express (`app.get`, `router.post`), Fastify, NestJS (`@Get`, `@Post`), and FastAPI (`@app.get`, `@router.post`) endpoints and marks each node with `category: "API"`.
 
 ### Step 2 — Synthesize `{ request }` API Suites (4 Mandatory Suites)
-Using [`templates/sample-api.spec.ts`](../templates/sample-api.spec.ts) and [`.agents/spec-writer.md`](../.agents/spec-writer.md), generate `specs/<domain>-api.spec.ts` covering:
+Using [`templates/sample-api.spec.ts`](../templates/sample-api.spec.ts) and [`AGENTS.md`](../AGENTS.md) / [`AGENT_INSTRUCTIONS.md`](../AGENT_INSTRUCTIONS.md), generate `specs/<domain>-api.spec.ts` covering:
 1. **Suite 1 — Health, Contract & Schema Validation (`2xx`):** Verifies status `200`/`201`, `content-type: application/json`, required JSON keys, and latency SLA (`< 500ms` health / `< 3000ms` CRUD).
 2. **Suite 2 — Negative & Boundary Payload Fuzzing (`4xx`):** Sends malformed JSON, missing fields, negative numbers, and SQLi/XSS strings; asserts structured `400`/`422` validation errors and strictly `status < 500`.
 3. **Suite 3 — RBAC, JWT & Security Boundaries (`401` / `403`):** Tests missing tokens, tampered Bearer JWTs, and horizontal/vertical privilege escalation across roles.
@@ -137,9 +137,9 @@ In the TobiTests UI (`http://localhost:5173`):
 
 ---
 
-## 🚀 Workflow C: Deploying the Interactive Portfolio Report (Vercel / GitHub Pages)
+## 🚀 Workflow C: Previewing & Hosting the Interactive Report (Local / Root Domain)
 
-Because TobiTests pre-compiles all run metrics, Gherkin bug cards (`web/public/data/*-state.json`), step screenshots (`web/public/evidence/runs/`), and `.webm` execution videos (`web/public/evidence/videos/`) into static assets, you can publish the entire interactive dashboard as a zero-backend portfolio showcase:
+Because TobiTests pre-compiles all run metrics, Gherkin bug cards (`web/public/data/*-state.json`), step screenshots (`web/public/evidence/runs/`), and `.webm` execution videos (`web/public/evidence/videos/`) into static assets, you can preview or host the interactive dashboard as a static site at a root domain (`/`):
 
 ```bash
 # 1. Ingest the latest Playwright run into web/public/data/
@@ -148,10 +148,10 @@ npm run audit:run -- --project tobitests
 # 2. Build the production static bundle in web/dist/
 npm run build:web
 
-# 3. Preview locally or deploy web/dist to Vercel / Netlify / GitHub Pages
+# 3. Preview locally via vite or deploy web/dist to a root domain (Vercel / Netlify)
 npx --prefix web vite preview
 ```
-- **Vercel Configuration:** Set Root Directory to `web`, Build Command to `npm run build`, and Output Directory to `dist`.
+- **Root-Relative Asset Paths:** `web/src/` loads `/data/...` and `/evidence/...` from the root (`base: '/'`). Run locally via `vite` / `vite preview` or deploy to a root domain (e.g., Vercel with Root Directory `web`, Build Command `npm run build`, Output Directory `dist`) — do **not** deploy to a subpath such as `github.io/tobitests/`.
 
 ---
 
@@ -172,7 +172,7 @@ Local URL: <http://localhost:PORT>
 
 ### Prompt 2 — Pure Backend / REST API Audit (Paste into Antigravity or OpenCode)
 ```text
-Act as the TobiTests Backend QA Architect following `.agents/explorer-qa.md`, `.agents/telemetry-auditor.md`, and `.agents/spec-writer.md` (Backend / Pure API Audit Mode).
+Act as the TobiTests Backend QA Architect following `AGENTS.md`, `AGENT_INSTRUCTIONS.md`, and `docs/TESTING_PROTOCOL.md` (Backend / Pure API Audit Mode).
 Target API Repository: <ABSOLUTE_REPO_PATH>
 API Base URL: <http://localhost:PORT>
 

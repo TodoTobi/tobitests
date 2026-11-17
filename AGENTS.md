@@ -6,7 +6,7 @@ This document defines the agent topology, dual co-orchestration architecture, sh
 
 ## 🤝 Agnostic Agent Architecture & Dual Co-Orchestration Protocol
 
-TobiTests features a **"Bring Your Own Agent" (BYOA)** architecture that operates seamlessly on a single local machine. While the default setup pairs **Antigravity** (as the Analytical Brain) with **OpenCode** (as the Deterministic Runner), the engine is **100% agent-agnostic**:
+TobiTests features a **"Bring Your Own Agent" (BYOA)** architecture that operates seamlessly on a single local machine. While the default setup pairs **Antigravity** (as the Analytical Brain) with **OpenCode** (as the Deterministic Runner), the engine is **agent-agnostic**:
 
 * **Supported Agent Engines:** `antigravity`, `opencode`, `claude-code`, `cursor`, `codex`, `windsurf`, and `custom` (any custom LLM agent or CI runner).
 * **Dynamic Role Swapping:** Any agent can be appointed **Primary Lead** (Steps 1–4, 7) or **Secondary Runner** (Steps 5, 6, 8), and roles can be inverted in real time via the UI or CLI (`--swap-agents`).
@@ -61,7 +61,7 @@ To prevent resource contention (such as simultaneous browser port binding or con
 
 ## 🛠️ Core CLI Commands & Repository-Agnostic Scripts (`scripts/`)
 
-All project-specific artifacts live under `workspaces/<project-slug>/`, keeping root `scripts/` strictly limited to the 4 repository-agnostic core scripts:
+All project-specific artifacts live under `workspaces/<project-slug>/`, keeping root `scripts/` limited to the 5 repository-agnostic core scripts:
 
 | Script / Command | Role in Pipeline | Usage Example |
 | :--- | :--- | :--- |

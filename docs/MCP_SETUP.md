@@ -7,7 +7,7 @@ TobiTests combines two Model Context Protocol (MCP) servers—**Playwright MCP**
 ## 🛠️ Prerequisites
 
 1. **Node.js `>= 18.x`** and **npm `>= 9.x`**
-2. **Python `>= 3.10`** (for the 4 core CLI & bridge scripts in `scripts/`)
+2. **Python `>= 3.10`** (for the 5 core CLI, MCP & bridge scripts in `scripts/`)
 3. **Chromium / Google Chrome** installed locally:
    ```bash
    npx playwright install chromium

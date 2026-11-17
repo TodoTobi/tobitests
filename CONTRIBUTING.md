@@ -1,5 +1,7 @@
 # Contributing to TobiTests
 
+*Read this in [Español](./CONTRIBUTING.es.md).*
+
 Thank you for your interest in contributing to **TobiTests** — the Open-Source Autonomous Multi-Agent E2E & API QA Engine! This guide covers the repository architecture, how to integrate new AI coding agents, how to extend the 3-Layer Bug Detection Oracle, and our pull request workflow.
 
 ---
@@ -8,30 +10,32 @@ Thank you for your interest in contributing to **TobiTests** — the Open-Source
 
 ```text
 tobitests/
-├── .agents/                    # Specialized AI subagent role prompts (Orchestrator, Explorer QA, Telemetry Auditor, Spec Writer)
 ├── docs/                       # Architecture specs, 8-step testing protocol, MCP setup, and operational manual
-├── scripts/                    # Repository-agnostic CLI (tobitests_cli.py), Playwright result ingestion, and spec sync watcher
+├── scripts/                    # Repository-agnostic CLI, MCP server, result ingestion, deep audit, and spec watcher (5 scripts)
 ├── specs/                      # Permanent Playwright E2E ({ page }) and Backend API ({ request }) test suites
 ├── templates/                  # Reference templates for Frontend UI (sample.spec.ts) and Backend REST APIs (sample-api.spec.ts)
 ├── web/                        # React 18 + TypeScript + Vite Interactive Command Center (2.5D Office + Journey Canvas + Diagnostic Studio)
 │   ├── public/data/            # Multi-project JSON state & shared antigravity-live.json blackboard
 │   └── src/                    # UI components (JourneyCanvas, OfficeScene, TestDetailModal) & useTobiState hook
-└── workspaces/                 # Per-project Normalized PRD ground truth (prd-ground-truth.json) & test matrices
+├── workspaces/                 # Per-project Normalized PRD ground truth (prd-ground-truth.json) & test matrices
+├── AGENTS.md                   # Agent roles, co-orchestration topology & Shared Blackboard contract
+├── AGENT_INSTRUCTIONS.md       # Autonomous execution manual for AI coding agents
+└── CLAUDE.md                   # Claude Code guidance & CLI reference
 ```
 
 ---
 
 ## 2. Adding Support for New AI Coding Agents & IDEs
 
-TobiTests coordinates multiple AI agents through a shared local blackboard (`web/public/data/antigravity-live.json`) and standard Model Context Protocol (MCP) servers (`@playwright/mcp` and `@chromedevtools/chrome-devtools-mcp`).
+TobiTests coordinates multiple AI agents through a shared local blackboard (`web/public/data/antigravity-live.json`) and standard Model Context Protocol (MCP) servers (`@playwright/mcp`, `@chromedevtools/chrome-devtools-mcp`, and `tobitests-mcp`).
 
 To integrate a new AI Coding Agent or IDE (e.g., Cursor, Windsurf, Cline, Claude Code, or custom orchestrators):
 
-1. **Connect MCP Servers:** Point your agent's MCP configuration to `@playwright/mcp` and `@chromedevtools/chrome-devtools-mcp` (see [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md)).
+1. **Connect MCP Servers:** Point your agent's MCP configuration to `@playwright/mcp` and `@chromedevtools/chrome-devtools-mcp` (see [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md)) or use the root [`.mcp.json`](.mcp.json).
 2. **Adopt the Blackboard Contract (`web/public/data/antigravity-live.json`):**
    - Read `activeProject`, `auditScope` (`"frontend"` | `"backend"` | `"fullstack"`), `currentPipelineStep` (`1`–`8`), and `blackboardState` (`"idle"` | `"exploring"` | `"auditing"` | `"writing_specs"` | `"executing_tests"` | `"triaging"` | `"standup_meeting"`).
    - Emit live agent status updates via `POST /api/antigravity/scope` or by updating `web/public/data/antigravity-live.json` so the 2.5D Isometric Office and Journey Canvas HUD reflect your agent's real-time progress.
-3. **Register Agent Prompts:** Add or update role definitions inside `.agents/` and document the workflow in `AGENTS.md`.
+3. **Register Agent Roles & Engines:** Document new engine integrations or role instructions in [`AGENTS.md`](AGENTS.md) and [`AGENT_INSTRUCTIONS.md`](AGENT_INSTRUCTIONS.md), and register engine detection in `scripts/tobitests_cli.py`.
 
 ---
 
@@ -41,13 +45,13 @@ Every exploratory session and automated test run in TobiTests evaluates the targ
 
 - **Layer 1 — Implicit Oracle (Runtime & Network Telemetry):**
   - Captures uncaught exceptions (`pageerror`), `console.error`, HTTP status codes `>= 400`, CORS blocks, and requests exceeding latency SLAs (`> 500ms` health / `> 3000ms` CRUD).
-  - *How to extend:* Add new CDP listeners or response header validators in `templates/sample.spec.ts`, `templates/sample-api.spec.ts`, and `.agents/telemetry-auditor.md`.
+  - *How to extend:* Add new CDP listeners or response header validators in `templates/sample.spec.ts`, `templates/sample-api.spec.ts`, and `specs/fixtures/tobi.ts`.
 - **Layer 2 — State Divergence Oracle (White-Box vs. Live DOM/API):**
   - Compares the state machine extracted from source code (`workspaces/<project>/prd-ground-truth.json`) against actual cross-view and cross-role mutations.
   - *How to extend:* Enhance route and schema discovery in `scripts/tobitests_cli.py` to support additional frameworks (e.g., Django, Spring Boot, Laravel, GraphQL, gRPC).
 - **Layer 3 — Visual & Accessibility Oracle (Layout & WCAG/ARIA):**
   - Detects horizontal/vertical overflow (`scrollWidth > clientWidth`), blocked interactive elements (`pointer-events: none`), broken modal focus traps (`Escape` dismissal), and ARIA/contrast violations.
-  - *How to extend:* Contribute reusable DOM inspection assertions in `templates/sample.spec.ts` and `.agents/explorer-qa.md`.
+  - *How to extend:* Contribute reusable DOM inspection assertions in `templates/sample.spec.ts` and document them in [`docs/TESTING_PROTOCOL.md`](docs/TESTING_PROTOCOL.md).
 
 ---
 

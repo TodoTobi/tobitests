@@ -13,7 +13,7 @@
 [![Playwright](https://img.shields.io/badge/Playwright-v1.64+-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Playwright_%2B_DevTools-blueviolet?logo=anthropic&logoColor=white)](https://modelcontextprotocol.io/)
 [![Chrome DevTools](https://img.shields.io/badge/Chrome_DevTools-CDP_Oracle-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/devtools)
-[![Co-Orchestration](https://img.shields.io/badge/Orquestaci%C3%B3n-Antigravity_%2B_OpenCode-10B981)](#orquestaci%C3%B3n-dual-y-trae-tu-propio-agente-byoa)
+[![Co-Orchestration](https://img.shields.io/badge/Orquestaci%C3%B3n-Antigravity_%2B_OpenCode-10B981)](#trae-tu-propio-agente-byoa-y-co-orquestación-dual)
 [![CI Status](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/TodoTobi/tobitests/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -26,21 +26,38 @@
 > * 🇧🇷 **[Português (README.pt.md)](./README.pt.md)** — Documentação em Português
 > * 🇨🇳 **[简体中文 (README.zh.md)](./README.zh.md)** — 完整中文文档
 
-> **"Un estudio autónomo de QA y diagnóstico 100% local y de código abierto. Combina inteligencia de código de caja blanca, actuación Playwright MCP, telemetría CDP de Chrome DevTools y una oficina 2.5D de agentes en tiempo real, sin límites ni cuotas en la nube."**
+**TobiTests** es un framework de código abierto de **Aseguramiento de Calidad E2E Multi-Agente Autónomo y Telemetría Visual**. Construido sobre el **Model Context Protocol (MCP)**, conecta agentes de IA (Antigravity, Claude Code, OpenCode, Cursor…) con subagentes especializados que inspeccionan tu código fuente, recorren flujos reales en el DOM, auditan la telemetría de red y consola mediante un **Oráculo de Detección de Errores de 3 Capas**, y compilan suites permanentes de Playwright (`.spec.ts`) — ejecutándose localmente en tu máquina.
 
-**TobiTests** es un framework de **Aseguramiento de Calidad E2E Multi-Agente Autónomo y Telemetría Visual** diseñado como una alternativa local de caja blanca frente a plataformas comerciales en la nube como TestSprite. Construido sobre el **Model Context Protocol (MCP)**, une agentes como **Antigravity**, **OpenCode**, **Claude Code** o **Cursor** con subagentes especializados que inspeccionan tu código fuente, exploran rutas en vivo en el DOM, auditan la telemetría de red/consola mediante un **Oráculo de Detección de Errores de 3 Capas** y generan suites permanentes y auto-reparables en Playwright (`.spec.ts`).
+---
+
+## ⚡ Inicio Rápido en 60 Segundos
+
+```bash
+# 1. Clonar e instalar dependencias
+git clone https://github.com/TodoTobi/tobitests.git && cd tobitests && npm install
+
+# 2. Iniciar el dashboard visual (http://localhost:5180)
+npm run dev:web
+
+# 3. Auditar tu aplicación (reemplaza la URL y el nombre del proyecto)
+python scripts/tobitests_cli.py --project my-app --url http://localhost:3000
+```
+
+![Demo de TobiTests — QA Visual y auditoría de Huellicam (workspaces/vetconnect)](docs/assets/tobitests-demo.gif)
+
+> **Workspace de demostración:** En la grabación se muestra la inspección del workspace demo local sanitizado **Huellicam (`workspaces/vetconnect`)** junto con los datos de auto-auditoría de `tobitests`. ¿Quieres contribuir una guía o grabación? Consulta [CONTRIBUTING.es.md](CONTRIBUTING.es.md).
 
 ---
 
 ## ✨ ¿Por qué TobiTests?
 
-| Dimensión | Agentes de "Uso de Computadora" (Píxeles) | QA SaaS en la Nube (ej. TestSprite) | **Framework TobiTests** |
-| :--- | :--- | :--- | :--- |
-| **Motor de Ejecución** | Coordenadas de ratón y capturas de pantalla | MicroVMs propietarias en la nube | **100% Chromium Local / CI mediante Playwright y CDP** |
-| **Conocimiento del Código** | Caja Negra (solo píxeles) | Mayormente Caja Negra / Subida de PRDs | **Caja Blanca Total** (Rutas, esquemas Zod/Joi, stores, AST) |
-| **Profundidad de Oráculos** | Fallos visuales de aserción | Logs estándar HTTP y aserciones | **Oráculo de 3 Capas** (CDP Implícito + Divergencia de Estado + A11y) |
-| **Observabilidad de Agentes**| Logs de texto en terminal | Dashboard estático en la nube | **Mapa de Flujo Interactivo + Oficina Isométrica 2.5D** |
-| **Costos y Cuotas** | Alto consumo de tokens de visión | Suscripción paga y límites de ejecución | **100% Open Source, Ejecuciones Ilimitadas en Local y CI** |
+| Dimensión | Agentes de "Uso de Computadora" (Píxeles) | **Framework TobiTests** |
+| :--- | :--- | :--- |
+| **Motor de Ejecución** | Coordenadas de ratón del SO y capturas | Chromium Local / CI mediante Playwright y CDP |
+| **Conocimiento del Código** | Caja Negra (solo píxeles) | **Caja Blanca Total** (Rutas, esquemas Zod/Joi, stores, AST) |
+| **Profundidad de Oráculos** | Solo fallos visuales de aserción | **Oráculo de 3 Capas** (CDP Implícito + Divergencia de Estado + A11y) |
+| **Observabilidad de Agentes** | Logs de texto en terminal | **Mapa de Flujo Interactivo + Oficina Isométrica 2.5D** |
+| **Costos** | Alto consumo de tokens de visión | Código abierto (MIT) — ejecútalo localmente o en CI sin costo |
 
 ---
 
@@ -61,7 +78,7 @@ flowchart LR
 
 1. **Bootstrap y Descubrimiento de Puertos/Stack:** Detecta puertos de frontend/backend, stack de frameworks (`Next.js`, `React + Vite`, `Vue`, `Node.js`) e inicializa el espacio de trabajo.
 2. **Análisis de Código Fuente y Rutas:** Análisis estático de caja blanca de definiciones de enrutadores, guards de autenticación, stores de estado (`React Query`, `Zustand`, `Context`) y esquemas de validación.
-3. **Generación de PRD Normalizado (`prd-ground-truth.json`):** Sintetiza una especificación autoritativa legible por máquina dentro de `workspaces/<proyecto>/`.
+3. **Generación de PRD Normalizado (`prd-ground-truth.json`):** Sintetiza una especificación legible por máquina dentro de `workspaces/<proyecto>/`.
 4. **Generación de Matriz de Pruebas (`test-matrix.json`):** Divide las pruebas en **Happy Paths**, **Fuzzing de Casos Límite/Negativos**, **Límites de Seguridad RBAC** y **UI/UX/A11y**.
 5. **Síntesis de Specs de Playwright (`specs/*.spec.ts`):** Genera especificaciones semánticas sin esperas arbitrarias (`sleep`), utilizando `getByRole`, `getByLabel` y `getByTestId`.
 6. **Ejecución Aislada con Video (`.webm`), Capturas y Trazas:** Ejecuta pruebas en contextos aislados capturando video `.webm`, capturas `.png` por paso y métricas de impacto por ruta.
@@ -72,11 +89,11 @@ flowchart LR
 
 ## 🤝 Trae tu Propio Agente (BYOA) y Co-Orquestación Dual
 
-TobiTests es 100% agnóstico respecto al agente. La configuración por defecto vincula a **Antigravity** (Cerebro Analítico) con **OpenCode** (Ejecutor Determinista), pero permite conectar cualquier agente o entorno:
+TobiTests es agnóstico respecto al agente. La configuración por defecto vincula a **Antigravity** (Cerebro Analítico) con **OpenCode** (Ejecutor Determinista), pero permite conectar cualquier agente o entorno:
 
 * **Motores Compatibles:** `antigravity`, `opencode`, `claude-code`, `cursor`, `codex`, `windsurf` y `custom`.
-* **Intercambio Dinámico de Roles:** Define quién es el **Líder Principal** (Pasos 1–4, 7) y quién es el **Ejecutor Secundario** (Pasos 5, 6, 8), o inviértelos con 1 clic (`--swap-agents`).
-* **Modo Solo (Agente Único):** ¿Trabajando con un solo agente? Activa el **Modo Solo** (`--mode single`) y el agente seleccionado ejecutará los 8 pasos de inicio a fin sin esperar relevos.
+* **Intercambio Dinámico de Roles:** Define quién es el **Líder Principal** (Pasos 1–4, 7) y quién es el **Ejecutor Secundario** (Pasos 5, 6, 8), o inviértelos en 1 clic (`--swap-agents`).
+* **Modo Solo (Agente Único):** ¿Trabajas con un solo agente? Activa el **Modo Solo** (`--mode single`) y el agente seleccionado ejecutará los 8 pasos de inicio a fin sin esperar relevos.
 * **Autodetección de Entorno:** Reconoce automáticamente herramientas CLI y reglas instaladas (`.cursorrules`, `CLAUDE.md`, `opencode.json`, `CODEX.md`, `.windsurfrules`).
 
 | Rol de Agente | Motor por Defecto | Opciones Soportadas | Enfoque Principal | Herramientas / MCP |
@@ -91,66 +108,68 @@ TobiTests es 100% agnóstico respecto al agente. La configuración por defecto v
 
 ## 🔬 El Oráculo de Detección de 3 Capas y Rúbrica P0–P3
 
-Definido en [`docs/TESTING_PROTOCOL.md`](docs/TESTING_PROTOCOL.md), los subagentes identifican y clasifican defectos sin depender de aserciones humanas frágiles:
+Definido en [`docs/TESTING_PROTOCOL.md`](docs/TESTING_PROTOCOL.md), los subagentes identifican y clasifican defectos sin depender únicamente de aserciones manuales:
 
 1. **Capa 1 — Oráculo Implícito (Chrome DevTools MCP y Listeners de Ejecución):**
-   Captura `pageerror`, `Uncaught Exception`, `console.error`, respuestas HTTP `>= 400` inesperadas y peticiones bloqueadas (`> 3000ms`) en WebSockets, WebRTC o APIs vía `list_console_messages`, `list_network_requests` y listeners de Playwright.
+   Captura `pageerror`, `Uncaught Exception`, `console.error`, respuestas HTTP `>= 400` inesperadas y peticiones colgadas (`> 3000ms`) en WebSockets, WebRTC o APIs vía `list_console_messages`, `list_network_requests` y `page.on('pageerror' | 'console' | 'response')`.
 2. **Capa 2 — Oráculo de Divergencia de Estado (Playwright MCP + Código Fuente):**
    Compara la máquina de estados deducida del código fuente contra el DOM renderizado en vivo tras cada mutación para detectar desincronizaciones entre vistas o roles (ej. un elemento cancelado en la Vista A que sigue activo en la Vista B por falta de invalidación de caché).
 3. **Capa 3 — Oráculo Visual y de Accesibilidad (Snapshots DOM y Estilos Computados):**
-   Detecta controles interactivos bloqueados (`pointer-events: none`), desbordamiento horizontal (`scrollWidth > clientWidth`), problemas de cierre en modales (`Escape` / click en backdrop) y violaciones críticas de accesibilidad WCAG/ARIA.
+   Detecta controles interactivos bloqueados (`pointer-events: none`), desbordamiento horizontal (`scrollWidth > clientWidth`), problemas de cierre en modales (`Escape` / clic en backdrop) y violaciones críticas de accesibilidad WCAG/ARIA.
 
 ### Rúbrica de Severidad e Impacto
 * 🔴 **`critical` (P0 — Bloqueante):** Caída total de la app (pantalla blanca), HTTP `500` en flujos centrales (Autenticación/Pagos), vulnerabilidad RBAC o pérdida de datos.
-* 🟠 **`high` (P1 — Mayor):** Divergencia de estado entre roles/vistas, flujo principal roto sin alternativa evidente, o timeout en servicios en tiempo real.
+* 🟠 **`high` (P1 — Mayor):** Divergencia de estado entre roles/vistas, flujo principal roto sin alternativa evidente, o timeout en servicios en tiempo real (WebRTC/WebSockets).
 * 🟡 **`medium` (P2 — Menor):** Validaciones de formulario faltantes, datos desactualizados en modales secundarios, o fallas de UI con solución sencilla.
-* 🔵 **`low` (P3 — Trivial / UI):** Errores de traducción, desalineación visual menor, advertencias no críticas en consola, o pequeños roces de usabilidad.
+* 🔵 **`low` (P3 — Trivial / UI):** Mezclas de idioma, desalineación visual menor, advertencias `console.warn` no críticas o pequeños roces de usabilidad.
 
 ---
 
 ## 🖥️ Suite de Observabilidad Visual (`web/`)
 
-La plataforma web de TobiTests (`web/src/`) proporciona tres módulos principales:
+La plataforma web de TobiTests (`web/src/`) proporciona tres estudios principales:
 
 1. **Canvas Interactivo de Rutas y Journeys ([`JourneyCanvas.tsx`](web/src/components/JourneyCanvas.tsx)):**
-   * Mapa de flujo interactivo con nodos y curvas Bézier (`rm-frame`, `rm-hi`, `rm-has-fail`) mostrando capturas de pantalla de rutas, conteo de pruebas por pantalla, toques de navegación y distintivos de fallo.
-   * Drawer lateral colapsable para inspeccionar trayectorias completas de izquierda a derecha y píldoras de conexión con información del agente ejecutor, herramienta MCP, selector de Playwright y duración.
+   * Mapa de flujo con nodos y curvas Bézier (`rm-frame`, `rm-hi`, `rm-has-fail`) mostrando capturas de pantalla de rutas, conteo de pruebas por pantalla, toques de navegación y distintivos de fallo.
+   * Pasa el cursor sobre cualquier prueba en el drawer colapsable para trazar su trayectoria completa de izquierda a derecha; haz clic en cualquier píldora de conexión para ver el agente ejecutor, herramienta MCP, selector de Playwright y duración.
 2. **"La Oficina" Centro de Comando Isométrico 2.5D ([`OfficeScene.tsx`](web/src/components/OfficeScene.tsx) y [`OfficeView.tsx`](web/src/components/OfficeView.tsx)):**
-   * Simulación 2.5D en tiempo real de **Antigravity**, **Explorer QA**, **Telemetry Auditor**, **Spec Writer** y **OpenCode** trabajando en sus escritorios, servidores y reuniones standup, sincronizada con `web/public/data/antigravity-live.json`.
+   * Simulación 2.5D en tiempo real de **Antigravity**, **Explorer QA**, **Telemetry Auditor**, **Spec Writer** y **OpenCode** en sus estaciones, servidores y reuniones standup, sincronizada con `web/public/data/antigravity-live.json`.
 3. **Estudio de Diagnóstico y Reproducción ([`TestDetailModal.tsx`](web/src/components/TestDetailModal.tsx)):**
-   * Enfoca automáticamente los pasos fallidos, reproduce videos `.webm` integrados junto a capturas por paso, y genera con un clic prompts **Gherkin/BDD + Cerco Anti-Regresión** y diagnóstico de causa raíz de caja blanca (`root_cause_file` y `root_cause_line`).
+   * Enfoca automáticamente los pasos fallidos, reproduce videos `.webm` integrados junto a capturas por paso, y proporciona con un clic prompts **Gherkin/BDD + Cerco Anti-Regresión** y diagnóstico de causa raíz de caja blanca (`root_cause_file` y `root_cause_line`).
 
 ---
 
-## ⚡ Inicio Rápido y Modos Operativos
+## ⚡ Modos Operativos y Guía de Uso
 
 > 📖 **Manuales Completos de Operación:**
-> * **[`docs/USER_GUIDE.md`](docs/USER_GUIDE.md):** Guía práctica para **Aplicaciones Web Frontend/Full-Stack**, **APIs Backend Puras / REST**, **Despliegue de Portafolio Estático** y **Prompts de Copiar y Pegar**.
+> * **[`docs/USER_GUIDE.md`](docs/USER_GUIDE.md):** Guía práctica para **Aplicaciones Web Frontend/Full-Stack**, **APIs Backend Puras / REST**, **Vista Previa Estática** y **Prompts de Copiar y Pegar** para Antigravity y OpenCode.
 > * **[`docs/MCP_SETUP.md`](docs/MCP_SETUP.md):** Configuración detallada de MCP para **Antigravity IDE**, **OpenCode CLI** ([`opencode.json`](opencode.json)), **Cursor** y **Claude Code**.
 
-### Modo 1: Demo Interactiva de Portafolio (Proyectos Pre-Cargados)
-TobiTests incluye dos espacios de trabajo completos y pre-auditados listos para explorar en el navegador (o desplegar como sitio estático en Vercel o GitHub Pages):
-* **`TobiTests (Self-Audit)`:** 5 suites, 84 pruebas E2E, mapa de flujo (incluyendo telemetría de contratos API) y grabaciones de video `.webm`.
-* **`VetConnect`:** 6 suites, 108 pruebas E2E y 4 bugs reales documentados en Gherkin (`BUG-01` a `BUG-04`) con videos de reproducción.
+### Modo 1: Demo Interactiva (Workspaces Pre-Cargados)
+TobiTests incluye dos espacios de trabajo pre-auditados listos para explorar localmente con `vite` (o alojar como sitio estático en un **dominio raíz** como Vercel/Netlify — nota que `web/src/` usa rutas relativas a la raíz `/data/...` y `/evidence/...`, por lo que no es compatible con subrutas como `github.io/tobitests/`):
+* **`TobiTests (Self-Audit)`:** 5 suites, 84 pruebas, 1 bug resuelto (`BUG-01`), mapa de flujo (incluyendo nodos de telemetría de contratos API), reporter nativo de pasos (`tobi-steps-reporter.ts`) y grabaciones `.webm` de auto-auditoría.
+* **`Huellicam (VetConnect)` (`workspaces/vetconnect`):** 9 pruebas registradas y 3 bugs documentados en Gherkin (`BUG-AUTO-01` a `BUG-AUTO-03`, resueltos) con trazas de diagnóstico y specs.
 
 ```bash
-# 1. Clonar e instalar dependencias (instala automáticamente la raíz y web mediante postinstall)
+# 1. Clonar e instalar dependencias
 git clone https://github.com/TodoTobi/tobitests.git
 cd tobitests
 npm install
+npm --prefix web install
 
-# 2. Iniciar el Dashboard de Observabilidad Visual + Watcher en vivo (http://localhost:5173)
+# 2. Iniciar el Dashboard de Observabilidad Visual (http://localhost:5180)
 npm run dev:all
 
-# 3. Compilar el paquete de producción (para Vercel / GitHub Pages)
+# 3. Compilar el paquete de producción (para vite preview local o hosting en dominio raíz)
 npm run build:web
 ```
 
 ### Modo 2: Auditar Cualquier Proyecto Frontend, API Backend o Full-Stack Local (`--scope`)
-TobiTests permite **seleccionar dinámicamente el alcance de auditoría (`frontend` | `backend` | `fullstack`)** tanto al crear el proyecto (en el selector de 3 tarjetas de `+ Agregar Proyecto` o mediante `--scope` en el CLI) como **en caliente tras las pruebas** mediante el selector superior (`🖥️ Frontend` | `⚙️ Backend API` | `🔗 Full-Stack`), con **fusión incremental** entre ejecuciones:
+TobiTests permite **seleccionar dinámicamente el alcance de auditoría (`frontend` | `backend` | `fullstack`)** tanto al inicializar el proyecto (en el selector de 3 tarjetas de `+ Agregar Proyecto` o mediante `--scope` en CLI) como **en tiempo real tras las pruebas** mediante el selector superior (`🖥️ Frontend` | `⚙️ Backend API` | `🔗 Full-Stack`) y el botón **`⚡ Re-auditar alcance`**, con **fusión incremental** entre ejecuciones:
 
 ```bash
 # 1. Inicializar el espacio de trabajo del proyecto objetivo (Pasos 1–4):
+#    Elige --scope frontend (UI E2E), --scope backend (API pura { request }), o --scope fullstack (ambos)
 npm run audit:init -- --project mi-app --repo "C:/ruta/a/mi-app" --url "http://localhost:3000" --scope fullstack
 
 # 2. Ejemplo de Fusión Incremental: Auditar Frontend primero y luego agregar Backend sin perder resultados:
@@ -168,7 +187,7 @@ npm run audit -- --status standup_meeting --orchestrator antigravity --step 8 --
 ```
 
 ### Modo 3: Configurar Servidores MCP en tu Cliente de IA
-Consulta **[`docs/MCP_SETUP.md`](docs/MCP_SETUP.md)** para instrucciones completas. Agrega `@playwright/mcp` y `@chromedevtools/chrome-devtools-mcp` a la configuración de tu cliente de IA (`mcp_config.json` / [`opencode.json`](opencode.json) / `.cursor/mcp.json`):
+Consulta **[`docs/MCP_SETUP.md`](docs/MCP_SETUP.md)** para instrucciones completas. El archivo [`.mcp.json`](.mcp.json) en la raíz registra `tobitests`, `playwright` y `chrome-devtools` automáticamente para Claude Code, o puedes agregar `@playwright/mcp` y `@chromedevtools/chrome-devtools-mcp` a tu cliente de IA (`mcp_config.json` / [`opencode.json`](opencode.json) / `.cursor/mcp.json`):
 
 ```json
 {
@@ -191,19 +210,15 @@ Consulta **[`docs/MCP_SETUP.md`](docs/MCP_SETUP.md)** para instrucciones complet
 
 ```text
 tobitests/
-├── .agents/                        # Prompts de sistema para los 4 subagentes especializados de QA
-│   ├── orchestrator.md             # Co-Orquestación Antigravity + OpenCode y protocolo de Pizarra
-│   ├── explorer-qa.md              # Actuador Playwright MCP y explorador de comportamiento/APIs
-│   ├── telemetry-auditor.md        # Auditor Chrome DevTools MCP e inspector de causa raíz de caja blanca
-│   └── spec-writer.md              # Sintetizador determinista de .spec.ts ({ page } y { request })
 ├── docs/                           # Suite Maestra de Documentación
 │   ├── USER_GUIDE.md               # Manual operativo diario (Frontend, API Backend y Prompts)
 │   ├── MCP_SETUP.md                # Guía de configuración MCP (Antigravity, OpenCode, Cursor, Claude)
-│   ├── ARCHITECTURE.md             # Pipeline de 8 Pasos, REA de TestSprite v3 y esquemas JSON
+│   ├── ARCHITECTURE.md             # Pipeline de 8 Pasos y esquemas JSON
 │   ├── TESTING_PROTOCOL.md         # Oráculo de 3 Capas, Rúbrica P0-P3 y Contrato Gherkin
 │   └── FIGMA_AI_PROMPT_SPEC.md     # Especificación de diseño de UI/UX
-├── scripts/                        # Scripts agnósticos del CLI central (estrictamente 4 scripts)
+├── scripts/                        # Scripts agnósticos del CLI central, MCP y puente (5 scripts)
 │   ├── tobitests_cli.py            # Inicializador agnóstico, escáner de rutas/APIs y CLI de Pizarra
+│   ├── tobitests_mcp.py            # Servidor MCP nativo que expone herramientas de TobiTests por stdio
 │   ├── ingest_playwright_results.py# Puente automático de reportes JSON de Playwright a la UI
 │   ├── run_deep_audit.py           # Ejecutor de auditoría profunda multi-oráculo
 │   └── sync_specs.py               # Observador en tiempo real de .spec.ts y sincronizador de UI
@@ -212,8 +227,9 @@ tobitests/
 │   └── sample-api.spec.ts          # Plantilla para Backend / API REST ({ request } 2xx/4xx/RBAC/Race)
 ├── specs/                          # Especificaciones permanentes de pruebas Playwright (.spec.ts)
 ├── workspaces/                     # PRDs, Matrices de prueba y scripts desacoplados por proyecto
-│   ├── tobitests-self-audit/       # 5 suites / 84 pruebas de auto-auditoría
-│   └── vetconnect-demo/            # 6 suites / 108 pruebas de VetConnect, 4 bugs y scripts
+│   ├── tobitests/                  # PRD, matriz y telemetría de auto-auditoría de TobiTests
+│   ├── tobitests-self-audit/       # Scripts de evidencia y PRD de referencia de auto-auditoría
+│   └── vetconnect/                 # Workspace demo sanitizado de Huellicam (VetConnect) (9 pruebas, 3 bugs Gherkin)
 ├── web/                            # Aplicación de Observabilidad Visual en React + TypeScript + Vite
 │   ├── public/data/                # JSONs de estado en vivo, projects.json y Pizarra Compartida
 │   ├── public/evidence/            # Videos .webm y capturas .png registradas
@@ -221,10 +237,20 @@ tobitests/
 ├── AGENTS.md                       # Manifiesto de topología de agentes, CLI y Pizarra Compartida
 ├── AGENT_INSTRUCTIONS.md           # Manual operativo autónomo para agentes de código
 ├── CLAUDE.md                       # Guía y referencia CLI para Claude Code
-├── .cursorrules                    # Reglas para Cursor IDE
+├── .mcp.json                       # Registro MCP sin configuración previa (tobitests, playwright, chrome-devtools)
+├── pyproject.toml                  # Metadatos del paquete Python y comandos (`tobitests`, `tobitests-mcp`)
 ├── opencode.json                   # Configuración de co-orquestación para OpenCode CLI
-└── package.json                    # Scripts del proyecto ("audit:init", "audit:run", "dev:all", "test")
+└── package.json                    # Scripts del proyecto ("audit:init", "audit:run", "dev:all", "verify")
 ```
+
+---
+
+## 🤝 Comunidad y Gobernanza
+
+* **[Guía de Contribución](CONTRIBUTING.es.md)** ([English](CONTRIBUTING.md))
+* **[Política de Seguridad](SECURITY.es.md)** ([English](SECURITY.md))
+* **[Código de Conducta](CODE_OF_CONDUCT.es.md)** ([English](CODE_OF_CONDUCT.md))
+* **[Registro de Cambios (Changelog)](CHANGELOG.md)**
 
 ---
 

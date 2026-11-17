@@ -38,4 +38,4 @@ When working within this repository or utilizing TobiTests protocols to audit an
 
 ## Shared Blackboard Synchronization (`web/public/data/antigravity-live.json`)
 
-Before and during every pipeline step (Steps 1–8), update `web/public/data/antigravity-live.json` (`activeOrchestrator`, `blackboardState`, `handoffReady`, `currentPipelineStep`, and `agents[].currentTask`) so the 2.5D Office View (`OfficeView.tsx`) and TestSprite Journey Canvas (`JourneyCanvas.tsx`) reflect real-time agent activity and braille progress spinners.
+Before and during every pipeline step (Steps 1–8), update `web/public/data/antigravity-live.json` (`activeOrchestrator`, `blackboardState`, `handoffReady`, `currentPipelineStep`, and `agents[].currentTask`) so the 2.5D Office View (`OfficeView.tsx`) and Interactive Journey Canvas (`JourneyCanvas.tsx`) reflect real-time agent activity and braille progress spinners.
