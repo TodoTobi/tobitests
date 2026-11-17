@@ -172,7 +172,9 @@ async def execute_deep_audit(
 
 def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
-    repo_root = Path(args.repo_root).resolve() if args.repo_root else Path(__file__).resolve().parent.parent
+    _parent = Path(__file__).resolve().parent.parent
+    _default_root = _parent if (_parent / "playwright.config.ts").is_file() else Path.cwd().resolve()
+    repo_root = Path(args.repo_root).resolve() if args.repo_root else _default_root
     workspace_dir = repo_root / "workspaces" / args.project
     workspace_dir.mkdir(parents=True, exist_ok=True)
     telemetry_path = workspace_dir / "deep-audit-telemetry.json"

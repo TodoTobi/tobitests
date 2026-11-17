@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-11-10T22:25:20Z",
+  "generatedAt": "2026-11-13T02:41:40Z",
   "pipelineStep": 3,
   "orchestrator": "antigravity",
   "auditScope": "fullstack",
@@ -10,8 +10,8 @@
   "project": {
     "id": "vetconnect",
     "name": "vetconnect",
-    "url": "http://[::1]:5173",
-    "repoPath": "../VetConnect",
+    "url": "http://localhost:5173",
+    "repoPath": "../vetconnect",
     "auditScope": "fullstack",
     "stack": {
       "framework": "React 18 + Vite 6 + TypeScript",
@@ -53,7 +53,11 @@
       ],
       "packageManager": "npm",
       "hasPlaywright": false,
-      "auditScope": "fullstack"
+      "auditScope": "fullstack",
+      "schemas": [
+        "zod"
+      ],
+      "hasAuthGuard": true
     }
   },
   "oraclesContract": {
@@ -64,7 +68,7 @@
   "routesDiscovered": [
     {
       "id": "landing",
-      "route": "http://[::1]:5173",
+      "route": "http://localhost:5173",
       "title": "/ · Landing & Entry",
       "category": "auth"
     },

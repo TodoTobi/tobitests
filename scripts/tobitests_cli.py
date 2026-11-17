@@ -26,6 +26,46 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
+SCRIPTS_DIR = Path(__file__).resolve().parent
+
+
+def resolve_default_repo_root(scripts_dir: Optional[Path] = None) -> Path:
+    base = (scripts_dir or SCRIPTS_DIR).resolve()
+    candidate = base.parent
+    if (candidate / "playwright.config.ts").is_file():
+        return candidate
+    return Path.cwd().resolve()
+
+
+def _normalize_repo_path(target_repo: Optional[str], repo_root: Path) -> str:
+    if not target_repo or not str(target_repo).strip():
+        return "."
+    raw = str(target_repo).strip()
+    if raw in (".", "./"):
+        return "."
+    r_root = repo_root.resolve()
+    candidate = Path(raw)
+    resolved = (r_root / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
+    if resolved == r_root:
+        return "."
+    try:
+        rel = os.path.relpath(str(resolved), str(r_root))
+        rel_posix = rel.replace("\\", "/")
+        if not os.path.isabs(rel) and rel_posix.split("/").count("..") <= 2:
+            return rel_posix
+    except ValueError:
+        pass
+    norm_posix = resolved.as_posix()
+    home_posix = Path.home().resolve().as_posix().rstrip("/")
+    if home_posix and norm_posix.lower().startswith(home_posix.lower() + "/"):
+        return "~/" + norm_posix[len(home_posix) + 1 :]
+    if home_posix and norm_posix.lower() == home_posix.lower():
+        return "~"
+    norm_posix = re.sub(r"^[a-zA-Z]:/Users/[^/]+", "~", norm_posix, flags=re.IGNORECASE)
+    norm_posix = re.sub(r"^/(?:Users|home)/[^/]+", "~", norm_posix, flags=re.IGNORECASE)
+    return norm_posix
+
+
 def resolve_fastest_url(url_str: str) -> str:
     try:
         parsed = urllib.parse.urlparse(url_str)
@@ -842,6 +882,8 @@ def generate_workspace_artifacts(
     if audit_scope not in prev_scopes:
         prev_scopes.append(audit_scope)
 
+    normalized_repo_path = _normalize_repo_path(target_repo, repo_root)
+
     # 1. Generate / Merge Normalized PRD (Step 3)
     prd_data = {
         "schemaVersion": "1.0.0",
@@ -854,7 +896,7 @@ def generate_workspace_artifacts(
             "id": project_slug,
             "name": project_name,
             "url": url,
-            "repoPath": target_repo or str(repo_root),
+            "repoPath": normalized_repo_path,
             "auditScope": audit_scope,
             "stack": stack_info,
         },
@@ -1194,7 +1236,7 @@ test.describe('{project_name} — Autonomous E2E Audit & 3-Layer Oracles', () =>
         "auditScope": audit_scope,
         "project": {
             "name": project_name,
-            "repoPath": target_repo or str(repo_root),
+            "repoPath": normalized_repo_path,
             "url": url,
             "backendUrl": "ws://localhost:9222 (Playwright + Chrome CDP)",
             "branch": "main",
@@ -1288,7 +1330,8 @@ def detect_environment_agents(repo_root: Path) -> List[str]:
     home = Path(os.environ.get("USERPROFILE") or os.environ.get("HOME") or Path.home())
 
     is_tobitests_repo = (
-        repo_root.resolve() == Path(__file__).resolve().parent.parent
+        ((SCRIPTS_DIR.parent / "playwright.config.ts").is_file()
+         and repo_root.resolve() == SCRIPTS_DIR.parent.resolve())
         or ((repo_root / "package.json").exists()
             and "tobitests" in (repo_root / "package.json").read_text(encoding="utf-8", errors="ignore").lower())
     )
@@ -1445,6 +1488,12 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         help="Optional local repository path to scan for stack dependencies and route files",
     )
     parser.add_argument(
+        "--repo-root",
+        type=str,
+        default=None,
+        help="Optional TobiTests workspace root directory (defaults to checkout root or current working directory)",
+    )
+    parser.add_argument(
         "--scope",
         type=str,
         choices=["frontend", "backend", "fullstack"],
@@ -1528,7 +1577,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
 def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = Path(args.repo_root).resolve() if args.repo_root else resolve_default_repo_root()
 
     project_slug: Optional[str] = None
     resolved_scope = args.scope

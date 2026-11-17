@@ -12,7 +12,7 @@ function createMockState(options: {
     auditScope: options.auditScope,
     project: {
       name: 'TobiTests',
-      repoPath: 'C:\\Users\\usuario\\Documents\\tobitests',
+      repoPath: '.',
       url: 'http://localhost:5173',
       backendUrl: 'ws://localhost:9222',
       branch: 'main',

@@ -26,21 +26,38 @@
 > * 🇨🇳 **[简体中文 (README.zh.md)](./README.zh.md)** — 完整中文文档
 > * 🇺🇸 **English (README.md)** — Default English version
 
-> **"A 100% local, open-source autonomous QA & diagnostics studio. Combine White-Box codebase intelligence, Playwright MCP actuation, Chrome DevTools CDP telemetry, and a real-time 2.5D Agent Office—with zero cloud quotas."**
+**TobiTests** is an open-source **Autonomous Multi-Agent E2E Quality Assurance & Visual Telemetry Framework**. Built on the **Model Context Protocol (MCP)**, it pairs AI agents (Antigravity, Claude Code, OpenCode, Cursor…) with specialized subagents that inspect your source code, explore live DOM journeys, audit runtime network/console telemetry through a **3-Layer Bug Detection Oracle**, and compile permanent, self-healing Playwright `.spec.ts` suites — all running locally on your machine.
 
-**TobiTests** is an open-source **Autonomous Multi-Agent E2E Quality Assurance & Visual Telemetry Framework** engineered as a white-box, local-first alternative to commercial cloud QA platforms like TestSprite. Built on the **Model Context Protocol (MCP)**, it unites **Antigravity** and **OpenCode** with specialized subagents that inspect your source code, explore live DOM journeys, audit runtime network/console telemetry through a **3-Layer Bug Detection Oracle**, and compile permanent, self-healing Playwright `.spec.ts` suites.
+---
+
+## ⚡ 60-Second Quickstart
+
+```bash
+# 1. Clone & install
+git clone https://github.com/TodoTobi/tobitests.git
+cd tobitests
+npm install
+
+# 2. Launch the visual dashboard (http://localhost:5173)
+npm run dev:web
+
+# 3. Audit your app (replace URL & project name)
+python scripts/tobitests_cli.py --project my-app --url http://localhost:3000
+```
+
+> **Demo:** A 60-second recording against [Huellicam / VetConnect](https://github.com/grupo-pinnacle/VetConnect) is coming soon. Want to contribute one? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 ## ✨ Why TobiTests?
 
-| Dimension | Pixel "Computer-Use" Agents | Cloud SaaS QA (e.g. TestSprite) | **TobiTests Framework** |
-| :--- | :--- | :--- | :--- |
-| **Execution Engine** | OS mouse coordinates & screenshots | Proprietary cloud microVMs | **100% Local Chromium / CI via Playwright & CDP** |
-| **Codebase Awareness** | Black-Box (pixels only) | Mostly Black-Box / PRD uploads | **Full White-Box** (Routes, Zod/Joi schemas, stores, AST) |
-| **Bug Oracle Depth** | Visual assertion failures only | Standard HTTP & assertion logs | **3-Layer Oracle** (Implicit CDP + State Divergence + A11y) |
-| **Agent Observability** | Terminal text logs | Static cloud dashboard | **Interactive Flow Map + 2.5D Isometric Agent Office** |
-| **Cost & Quotas** | High vision-token burn | Paid subscription & run limits | **100% Open Source, Unlimited Local & CI Runs** |
+| Dimension | Pixel "Computer-Use" Agents | **TobiTests Framework** |
+| :--- | :--- | :--- |
+| **Execution Engine** | OS mouse coordinates & screenshots | Local Chromium / CI via Playwright & CDP |
+| **Codebase Awareness** | Black-Box (pixels only) | **Full White-Box** (Routes, Zod/Joi schemas, stores, AST) |
+| **Bug Oracle Depth** | Visual assertion failures only | **3-Layer Oracle** (Implicit CDP + State Divergence + A11y) |
+| **Agent Observability** | Terminal text logs | **Interactive Flow Map + 2.5D Isometric Agent Office** |
+| **Cost** | High vision-token burn | Open source — run locally or in CI for free |
 
 ---
 
@@ -72,7 +89,7 @@ flowchart LR
 
 ## 🤝 Bring Your Own Agent (BYOA) & Dual Co-Orchestration
 
-TobiTests is 100% agent-agnostic. While the default configuration pairs **Antigravity** (Analytical Brain) with **OpenCode** (Deterministic Runner), you can plug in any AI agent or IDE you use:
+TobiTests is agent-agnostic. While the default configuration pairs **Antigravity** (Analytical Brain) with **OpenCode** (Deterministic Runner), you can plug in any AI agent or IDE you use:
 
 * **Supported Engines:** `antigravity`, `opencode`, `claude-code`, `cursor`, `codex`, `windsurf`, and `custom`.
 * **Dynamic Role Swapping:** Choose who is **Primary Lead** (Steps 1–4, 7) and who is **Secondary Runner** (Steps 5, 6, 8), or swap them in 1 click (`--swap-agents`).
@@ -201,7 +218,7 @@ tobitests/
 ├── docs/                           # Master Documentation Suite
 │   ├── USER_GUIDE.md               # Daily operational manual (Frontend, Pure Backend API & Copy-Paste Prompts)
 │   ├── MCP_SETUP.md                # MCP & Co-Orchestration setup guide (Antigravity, OpenCode, Cursor, Claude)
-│   ├── ARCHITECTURE.md             # 8-Step Local Pipeline, TestSprite v3 REA & JSON schemas
+│   ├── ARCHITECTURE.md             # 8-Step Local Pipeline & JSON schemas
 │   ├── TESTING_PROTOCOL.md         # 3-Layer Bug Oracle, P0-P3 Rubric & Gherkin Bug Contract
 │   └── FIGMA_AI_PROMPT_SPEC.md     # UI/UX design specification
 ├── scripts/                        # Repository-agnostic core CLI & bridge scripts (strictly 4 scripts)

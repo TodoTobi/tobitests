@@ -2,8 +2,23 @@
   "project": "vetconnect",
   "target_url": "http://localhost:5173",
   "visited_routes": [
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://localhost:5173/login",
+    "http://localhost:5173/register",
+    "http://localhost:5173/forgot-password",
+    "http://localhost:5173/client"
   ],
-  "console_errors": [],
-  "network_failures": []
+  "console_errors": [
+    "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
+  "network_failures": [
+    "HTTP 401 http://localhost:3001/api/auth/me",
+    "HTTP 401 http://localhost:3001/api/auth/me",
+    "HTTP 401 http://localhost:3001/api/auth/me",
+    "HTTP 401 http://localhost:3001/api/auth/me"
+  ],
+  "page_errors": []
 }

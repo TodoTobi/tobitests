@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "tobitests": {
+      "command": "python",
+      "args": ["scripts/tobitests_mcp.py"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "@chromedevtools/chrome-devtools-mcp@latest"]
+    }
+  }
+}

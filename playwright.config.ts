@@ -59,6 +59,12 @@ export default defineConfig({
       url: defaultUrl,
       reuseExistingServer: !process.env.CI,
       timeout: 60 * 1000,
+      env: {
+        ...Object.fromEntries(
+          Object.entries(process.env).filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+        ),
+        TOBI_NO_STATE_WRITE: '1',
+      },
     },
   } : {}),
   projects: [

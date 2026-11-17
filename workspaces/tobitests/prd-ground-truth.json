@@ -11,7 +11,7 @@
     "id": "tobitests",
     "name": "tobitests",
     "url": "http://localhost:5180",
-    "repoPath": "C:\\Users\\usuario\\Documents\\tobitests",
+    "repoPath": ".",
     "auditScope": "fullstack",
     "stack": {
       "framework": "Web Application (Generic SPA/SSR)",

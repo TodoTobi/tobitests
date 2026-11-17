@@ -6,6 +6,11 @@ web/node_modules/
 dist/
 web/dist/
 build/
+*.egg-info/
+.eggs/
+.venv/
+.venv*/
+venv/
 
 # Playwright & Test Artifacts
 test-results/
@@ -23,6 +28,7 @@ web/public/evidence/videos/ritmo-caldera-*
 # Dynamic Workspaces & Generated States
 workspaces/custom-*/
 workspaces/ritmo-caldera/
+workspaces/*/agent-digest.json
 web/public/data/custom-*-state.json
 web/public/data/ritmo-caldera-state.json
 web/public/data/the-ten-thrones-state.json

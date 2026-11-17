@@ -104,6 +104,7 @@ def isolated_scripts(tmp_path):
     (tmp_path / "web" / "public" / "evidence" / "videos").mkdir(parents=True, exist_ok=True)
     (tmp_path / "specs").mkdir(parents=True, exist_ok=True)
     (tmp_path / "test-results").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "playwright.config.ts").write_text("// isolated test fixture\n", encoding="utf-8")
 
     real_scripts = REPO_ROOT / "scripts"
     for py_file in real_scripts.glob("*.py"):

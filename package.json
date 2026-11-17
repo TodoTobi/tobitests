@@ -2,7 +2,14 @@
   "name": "tobitests",
   "version": "1.0.0",
   "description": "Autonomous Multi-Agent E2E QA & Visual Office Telemetry Framework",
-  "main": "index.js",
+  "homepage": "https://github.com/TodoTobi/tobitests#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TodoTobi/tobitests.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TodoTobi/tobitests/issues"
+  },
   "scripts": {
     "audit": "python scripts/tobitests_cli.py",
     "audit:init": "python scripts/tobitests_cli.py --status exploring --step 1",
@@ -11,6 +18,8 @@
     "mcp": "python scripts/tobitests_mcp.py",
     "sync:watch": "python scripts/sync_specs.py --watch",
     "test:backend": "python -m pytest -q",
+    "typecheck:web": "npm run typecheck --prefix web",
+    "verify": "python -m pytest -q && npm run typecheck:web && npm run build:web && npx playwright test",
     "dev:all": "npm run dev --prefix web",
     "test": "playwright test",
     "test:ui": "playwright test --ui",

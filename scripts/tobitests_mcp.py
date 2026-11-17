@@ -15,7 +15,17 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
-DEFAULT_REPO_ROOT = SCRIPTS_DIR.parent
+
+
+def resolve_default_repo_root(scripts_dir: Optional[Path] = None) -> Path:
+    base = (scripts_dir or SCRIPTS_DIR).resolve()
+    candidate = base.parent
+    if (candidate / "playwright.config.ts").is_file():
+        return candidate
+    return Path.cwd().resolve()
+
+
+DEFAULT_REPO_ROOT = resolve_default_repo_root()
 
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
@@ -135,7 +145,9 @@ def _resolve_root(arguments: Dict[str, Any], default_repo_root: Optional[Path]) 
     ws_override = arguments.get("workspaceRoot")
     if ws_override:
         return Path(str(ws_override)).resolve()
-    return (default_repo_root or DEFAULT_REPO_ROOT).resolve()
+    if default_repo_root is not None:
+        return default_repo_root.resolve()
+    return resolve_default_repo_root()
 
 
 def dispatch_tool(
@@ -375,7 +387,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--repo-root", type=str, default=None, help="Optional TobiTests root path")
     args = parser.parse_args(argv)
 
-    root = Path(args.repo_root).resolve() if args.repo_root else DEFAULT_REPO_ROOT
+    root = Path(args.repo_root).resolve() if args.repo_root else resolve_default_repo_root()
 
     if args.list_tools:
         print(json.dumps({"tools": TOOLS_CATALOG}, ensure_ascii=False, indent=2))

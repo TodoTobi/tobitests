@@ -275,13 +275,65 @@ function tobiTestsBridgePlugin(): Plugin {
       const sseClients = new Set<any>();
       let auditInProgress = false;
 
+      const noStateWrite =
+        process.env.TOBI_NO_STATE_WRITE === '1' ||
+        process.env.TOBI_NO_STATE_WRITE === 'true';
+      const inMemoryFiles = new Map<string, string>();
+      const deletedInMemory = new Set<string>();
+      const memKey = (filePath: string) => path.resolve(filePath);
+
+      const existsWithIsolation = (filePath: string): boolean => {
+        const key = memKey(filePath);
+        if (noStateWrite) {
+          if (deletedInMemory.has(key)) return false;
+          if (inMemoryFiles.has(key)) return true;
+        }
+        return fs.existsSync(filePath);
+      };
+
+      const readFileWithIsolation = (filePath: string): string => {
+        const key = memKey(filePath);
+        if (noStateWrite) {
+          if (deletedInMemory.has(key)) {
+            throw new Error(`ENOENT: deleted in memory: ${filePath}`);
+          }
+          if (inMemoryFiles.has(key)) {
+            return inMemoryFiles.get(key)!;
+          }
+        }
+        return fs.readFileSync(filePath, 'utf8');
+      };
+
+      const writeJsonWithIsolation = (filePath: string, data: unknown): void => {
+        const key = memKey(filePath);
+        if (noStateWrite) {
+          deletedInMemory.delete(key);
+          const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+          inMemoryFiles.set(key, content);
+          return;
+        }
+        atomicWriteJsonSync(filePath, data);
+      };
+
+      const deleteFileWithIsolation = (filePath: string): void => {
+        const key = memKey(filePath);
+        if (noStateWrite) {
+          inMemoryFiles.delete(key);
+          deletedInMemory.add(key);
+          return;
+        }
+        if (fs.existsSync(filePath)) {
+          try { fs.unlinkSync(filePath); } catch (e) {}
+        }
+      };
+
       // Helper to merge live transcript status with Shared Blackboard state
       const getMergedLivePayload = () => {
         const live = getAntigravityLiveStatus();
         let existingBlackboard: Record<string, any> = {};
         try {
-          if (fs.existsSync(publicLivePath)) {
-            const parsed = JSON.parse(fs.readFileSync(publicLivePath, 'utf8'));
+          if (existsWithIsolation(publicLivePath)) {
+            const parsed = JSON.parse(readFileWithIsolation(publicLivePath));
             if (parsed && typeof parsed === 'object') {
               existingBlackboard = {
                 blackboardState: parsed.blackboardState,
@@ -289,7 +341,7 @@ function tobiTestsBridgePlugin(): Plugin {
                 handoffReady: parsed.handoffReady,
                 currentPipelineStep: parsed.currentPipelineStep,
                 pipelineStepName: parsed.pipelineStepName,
-                activeProject: (parsed.activeProject && (parsed.activeProject === 'tobitests' || fs.existsSync(path.resolve(__dirname, `./public/data/${parsed.activeProject}-state.json`))))
+                activeProject: (parsed.activeProject && (parsed.activeProject === 'tobitests' || existsWithIsolation(path.resolve(__dirname, `./public/data/${parsed.activeProject}-state.json`))))
                   ? parsed.activeProject
                   : 'tobitests',
                 auditScope: parsed.auditScope,
@@ -359,6 +411,21 @@ function tobiTestsBridgePlugin(): Plugin {
         if (req.url && (req.url.startsWith('/evidence/') || req.url.startsWith('/data/')) && req.method === 'GET') {
           const cleanUrl = req.url.split('?')[0];
           const filePath = path.resolve(__dirname, './public', cleanUrl.replace(/^\//, ''));
+          const key = memKey(filePath);
+          if (noStateWrite && cleanUrl.startsWith('/data/')) {
+            if (deletedInMemory.has(key)) {
+              next();
+              return;
+            }
+            if (inMemoryFiles.has(key)) {
+              const content = inMemoryFiles.get(key)!;
+              res.setHeader('Content-Type', 'application/json');
+              res.setHeader('Content-Length', Buffer.byteLength(content, 'utf8'));
+              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+              res.end(content);
+              return;
+            }
+          }
           if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
             const ext = path.extname(filePath).toLowerCase();
             const mimeTypes: Record<string, string> = {
@@ -407,7 +474,7 @@ function tobiTestsBridgePlugin(): Plugin {
                 ...(nextProj ? { activeProject: nextProj } : {}),
                 auditScope: nextScope,
               };
-              atomicWriteJsonSync(publicLivePath, updated);
+              writeJsonWithIsolation(publicLivePath, updated);
               sseClients.forEach((client) => {
                 try {
                   client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: updated })}\n\n`);
@@ -442,7 +509,7 @@ function tobiTestsBridgePlugin(): Plugin {
                 activeOrchestrator: updatedConfig.primaryAgent,
                 orchestrationConfig: updatedConfig,
               };
-              atomicWriteJsonSync(publicLivePath, updated);
+              writeJsonWithIsolation(publicLivePath, updated);
               sseClients.forEach((client) => {
                 try {
                   client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: updated })}\n\n`);
@@ -517,7 +584,7 @@ function tobiTestsBridgePlugin(): Plugin {
                   opencode: 'working',
                 },
               };
-              atomicWriteJsonSync(publicLivePath, exploringState);
+              writeJsonWithIsolation(publicLivePath, exploringState);
               sseClients.forEach((client) => {
                 try {
                   client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: exploringState })}\n\n`);
@@ -579,9 +646,9 @@ function tobiTestsBridgePlugin(): Plugin {
                 ];
                 let updatedPayload = null;
                 for (const sf of possibleStateFiles) {
-                  if (fs.existsSync(sf)) {
+                  if (existsWithIsolation(sf)) {
                     try {
-                      updatedPayload = JSON.parse(fs.readFileSync(sf, 'utf8'));
+                      updatedPayload = JSON.parse(readFileWithIsolation(sf));
                       break;
                     } catch (e) {}
                   }
@@ -609,7 +676,7 @@ function tobiTestsBridgePlugin(): Plugin {
                     opencode: 'idle',
                   },
                 };
-                atomicWriteJsonSync(publicLivePath, finalBlackboard);
+                writeJsonWithIsolation(publicLivePath, finalBlackboard);
                 sseClients.forEach((client) => {
                   try {
                     client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: finalBlackboard })}\n\n`);
@@ -691,9 +758,7 @@ function tobiTestsBridgePlugin(): Plugin {
                   path.resolve(__dirname, `./public/data/${proj}-state.json`),
                   path.resolve(__dirname, `./public/data/${cleanSlug}-state.json`),
                 ].forEach((p) => {
-                  if (fs.existsSync(p)) {
-                    try { fs.unlinkSync(p); } catch (e) {}
-                  }
+                  deleteFileWithIsolation(p);
                 });
                 // 2. Delete generated specs
                 [
@@ -702,15 +767,13 @@ function tobiTestsBridgePlugin(): Plugin {
                   path.resolve(repoRoot, `specs/${cleanSlug}.spec.ts`),
                   path.resolve(repoRoot, `specs/custom-${proj}.spec.ts`),
                 ].forEach((s) => {
-                  if (fs.existsSync(s)) {
-                    try { fs.unlinkSync(s); } catch (e) {}
-                  }
+                  deleteFileWithIsolation(s);
                 });
                 // 3. Reset live blackboard if active
                 let currentLive: any = null;
-                if (fs.existsSync(publicLivePath)) {
+                if (existsWithIsolation(publicLivePath)) {
                   try {
-                    currentLive = JSON.parse(fs.readFileSync(publicLivePath, 'utf8'));
+                    currentLive = JSON.parse(readFileWithIsolation(publicLivePath));
                   } catch (e) {}
                 }
                 if (currentLive && (currentLive.activeProject === proj || currentLive.activeProject === cleanSlug)) {
@@ -729,7 +792,7 @@ function tobiTestsBridgePlugin(): Plugin {
                       opencode: 'idle',
                     },
                   };
-                  atomicWriteJsonSync(publicLivePath, resetLive);
+                  writeJsonWithIsolation(publicLivePath, resetLive);
                   sseClients.forEach((client) => {
                     try {
                       client.write(`data: ${JSON.stringify({ type: 'ANTIGRAVITY_LIVE', payload: resetLive })}\n\n`);
@@ -762,15 +825,15 @@ function tobiTestsBridgePlugin(): Plugin {
             const publicTobiState = path.resolve(__dirname, './public/data/tobitests-state.json');
             const targetStateFile = isNonTobi
               ? path.resolve(__dirname, `./public/data/${slugifyProject(projParam)}-state.json`)
-              : (fs.existsSync(publicTobiState) ? publicTobiState : stateFilePath);
+              : (existsWithIsolation(publicTobiState) ? publicTobiState : stateFilePath);
 
-            if (fs.existsSync(targetStateFile)) {
-              const raw = fs.readFileSync(targetStateFile, 'utf8');
+            if (existsWithIsolation(targetStateFile)) {
+              const raw = readFileWithIsolation(targetStateFile);
               res.write(`data: ${JSON.stringify({ type: 'INIT', project: projParam || 'tobitests', payload: JSON.parse(raw) })}\n\n`);
             } else if (isNonTobi) {
               res.write(`data: ${JSON.stringify({ type: 'ERROR', error: `Project state not found for: ${projParam}` })}\n\n`);
-            } else if (fs.existsSync(stateFilePath)) {
-              const raw = fs.readFileSync(stateFilePath, 'utf8');
+            } else if (existsWithIsolation(stateFilePath)) {
+              const raw = readFileWithIsolation(stateFilePath);
               res.write(`data: ${JSON.stringify({ type: 'INIT', project: 'tobitests', payload: JSON.parse(raw) })}\n\n`);
             }
             const live = getAntigravityLiveStatus();
@@ -781,6 +844,58 @@ function tobiTestsBridgePlugin(): Plugin {
           return;
         }
 
+        if (req.url === '/api/projects' && req.method === 'GET') {
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-cache');
+          try {
+            const dataDir = path.resolve(__dirname, './public/data');
+            const projects: any[] = [];
+            const fileSet = new Set<string>();
+            if (fs.existsSync(dataDir)) {
+              for (const f of fs.readdirSync(dataDir)) {
+                if (f.endsWith('-state.json')) fileSet.add(f);
+              }
+            }
+            if (noStateWrite) {
+              for (const key of inMemoryFiles.keys()) {
+                if (path.dirname(key) === path.resolve(dataDir) && path.basename(key).endsWith('-state.json')) {
+                  fileSet.add(path.basename(key));
+                }
+              }
+            }
+            for (const file of Array.from(fileSet).sort()) {
+              const fullPath = path.join(dataDir, file);
+              if (!existsWithIsolation(fullPath)) continue;
+              const id = file.replace(/-state\.json$/, '');
+              if (id === 'tobi' || id === 'tobitests') continue;
+              try {
+                const parsed = JSON.parse(readFileWithIsolation(fullPath));
+                const p = parsed?.project || {};
+                const rawName = String(p.name || id);
+                const displayName = id === 'vetconnect' && /^vetconnect$/i.test(rawName)
+                  ? 'Huellicam (VetConnect)'
+                  : rawName;
+                projects.push({
+                  id,
+                  name: displayName,
+                  environment: p.environment || 'Local Workspace',
+                  branch: p.branch || 'main',
+                  repoPath: p.repoPath || '.',
+                  url: p.url || 'http://localhost:5173',
+                  backendUrl: p.backendUrl,
+                  auditScope: parsed?.auditScope || p.auditScope || 'fullstack',
+                  isCustom: id.startsWith('custom-'),
+                });
+              } catch {}
+            }
+            res.end(JSON.stringify({ projects }));
+          } catch (err) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: String(err) }));
+          }
+          return;
+        }
+
         if (req.url?.startsWith('/api/state') && req.method === 'GET') {
           res.setHeader('Content-Type', 'application/json');
           try {
@@ -788,18 +903,23 @@ function tobiTestsBridgePlugin(): Plugin {
             const projParam = urlObj.searchParams.get('project');
             const isNonTobi = projParam && projParam !== 'tobitests' && projParam !== 'tobi';
             const publicTobiState = path.resolve(__dirname, './public/data/tobitests-state.json');
+            const exactNonTobi = isNonTobi
+              ? path.resolve(__dirname, `./public/data/${projParam}-state.json`)
+              : null;
             const targetStateFile = isNonTobi
-              ? path.resolve(__dirname, `./public/data/${slugifyProject(projParam)}-state.json`)
-              : (fs.existsSync(publicTobiState) ? publicTobiState : stateFilePath);
+              ? (exactNonTobi && existsWithIsolation(exactNonTobi)
+                  ? exactNonTobi
+                  : path.resolve(__dirname, `./public/data/${slugifyProject(projParam)}-state.json`))
+              : (existsWithIsolation(publicTobiState) ? publicTobiState : stateFilePath);
 
-            if (fs.existsSync(targetStateFile)) {
-              const raw = fs.readFileSync(targetStateFile, 'utf8');
+            if (existsWithIsolation(targetStateFile)) {
+              const raw = readFileWithIsolation(targetStateFile);
               res.end(raw);
             } else if (isNonTobi) {
               res.statusCode = 404;
               res.end(JSON.stringify({ error: `Project state not found: ${projParam}` }));
-            } else if (fs.existsSync(stateFilePath)) {
-              const raw = fs.readFileSync(stateFilePath, 'utf8');
+            } else if (existsWithIsolation(stateFilePath)) {
+              const raw = readFileWithIsolation(stateFilePath);
               res.end(raw);
             } else {
               res.statusCode = 404;
@@ -822,15 +942,15 @@ function tobiTestsBridgePlugin(): Plugin {
               const isTobi = projectName.includes('tobi') || projectName === '';
 
               if (isTobi) {
-                atomicWriteJsonSync(stateFilePath, parsed);
+                writeJsonWithIsolation(stateFilePath, parsed);
                 try {
-                  atomicWriteJsonSync(path.resolve(__dirname, './public/data/tobi-state.json'), parsed);
-                  atomicWriteJsonSync(path.resolve(__dirname, './public/data/tobitests-state.json'), parsed);
+                  writeJsonWithIsolation(path.resolve(__dirname, './public/data/tobi-state.json'), parsed);
+                  writeJsonWithIsolation(path.resolve(__dirname, './public/data/tobitests-state.json'), parsed);
                 } catch (e) {}
               } else {
                 const slug = slugifyProject(projectName);
                 const destPath = path.resolve(__dirname, `./public/data/${slug}-state.json`);
-                atomicWriteJsonSync(destPath, parsed);
+                writeJsonWithIsolation(destPath, parsed);
               }
 
               sseClients.forEach(client => {
@@ -887,18 +1007,18 @@ function tobiTestsBridgePlugin(): Plugin {
             const rawProj = urlObj.searchParams.get('project') || 'tobitests';
             const slug = slugifyProject(rawProj);
             const digestPath = path.resolve(__dirname, `../workspaces/${slug}/agent-digest.json`);
-            if (fs.existsSync(digestPath)) {
-              res.end(fs.readFileSync(digestPath, 'utf8'));
+            if (existsWithIsolation(digestPath)) {
+              res.end(readFileWithIsolation(digestPath));
               return;
             }
             const publicState = path.resolve(__dirname, `./public/data/${slug}-state.json`);
-            const fallbackState = slug === 'tobitests' && !fs.existsSync(publicState) ? stateFilePath : publicState;
-            if (!fs.existsSync(fallbackState)) {
+            const fallbackState = slug === 'tobitests' && !existsWithIsolation(publicState) ? stateFilePath : publicState;
+            if (!existsWithIsolation(fallbackState)) {
               res.statusCode = 404;
               res.end(JSON.stringify({ error: `Digest not found for project: ${slug}` }));
               return;
             }
-            const parsed = JSON.parse(fs.readFileSync(fallbackState, 'utf8'));
+            const parsed = JSON.parse(readFileWithIsolation(fallbackState));
             const bugs = Array.isArray(parsed?.bugs) ? parsed.bugs : [];
             const openBugs = bugs.filter((b: any) => b && b.status !== 'Resolved' && b.status !== 'Closed');
             const runs = Array.isArray(parsed?.runs) ? parsed.runs : [];

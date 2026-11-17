@@ -1,0 +1,48 @@
+name: Feature Request
+description: Propose a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make TobiTests better? We'd love to hear it.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the pain point or use case you're trying to address.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like to see implemented.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you thought about?
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Affected area
+      options:
+        - MCP server (tobitests_mcp.py)
+        - CLI (tobitests_cli.py)
+        - Playwright spec generation
+        - Web UI (Vite/React dashboard)
+        - Python ingestion / path normalization
+        - CI / GitHub Actions
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Would you like to work on this?
+      options:
+        - label: "Yes, I'd like to submit a PR"

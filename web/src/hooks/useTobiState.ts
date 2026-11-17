@@ -530,10 +530,10 @@ const DEFAULT_PROJECTS: ProjectOption[] = [
   },
   {
     id: "vetconnect",
-    name: "VetConnect",
+    name: "Huellicam (VetConnect)",
     environment: "Telemedicina Veterinaria",
-    branch: "feature/cerco-frontend-ux-truth",
-    repoPath: "C:/Users/usuario/Documents/VetConnect",
+    branch: "main",
+    repoPath: "../vetconnect",
     url: "http://localhost:5173",
     auditScope: "fullstack",
     isCustom: false
@@ -875,18 +875,57 @@ export function useTobiState() {
     }
   });
 
+  const [discoveredProjects, setDiscoveredProjects] = useState<ProjectOption[]>([]);
   const [scopeMap, setScopeMap] = useState<Record<string, AuditScope>>(() => getSavedScopeMap());
 
-  const availableProjects: ProjectOption[] = [
-    ...DEFAULT_PROJECTS.filter((p) => !deletedProjects.includes(p.id)).map((p) => ({
-      ...p,
-      auditScope: scopeMap[p.id] || p.auditScope || "fullstack",
-    })),
-    ...customProjects.filter((p) => !deletedProjects.includes(p.id)).map((p) => ({
-      ...p,
-      auditScope: scopeMap[p.id] || p.auditScope || "fullstack",
-    })),
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/projects")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data || !Array.isArray(data.projects)) return;
+        const diskProjects = data.projects as ProjectOption[];
+        setDiscoveredProjects(diskProjects);
+        const diskIds = new Set(diskProjects.map((p) => p.id));
+        setDeletedProjects((prev) => {
+          const next = prev.filter((id) => !diskIds.has(id));
+          if (next.length !== prev.length) {
+            try {
+              localStorage.setItem("tobitests_deleted_projects", JSON.stringify(next));
+            } catch (e) {}
+          }
+          return next;
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const availableProjects: ProjectOption[] = useMemo(() => {
+    const byId = new Map<string, ProjectOption>();
+    for (const p of DEFAULT_PROJECTS) {
+      if (!deletedProjects.includes(p.id)) {
+        byId.set(p.id, { ...p, auditScope: scopeMap[p.id] || p.auditScope || "fullstack" });
+      }
+    }
+    for (const p of discoveredProjects) {
+      const existing = byId.get(p.id);
+      byId.set(p.id, {
+        ...(existing || {}),
+        ...p,
+        name: p.id === "vetconnect" ? "Huellicam (VetConnect)" : p.name,
+        auditScope: scopeMap[p.id] || p.auditScope || existing?.auditScope || "fullstack",
+      });
+    }
+    for (const p of customProjects) {
+      if (!deletedProjects.includes(p.id)) {
+        byId.set(p.id, { ...p, auditScope: scopeMap[p.id] || p.auditScope || "fullstack" });
+      }
+    }
+    return Array.from(byId.values());
+  }, [deletedProjects, discoveredProjects, customProjects, scopeMap]);
 
   const resolvedInitialProjectId = (() => {
     let saved = "tobitests";
@@ -1137,13 +1176,15 @@ export function useTobiState() {
     const savedScopes = getSavedScopeMap();
     const resolvedScope: AuditScope = savedScopes[projectId] || "fullstack";
 
-    if (projectId.startsWith("custom-")) {
+    if (projectId !== "tobitests" && projectId !== "tobi") {
       let applied = false;
       try {
         const cached = localStorage.getItem(`tobitests_state_${projectId}`);
         if (cached) {
           const rawParsed = JSON.parse(cached);
-          const parsed = sanitizeCustomStateIfLegacy(rawParsed, projectId);
+          const parsed = projectId.startsWith("custom-")
+            ? sanitizeCustomStateIfLegacy(rawParsed, projectId)
+            : rawParsed;
           const sc: AuditScope = savedScopes[projectId] || parsed.auditScope || parsed.project?.auditScope || "fullstack";
           setState({
             ...parsed,
@@ -1156,13 +1197,10 @@ export function useTobiState() {
 
       if (!applied) {
         try {
-          const savedList = localStorage.getItem("tobitests_projects_v1") || localStorage.getItem("tobitests_custom_projects");
-          const list: ProjectOption[] = savedList ? JSON.parse(savedList) : [];
-          const match = list.find((p) => p.id === projectId);
+          const match = availableProjects.find((p) => p.id === projectId);
           if (match) {
             const fresh = createCustomProjectInitialState(match);
             setState(fresh);
-            localStorage.setItem(`tobitests_state_${projectId}`, JSON.stringify(fresh));
           }
         } catch (e) {}
       }
@@ -1172,7 +1210,7 @@ export function useTobiState() {
         .then(async (res) => {
           if (res.ok) {
             const serverState = await res.json();
-            if (serverState && Array.isArray(serverState.runs) && serverState.runs.length > 0) {
+            if (serverState && serverState.project) {
               const sc: AuditScope = savedScopes[projectId] || serverState.auditScope || "fullstack";
               const updated = {
                 ...serverState,
@@ -1213,7 +1251,7 @@ export function useTobiState() {
         openBugs: openBugsCount,
       },
     });
-  }, []);
+  }, [availableProjects]);
 
   const addProject = useCallback((params: { id?: string; name: string; repoPath: string; url?: string; backendUrl?: string; auditScope?: AuditScope; environment?: string; branch?: string; isCustom?: boolean; autoRun?: boolean }) => {
     const slug = params.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "proyecto";
@@ -1312,6 +1350,7 @@ export function useTobiState() {
   const removeProject = useCallback((projectId: string) => {
     const updated = customProjects.filter((p) => p.id !== projectId);
     setCustomProjects(updated);
+    setDiscoveredProjects((prev) => prev.filter((p) => p.id !== projectId));
 
     const nextDeleted = Array.from(new Set([...deletedProjects, projectId]));
     setDeletedProjects(nextDeleted);

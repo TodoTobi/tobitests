@@ -41,6 +41,74 @@ def slugify(value: str) -> str:
     return slug or "tobitests"
 
 
+def _normalize_repo_rel(raw_path: str, repo_root: Optional[Path] = None) -> str:
+    raw = str(raw_path or "").strip()
+    if not raw:
+        return ""
+    norm_posix = raw.replace("\\", "/")
+    if repo_root is not None:
+        candidates = {
+            repo_root.resolve().as_posix().rstrip("/"),
+            str(repo_root).replace("\\", "/").rstrip("/"),
+        }
+        for root_posix in sorted(candidates, key=len, reverse=True):
+            if not root_posix:
+                continue
+            if norm_posix.lower().startswith(root_posix.lower() + "/"):
+                return norm_posix[len(root_posix) + 1 :]
+            if norm_posix.lower() == root_posix.lower():
+                return "."
+    home_posix = Path.home().resolve().as_posix().rstrip("/")
+    if home_posix and norm_posix.lower().startswith(home_posix.lower() + "/"):
+        norm_posix = "~/" + norm_posix[len(home_posix) + 1 :]
+    elif home_posix and norm_posix.lower() == home_posix.lower():
+        norm_posix = "~"
+    norm_posix = re.sub(r"^[a-zA-Z]:/Users/[^/]+", "~", norm_posix, flags=re.IGNORECASE)
+    norm_posix = re.sub(r"^/(?:Users|home)/[^/]+", "~", norm_posix, flags=re.IGNORECASE)
+    return norm_posix
+
+
+def _sanitize_trace_text(text: str, repo_root: Optional[Path] = None) -> str:
+    if not text:
+        return ""
+    cleaned = str(text)
+    if repo_root is not None:
+        candidates = {
+            repo_root.resolve().as_posix().rstrip("/"),
+            str(repo_root).replace("\\", "/").rstrip("/"),
+        }
+        for root_posix in sorted(candidates, key=len, reverse=True):
+            if not root_posix:
+                continue
+            parts = [re.escape(seg) for seg in root_posix.split("/") if seg]
+            if not parts:
+                continue
+            prefix = r"/" if root_posix.startswith("/") else ""
+            pattern = prefix + r"[\\/]+".join(parts) + r"[\\/]+([A-Za-z0-9_.\-\\/]+)"
+            cleaned = re.sub(
+                pattern,
+                lambda m: m.group(1).replace("\\", "/"),
+                cleaned,
+                flags=re.IGNORECASE,
+            )
+            bare_pattern = prefix + r"[\\/]+".join(parts)
+            cleaned = re.sub(bare_pattern, ".", cleaned, flags=re.IGNORECASE)
+    home_posix = Path.home().resolve().as_posix().rstrip("/")
+    if home_posix:
+        home_parts = [re.escape(seg) for seg in home_posix.split("/") if seg]
+        if home_parts:
+            prefix = r"/" if home_posix.startswith("/") else ""
+            cleaned = re.sub(
+                prefix + r"[\\/]+".join(home_parts),
+                "~",
+                cleaned,
+                flags=re.IGNORECASE,
+            )
+    cleaned = re.sub(r"[a-zA-Z]:[\\/]+Users[\\/]+[^\\/\s\"'`<>|]+", "~", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"/(?:Users|home)/[^/\s\"'`<>|]+", "~", cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
 def _preflight(url: str, timeout: float = 3.0) -> bool:
     """True si hay CUALQUIER respuesta HTTP (aun 404); False si no conecta."""
     import urllib.error
@@ -487,7 +555,7 @@ def synthesize_draft_bug(
     dado_que = f"el suite Playwright ejecuta la especificación {spec_name}"
 
     err_loc = error_obj.get("location", {}) if isinstance(error_obj, dict) else {}
-    rc_file = err_loc.get("file", "") or f"specs/{spec_name}"
+    rc_file = _normalize_repo_rel(str(err_loc.get("file", "") or ""), repo_root) or f"specs/{spec_name}"
     raw_line = err_loc.get("line", 1)
     try:
         rc_line = int(raw_line) if raw_line is not None else 1
@@ -831,7 +899,7 @@ def extract_tests_from_suite(
     steps_data: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     extracted: List[Dict[str, Any]] = []
-    suite_file_raw = str(suite.get("file", default_spec))
+    suite_file_raw = _normalize_repo_rel(str(suite.get("file", default_spec)), repo_root)
     spec_file = Path(suite_file_raw).name if suite_file_raw else default_spec
 
     active_run_folder = run_folder or _new_run_id(datetime.datetime.now()).lstrip("#")
@@ -881,8 +949,8 @@ def extract_tests_from_suite(
                 raw_errors = r0.get("errors", [])
                 err_obj = raw_errors[0] if (raw_errors and isinstance(raw_errors, list)) else r0.get("error")
                 if err_obj and isinstance(err_obj, dict):
-                    msg = _strip_ansi(err_obj.get("message", ""))
-                    stk = _strip_ansi(err_obj.get("stack", ""))
+                    msg = _sanitize_trace_text(_strip_ansi(err_obj.get("message", "")), repo_root)
+                    stk = _sanitize_trace_text(_strip_ansi(err_obj.get("stack", "")), repo_root)
                     loc = err_obj.get("location")
                     test_error = {
                         "message": msg,
@@ -890,7 +958,7 @@ def extract_tests_from_suite(
                     }
                     if loc and isinstance(loc, dict):
                         test_error["location"] = {
-                            "file": str(loc.get("file", "")),
+                            "file": _normalize_repo_rel(str(loc.get("file", "")), repo_root),
                             "line": int(loc.get("line", 0)),
                             "column": int(loc.get("column", 0)),
                         }
@@ -977,7 +1045,7 @@ def extract_tests_from_suite(
                         action_name = _classify_step(st_title, st_cat)
 
                         if st_err:
-                            err_msg = _strip_ansi(str(st_err))[:2000]
+                            err_msg = _sanitize_trace_text(_strip_ansi(str(st_err)), repo_root)[:2000]
                             st_actual = err_msg
                             st_expected = ""
                             st_status = "Failed"
@@ -1016,7 +1084,7 @@ def extract_tests_from_suite(
                         st_dur = int(st.get("duration", 25))
                         st_err = st.get("error")
                         if st_err:
-                            st_actual = _strip_ansi(st_err.get("message", "Failed"))[:2000]
+                            st_actual = _sanitize_trace_text(_strip_ansi(st_err.get("message", "Failed")), repo_root)[:2000]
                             st_expected = ""
                             st_status = "Failed"
                         else:
@@ -1128,12 +1196,16 @@ def extract_tests_from_suite(
         if test_error:
             test_data["error"] = test_error
         if log_parts:
-            test_data["logs"] = _strip_ansi("".join(log_parts))[:2000]
+            test_data["logs"] = _sanitize_trace_text(_strip_ansi("".join(log_parts)), repo_root)[:2000]
 
         if telemetry_events:
-            console_log = _format_console(telemetry_events)
-            network_trace = _format_network(telemetry_events)
-            page_errors = [e.get("message", "") for e in telemetry_events if e.get("type") == "pageerror" and e.get("message")]
+            console_log = [_sanitize_trace_text(line, repo_root) for line in _format_console(telemetry_events)]
+            network_trace = [_sanitize_trace_text(line, repo_root) for line in _format_network(telemetry_events)]
+            page_errors = [
+                _sanitize_trace_text(str(e.get("message", "")), repo_root)
+                for e in telemetry_events
+                if e.get("type") == "pageerror" and e.get("message")
+            ]
 
             console_events = [e for e in telemetry_events if e.get("type") == "console"]
             console_by_level: Dict[str, int] = {}
@@ -1186,7 +1258,10 @@ def extract_tests_from_suite(
                 test_data["touchedTargets"] = touched_targets
 
             if status_str == "Failed" and failed_step_window is not None:
-                nearby_list = _nearby(telemetry_events, failed_step_window[0], failed_step_window[1])
+                nearby_list = [
+                    _sanitize_trace_text(line, repo_root)
+                    for line in _nearby(telemetry_events, failed_step_window[0], failed_step_window[1])
+                ]
                 if nearby_list:
                     if "error" not in test_data or not test_data["error"]:
                         test_data["error"] = {"message": "Test execution failed", "stack": ""}
@@ -1813,7 +1888,7 @@ def ingest_report_into_state(
         "auditScope": audit_scope or "fullstack",
         "project": {
             "name": project_slug.replace("-", " ").title(),
-            "repoPath": str(repo_root),
+            "repoPath": ".",
             "url": "http://localhost:5173",
             "backendUrl": "ws://localhost:9222 (Playwright + Chrome CDP)",
             "branch": "main",
@@ -1852,6 +1927,10 @@ def ingest_report_into_state(
     state["auditScope"] = resolved_scope
     if "project" in state and isinstance(state["project"], dict):
         state["project"]["auditScope"] = resolved_scope
+        existing_rp = state["project"].get("repoPath")
+        if isinstance(existing_rp, str) and existing_rp:
+            if Path(existing_rp).is_absolute() or "\\" in existing_rp:
+                state["project"]["repoPath"] = _normalize_repo_rel(existing_rp, repo_root)
 
     default_shot = ""
     default_vid = ""
@@ -2389,7 +2468,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    repo_root = Path(args.repo).resolve() if args.repo else Path(__file__).resolve().parent.parent
+    _parent = Path(__file__).resolve().parent.parent
+    _default_root = _parent if (_parent / "playwright.config.ts").is_file() else Path.cwd().resolve()
+    repo_root = Path(args.repo).resolve() if args.repo else _default_root
     project_slug = slugify(args.project)
     report_arg = Path(args.report)
     report_path = report_arg if report_arg.is_absolute() else (repo_root / report_arg)
