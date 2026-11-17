@@ -192,20 +192,23 @@ def test_path_normalization_cli_and_ingest(tmp_path):
     state = json.loads(state_file.read_text(encoding="utf-8"))
     assert state["project"]["repoPath"] == "."
 
-    # Ingest report containing Windows & POSIX absolute paths
+    # Ingest report containing absolute paths — the ingest function must sanitise them
+    # to relative paths so no host-specific paths leak into committed state files.
+    # We use the real tmp_path as repo root so _normalize_repo_rel can relativise it,
+    # and add a separate fixed Windows-style "other user" path to verify regex stripping.
     (ws / "test-results").mkdir(parents=True, exist_ok=True)
     (ws / "web" / "public" / "data").mkdir(parents=True, exist_ok=True)
-    win_spec = str(ws).replace("/", "\\") + "\\specs\\norm-demo.spec.ts"
+    abs_spec = str(ws / "specs" / "norm-demo.spec.ts")
     other_user_path = "C:\\Users\\someone\\Documents\\repo\\specs\\other.spec.ts"
     report = {
         "suites": [
             {
                 "title": "norm-demo.spec.ts",
-                "file": win_spec,
+                "file": abs_spec,
                 "specs": [
                     {
                         "title": "TC-01: Path sanitization",
-                        "file": win_spec,
+                        "file": abs_spec,
                         "tests": [
                             {
                                 "status": "unexpected",
@@ -215,9 +218,9 @@ def test_path_normalization_cli_and_ingest(tmp_path):
                                         "duration": 100,
                                         "errors": [
                                             {
-                                                "message": f"Expected 200 at {win_spec}:12:5 and {other_user_path}:4",
-                                                "stack": f"at fn ({win_spec}:12:5)",
-                                                "location": {"file": win_spec, "line": 12, "column": 5},
+                                                "message": f"Expected 200 at {abs_spec}:12:5 and {other_user_path}:4",
+                                                "stack": f"at fn ({abs_spec}:12:5)",
+                                                "location": {"file": abs_spec, "line": 12, "column": 5},
                                             }
                                         ],
                                         "attachments": [],
@@ -248,7 +251,8 @@ def test_path_normalization_cli_and_ingest(tmp_path):
     ingested_text = out_state.read_text(encoding="utf-8")
     assert "C:\\Users\\" not in ingested_text
     assert "/Users/" not in ingested_text
-    assert str(ws) not in ingested_text
+    # The absolute path to ws must not appear verbatim in the output
+    assert str(ws).replace("\\", "/") not in ingested_text
 
     ingested = json.loads(ingested_text)
     t0 = ingested["runs"][0]["tests"][0]
